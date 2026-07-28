@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Implantation Interactive - Meunerie de l'Aubetin</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .header { text-align: center; margin-bottom: 20px; color: #2c3e50; }
+        .header h1 { margin: 0 0 10px 0; font-size: 28px; text-transform: uppercase; }
+        .header p { margin: 0; font-size: 16px; color: #7f8c8d; }
+
+        .tab-container {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .tab-btn {
+            background-color: white;
+            border: 2px solid #3498db;
+            color: #3498db;
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+        .tab-btn:hover { background-color: #ebf5fb; }
+        .tab-btn.active { background-color: #3498db; color: white; box-shadow: 0 4px 12px rgba(52, 152, 219, 0.4); }
+
+        .plan-view {
+            display: none;
+            background-color: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 1400px;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        
+        .plan-view.active { display: block; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .view-title { font-size: 24px; color: #2c3e50; margin-bottom: 10px; border-bottom: 2px solid #3498db; padding-bottom: 5px; }
+        .view-desc { color: #7f8c8d; margin-bottom: 20px; font-size: 15px; }
+
+        svg { width: 100%; height: auto; border: 2px solid #bdc3c7; background-color: #fdfdfd; }
+
+        .g-wall-exterior { fill: none; stroke: #34495e; stroke-width: 4; stroke-linecap: square; }
+        .g-wall-interior { fill: none; stroke: #7f8c8d; stroke-width: 2; stroke-dasharray: 6,4; }
+        
+        .g-zone-boutique { fill: rgba(52, 152, 219, 0.15); stroke: #2980b9; stroke-width: 1; }
+        .g-zone-meunerie { fill: rgba(241, 196, 15, 0.15); stroke: #f39c12; stroke-width: 1; }
+        .g-zone-fournil  { fill: rgba(231, 76, 60, 0.15); stroke: #c0392b; stroke-width: 1; }
+        .g-zone-stockage { fill: rgba(149, 165, 166, 0.15); stroke: #7f8c8d; stroke-width: 1; }
+        .g-zone-silo     { fill: rgba(155, 89, 182, 0.2); stroke: #8e44ad; stroke-width: 1.5; stroke-dasharray: 4,2; }
+
+        .g-text-titre { font-family: Arial, sans-serif; font-size: 50px; font-weight: bold; fill: #2c3e50; text-anchor: middle; dominant-baseline: middle; }
+        .g-text-surface { font-family: Arial, sans-serif; font-size: 40px; fill: #7f8c8d; text-anchor: middle; dominant-baseline: middle; }
+        .g-text-dim { font-family: Arial, sans-serif; font-size: 35px; fill: #c0392b; text-anchor: middle; }
+        
+        .g-door { fill: #ecf0f1; stroke: #e67e22; stroke-width: 2; }
+        .g-door-arc { fill: none; stroke: #e67e22; stroke-width: 1; stroke-dasharray: 2,2; }
+
+        .m-wall { fill: none; stroke: #34495e; stroke-width: 4; stroke-linecap: square; }
+        .m-wall-dashed { fill: none; stroke: #7f8c8d; stroke-width: 2; stroke-dasharray: 6,4; }
+        .m-text-dim { font-family: Arial, sans-serif; font-size: 30px; fill: #7f8c8d; text-anchor: middle; }
+        .m-text-machine { font-family: Arial, sans-serif; font-size: 25px; font-weight: bold; fill: #2c3e50; text-anchor: middle; dominant-baseline: middle;}
+        
+        .m-machine-moulin { fill: #f39c12; stroke: #d35400; stroke-width: 2; } 
+        .m-machine-meule { fill: #ecf0f1; stroke: #bdc3c7; stroke-width: 2; } 
+        .m-machine-bluterie { fill: #f1c40f; stroke: #f39c12; stroke-width: 2; }
+        .m-machine-ensachage { fill: #ecf0f1; stroke: #95a5a6; stroke-width: 2; }
+        .m-machine-brosse { fill: #95a5a6; stroke: #7f8c8d; stroke-width: 2; }
+        .m-machine-cyclone { fill: #bdc3c7; stroke: #95a5a6; stroke-width: 2; }
+        .m-machine-vis { fill: none; stroke: #34495e; stroke-width: 6; stroke-linecap: round; } 
+        .m-flux-arrow { fill: none; stroke: #3498db; stroke-width: 4; stroke-dasharray: 10,5; marker-end: url(#arrow-blue); }
+
+        .legend { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; margin-top: 20px;}
+        .legend-item { display: flex; align-items: center; font-size: 14px; color: #34495e; }
+        .legend-box { width: 20px; height: 20px; margin-right: 10px; border: 1px solid #7f8c8d; }
+
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>Explorateur d'Implantation - Meunerie de l'Aubetin</h1>
+        <p>Bâtiment Agricole (Dagny) - Échelle respectée pour tous les plans</p>
+    </div>
+
+    <div class="tab-container">
+        <button class="tab-btn active" id="btn-global" onclick="switchView('global')"><i class="fa-solid fa-building"></i> 1. Plan du Bâtiment Entier</button>
+        <button class="tab-btn" id="btn-optA" onclick="switchView('optA')"><i class="fa-solid fa-cogs"></i> 2. Machinerie : Option A (en "L")</button>
+        <button class="tab-btn" id="btn-optB" onclick="switchView('optB')"><i class="fa-solid fa-stream"></i> 3. Machinerie : Option B (Linéaire)</button>
+    </div>
+
+    <!-- ================= VUE 1 : PLAN GLOBAL DU BATIMENT ================= -->
+    <div id="global" class="plan-view active">
+        <h2 class="view-title">Vue d'ensemble de la structure</h2>
+        <p class="view-desc">Répartition des zones d'activités (Boutique, Meunerie, Réception, Fournil, Stockage).</p>
+        
+        <svg viewBox="-250 -250 4100 1450" preserveAspectRatio="xMidYMid meet">
+            <defs>
+                <marker id="arrow" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                    <path d="M 0 2 L 10 5 L 0 8 z" fill="#c0392b" />
+                </marker>
+            </defs>
+
+            <!-- Fonds de zones -->
+            <rect class="g-zone-boutique" x="0" y="0" width="950" height="900" />
+            <rect class="g-zone-meunerie" x="950" y="0" width="400" height="900" />
+            <rect class="g-zone-silo" x="1350" y="455" width="375" height="445" />
+            <rect class="g-zone-meunerie" x="1350" y="0" width="375" height="455" />
+            <rect class="g-zone-meunerie" x="1725" y="0" width="400" height="900" />
+            <rect class="g-zone-fournil" x="2125" y="0" width="1250" height="900" />
+            <rect class="g-zone-stockage" x="3375" y="0" width="235" height="900" />
+
+            <!-- Murs -->
+            <rect class="g-wall-exterior" x="0" y="0" width="3610" height="900" />
+            <line class="g-wall-interior" x1="950" y1="0" x2="950" y2="900" />
+            <line class="g-wall-interior" x1="1350" y1="0" x2="1350" y2="900" />
+            <line class="g-wall-interior" x1="1725" y1="0" x2="1725" y2="900" />
+            <line class="g-wall-interior" x1="2125" y1="0" x2="2125" y2="900" />
+            <line class="g-wall-interior" x1="3375" y1="0" x2="3375" y2="900" />
+            <line class="g-wall-interior" x1="1350" y1="455" x2="1725" y2="455" />
+            
+            <!-- Portes Façade (Bas) -->
+            <rect class="g-door" x="400" y="890" width="200" height="20" /> 
+            <rect class="g-door" x="1050" y="890" width="200" height="20" />
+            <rect class="g-door" x="2600" y="890" width="300" height="20" />
+            <rect class="g-door" x="3390" y="890" width="200" height="20" />
+
+            <!-- Ouvertures intérieures -->
+            <rect fill="white" x="940" y="400" width="20" height="150" />
+            <text x="870" y="475" class="g-text-dim" style="fill:#34495e; font-size:25px;">Ouverture</text>
+            
+            <!-- Portes intérieures -->
+            <rect fill="white" x="1340" y="200" width="20" height="90" />
+            <path class="g-door-arc" d="M 1350 200 A 90 90 0 0 1 1260 290" />
+            <line stroke="#e67e22" x1="1350" y1="290" x2="1260" y2="290" />
+            
+            <rect fill="white" x="1715" y="700" width="20" height="90" />
+            <path class="g-door-arc" d="M 1725 700 A 90 90 0 0 0 1815 790" />
+            <line stroke="#e67e22" x1="1725" y1="790" x2="1815" y2="790" />
+            
+            <!-- Balance et Ouverture Fournil (CORRIGÉS) -->
+            <rect fill="#bdc3c7" stroke="#7f8c8d" stroke-width="2" x="2135" y="250" width="80" height="150" /> 
+            <text x="2175" y="325" class="g-text-dim" transform="rotate(-90 2175 325)" style="fill:#2c3e50; font-weight:bold; font-size:25px;">BALANCE</text>
+            
+            <rect fill="white" x="2115" y="450" width="20" height="200" />
+            <text x="2040" y="550" class="g-text-dim" style="fill:#34495e; font-size:25px;">Ouverture</text>
+
+            <rect fill="white" x="3365" y="600" width="20" height="150" />
+            <path class="g-door-arc" d="M 3375 600 A 150 150 0 0 0 3525 750" />
+            <line stroke="#e67e22" x1="3375" y1="750" x2="3525" y2="750" />
+
+            <!-- Textes des Zones -->
+            <text x="475" y="410" class="g-text-titre">1. BOUTIQUE</text>
+            <text x="475" y="470" class="g-text-surface">85 m²</text>
+            
+            <text x="1150" y="200" class="g-text-titre">2. MEUNERIE</text>
+            <text x="1150" y="260" class="g-text-surface">36 m²</text>
+            
+            <text x="1537" y="640" class="g-text-titre" style="fill:#8e44ad;">3. RÉCEPTION</text>
+            <text x="1537" y="700" class="g-text-surface">Silo enterré</text>
+            <text x="1537" y="740" class="g-text-surface" style="font-size:25px; fill:#27ae60;">(Descente Grain)</text>
+
+            <text x="1537" y="220" class="g-text-titre">MEUNERIE</text>
+            
+            <text x="1925" y="410" class="g-text-titre">4. MEUNERIE</text>
+            <text x="1925" y="470" class="g-text-surface">36 m²</text>
+            
+            <text x="2750" y="410" class="g-text-titre">5. FOURNIL</text>
+            <text x="2750" y="470" class="g-text-surface">112,5 m²</text>
+            
+            <text x="3492" y="450" class="g-text-titre" transform="rotate(-90 3492 450)">6. STOCK.</text>
+            <text x="3492" y="450" class="g-text-surface" transform="translate(60, 0) rotate(-90 3492 450)">20 m²</text>
+
+            <!-- Cotation (CORRIGÉE) -->
+            <line x1="0" y1="-120" x2="3610" y2="-120" stroke="#c0392b" stroke-width="4" marker-start="url(#arrow)" marker-end="url(#arrow)" />
+            <text x="1805" y="-160" class="g-text-dim" style="font-size:45px; font-weight:bold;">Longueur Totale : 36,10 m</text>
+            
+            <line x1="0" y1="1030" x2="950" y2="1030" stroke="#c0392b" stroke-width="3" marker-start="url(#arrow)" marker-end="url(#arrow)" />
+            <text x="475" y="1090" class="g-text-dim">9,50 m</text>
+
+            <line x1="950" y1="1030" x2="1350" y2="1030" stroke="#c0392b" stroke-width="3" marker-start="url(#arrow)" marker-end="url(#arrow)" />
+            <text x="1150" y="1090" class="g-text-dim">4,00 m</text>
+
+            <line x1="1350" y1="1030" x2="1725" y2="1030" stroke="#c0392b" stroke-width="3" marker-start="url(#arrow)" marker-end="url(#arrow)" />
+            <text x="1537" y="1090" class="g-text-dim">3,75 m</text>
+
+            <line x1="1725" y1="1030" x2="2125" y2="1030" stroke="#c0392b" stroke-width="3" marker-start="url(#arrow)" marker-end="url(#arrow)" />
+            <text x="1925" y="1090" class="g-text-dim">4,00 m</text>
+
+            <line x1="2125" y1="1030" x2="3375" y2="1030" stroke="#c0392b" stroke-width="3" marker-start="url(#arrow)" marker-end="url(#arrow)" />
+            <text x="2750" y="1090" class="g-text-dim">12,50 m</text>
+
+            <line x1="3375" y1="1030" x2="3610" y2="1030" stroke="#c0392b" stroke-width="3" marker-start="url(#arrow)" marker-end="url(#arrow)" />
+            <text x="3492" y="1090" class="g-text-dim">2,35 m</text>
+
+            <line x1="-120" y1="0" x2="-120" y2="900" stroke="#c0392b" stroke-width="4" marker-start="url(#arrow)" marker-end="url(#arrow)" />
+            <text x="-160" y="450" class="g-text-dim" style="font-size:45px; font-weight:bold;" transform="rotate(-90 -160 450)">Largeur : 9,00 m</text>
+
+            <!-- Cotation interne decalee -->
+            <line x1="1290" y1="455" x2="1290" y2="900" stroke="#c0392b" stroke-width="2" marker-start="url(#arrow)" marker-end="url(#arrow)" />
+            <line x1="1290" y1="455" x2="1350" y2="455" stroke="#c0392b" stroke-width="1" stroke-dasharray="2,2" />
+            <text x="1255" y="677" class="g-text-dim" transform="rotate(-90 1255 677)">4,45 m</text>
+
+        </svg>
+
+        <div class="legend">
+            <div class="legend-item"><div class="legend-box" style="background-color: rgba(52, 152, 219, 0.15);"></div> Boutique</div>
+            <div class="legend-item"><div class="legend-box" style="background-color: rgba(241, 196, 15, 0.15);"></div> Meunerie</div>
+            <div class="legend-item"><div class="legend-box" style="background-color: rgba(155, 89, 182, 0.2); border-color:#8e44ad; border-style:dashed;"></div> Fosse / Silo Grain</div>
+            <div class="legend-item"><div class="legend-box" style="background-color: rgba(231, 76, 60, 0.15);"></div> Fournil</div>
+            <div class="legend-item"><div class="legend-box" style="background-color: rgba(149, 165, 166, 0.15);"></div> Stockage</div>
+            <div class="legend-item"><div class="legend-box" style="background-color: #ecf0f1; border-color:#e67e22; border-width:2px;"></div> Portes Agricoles</div>
+        </div>
+    </div>
+
+    <div id="optA" class="plan-view">
+        <h2 class="view-title">Détail Machinerie - Option A : Implantation en "L"</h2>
+        <p class="view-desc">La préparation (Brosse/Décortiqueuse) est isolée dans la Zone 2. Les moulins s'étendent sur les Zones 3 et 4.</p>
+        
+        <svg viewBox="-100 -100 1375 1100" preserveAspectRatio="xMidYMid meet">
+            <defs>
+                <marker id="arrow-blue" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+                    <path d="M 0 2 L 10 5 L 0 8 z" fill="#3498db" />
+                </marker>
+            </defs>
+
+            <rect class="m-wall" x="0" y="0" width="1175" height="900" />
+            <rect fill="rgba(155, 89, 182, 0.1)" stroke="#8e44ad" stroke-width="2" stroke-dasharray="4,2" x="400" y="455" width="375" height="445" />
+            <text x="587" y="677" class="m-text-dim" style="font-size:20px; fill:#8e44ad;">Fosse de</text>
+            <text x="587" y="707" class="m-text-dim" style="font-size:20px; fill:#8e44ad;">Réception</text>
+
+            <line class="m-wall" x1="400" y1="0" x2="400" y2="455" />
+            <rect fill="white" x="390" y="200" width="20" height="150" /> 
+            
+            <text x="200" y="-30" class="m-text-dim" style="fill:#2c3e50;">Zone 2: Nettoyage (4m)</text>
+            <text x="787" y="-30" class="m-text-dim" style="fill:#2c3e50;">Zones 3+4: Mouture (7,75m)</text>
+
+            <rect class="m-machine-brosse" x="50" y="100" width="120" height="71" />
+            <text x="110" y="135" class="m-text-machine" style="font-size:16px;">BROSSE</text>
+            <circle class="m-machine-cyclone" cx="250" cy="135" r="40" />
+            <text x="250" y="135" class="m-text-machine" style="font-size:12px;">Cy</text>
+            
+            <rect class="m-machine-brosse" x="50" y="250" width="105" height="72" />
+            <text x="102" y="286" class="m-text-machine" style="font-size:16px;">DÉCORT.</text>
+            <circle class="m-machine-cyclone" cx="250" cy="286" r="40" />
+            <text x="250" y="286" class="m-text-machine" style="font-size:12px;">Cy</text>
+
+            <path class="m-flux-arrow" d="M 170 135 L 350 135 L 350 500 L 500 500" />
+
+            <g transform="translate(450, 100)">
+                <rect class="m-machine-ensachage" x="0" y="0" width="152" height="152" />
+                <text x="76" y="76" class="m-text-machine" style="font-size:16px;">Trémie 2m3</text>
+                <line class="m-machine-vis" x1="152" y1="76" x2="250" y2="76" />
+                <circle class="m-machine-meule" cx="300" cy="76" r="50" />
+                <rect class="m-machine-bluterie" x="350" y="36" width="120" height="80" />
+                <text x="410" y="76" class="m-text-machine" style="font-size:16px;">ML100</text>
+                <line class="m-machine-vis" x1="470" y1="76" x2="520" y2="76" />
+                <rect class="m-machine-ensachage" x="520" y="25" width="246" height="103" />
+                <text x="643" y="76" class="m-text-machine" style="font-size:16px;">Rampe 14 Sacs</text>
+            </g>
+
+            <g transform="translate(850, 400)">
+                <rect class="m-machine-ensachage" x="0" y="0" width="100" height="100" />
+                <text x="50" y="50" class="m-text-machine" style="font-size:14px;">Trémie</text>
+                <line class="m-machine-vis" x1="50" y1="100" x2="50" y2="150" />
+                <circle class="m-machine-meule" cx="50" cy="175" r="25" />
+                <rect class="m-machine-bluterie" x="25" y="200" width="50" height="80" />
+                <text x="-30" y="175" class="m-text-machine" style="font-size:16px;">ML50</text>
+                <rect class="m-machine-ensachage" x="-25" y="300" width="150" height="80" />
+                <text x="50" y="340" class="m-text-machine" style="font-size:14px;">8 Sacs</text>
+                <line class="m-machine-vis" x1="50" y1="280" x2="50" y2="300" />
+            </g>
+        </svg>
+
+        <div class="legend">
+            <div class="legend-item"><div class="legend-box" style="background-color: #f39c12; border-color:#d35400;"></div> Moulins (Châssis)</div>
+            <div class="legend-item"><div class="legend-box" style="background-color: #ecf0f1; border-color:#bdc3c7; border-radius:50%;"></div> Meules de pierre</div>
+            <div class="legend-item"><div class="legend-box" style="background-color: #f1c40f; border-color:#f39c12;"></div> Bluteries</div>
+            <div class="legend-item"><div class="legend-box" style="background-color: #ecf0f1; border-color:#95a5a6;"></div> Ensacheuses / Trémies</div>
+            <div class="legend-item"><div class="legend-box" style="background-color: #95a5a6; border-color:#7f8c8d;"></div> Nettoyage (Brosse/Décort.)</div>
+            <div class="legend-item"><div class="legend-box" style="background-color: transparent; border-color:#3498db; border-style:dashed;"></div> Flux du grain</div>
+        </div>
+    </div>
+
+    <div id="optB" class="plan-view">
+        <h2 class="view-title">Détail Machinerie - Option B : Implantation Linéaire</h2>
+        <p class="view-desc">Les cloisons internes sont supprimées. Le flux traverse l'atelier de gauche à droite le long du mur.</p>
+        
+        <svg viewBox="-100 -100 1375 1100" preserveAspectRatio="xMidYMid meet">
+            <defs>
+                <marker id="arrow-blue2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+                    <path d="M 0 2 L 10 5 L 0 8 z" fill="#3498db" />
+                </marker>
+            </defs>
+
+            <rect class="m-wall" x="0" y="0" width="1175" height="900" />
+            <rect fill="rgba(155, 89, 182, 0.1)" stroke="#8e44ad" stroke-width="2" stroke-dasharray="4,2" x="400" y="455" width="375" height="445" />
+            <text x="587" y="677" class="m-text-dim" style="font-size:20px; fill:#8e44ad;">Fosse de Réception</text>
+
+            <line class="m-wall-dashed" x1="400" y1="0" x2="400" y2="455" />
+            <line class="m-wall-dashed" x1="775" y1="0" x2="775" y2="900" />
+
+            <g transform="translate(50, 100)">
+                <rect class="m-machine-brosse" x="0" y="0" width="120" height="71" />
+                <text x="60" y="35" class="m-text-machine" style="font-size:16px;">BROSSE</text>
+                <circle class="m-machine-cyclone" cx="60" cy="110" r="30" />
+                
+                <rect class="m-machine-brosse" x="150" y="0" width="105" height="72" />
+                <text x="202" y="36" class="m-text-machine" style="font-size:16px;">DÉCORT.</text>
+                <circle class="m-machine-cyclone" cx="202" cy="110" r="30" />
+
+                <path class="m-flux-arrow" d="M 280 35 L 350 35" />
+
+                <rect class="m-machine-ensachage" x="380" y="-30" width="152" height="152" />
+                <text x="456" y="46" class="m-text-machine" style="font-size:14px;">Trémie 2m3</text>
+                <line class="m-machine-vis" x1="456" y1="122" x2="456" y2="180" />
+                <circle class="m-machine-meule" cx="456" cy="230" r="50" />
+                <rect class="m-machine-bluterie" x="416" y="280" width="80" height="120" />
+                <text x="360" y="230" class="m-text-machine" style="font-size:16px;">ML100</text>
+                <line class="m-machine-vis" x1="456" y1="400" x2="456" y2="450" />
+                <rect class="m-machine-ensachage" x="333" y="450" width="246" height="103" />
+                <text x="456" y="501" class="m-text-machine" style="font-size:16px;">Rampe 14 Sacs</text>
+
+                <path class="m-flux-arrow" d="M 550 35 L 750 35" />
+
+                <rect class="m-machine-ensachage" x="780" y="-30" width="100" height="100" />
+                <text x="830" y="20" class="m-text-machine" style="font-size:14px;">Trémie</text>
+                <line class="m-machine-vis" x1="830" y1="70" x2="830" y2="110" />
+                <circle class="m-machine-meule" cx="830" cy="135" r="25" />
+                <rect class="m-machine-bluterie" x="805" y="160" width="50" height="80" />
+                <text x="760" y="135" class="m-text-machine" style="font-size:16px;">ML50</text>
+                <line class="m-machine-vis" x1="830" y1="240" x2="830" y2="280" />
+                <rect class="m-machine-ensachage" x="755" y="280" width="150" height="80" />
+                <text x="830" y="320" class="m-text-machine" style="font-size:14px;">8 Sacs</text>
+            </g>
+
+            <rect fill="rgba(46, 204, 113, 0.1)" stroke="#2ecc71" stroke-width="2" stroke-dasharray="4,2" x="50" y="700" width="1050" height="150" />
+            <text x="575" y="775" class="m-text-machine" style="font-size:20px; fill:#27ae60;">Couloir de circulation et d'évacuation (Transpalettes)</text>
+
+        </svg>
+
+        <div class="legend">
+            <div class="legend-item"><div class="legend-box" style="background-color: #f39c12; border-color:#d35400;"></div> Moulins (Châssis)</div>
+            <div class="legend-item"><div class="legend-box" style="background-color: #ecf0f1; border-color:#bdc3c7; border-radius:50%;"></div> Meules de pierre</div>
+            <div class="legend-item"><div class="legend-box" style="background-color: #f1c40f; border-color:#f39c12;"></div> Bluteries</div>
+            <div class="legend-item"><div class="legend-box" style="background-color: #ecf0f1; border-color:#95a5a6;"></div> Ensacheuses / Trémies</div>
+            <div class="legend-item"><div class="legend-box" style="background-color: #95a5a6; border-color:#7f8c8d;"></div> Nettoyage (Brosse/Décort.)</div>
+            <div class="legend-item"><div class="legend-box" style="background-color: transparent; border-color:#3498db; border-style:dashed;"></div> Flux du grain</div>
+        </div>
+    </div>
+
+    <script>
+        function switchView(viewId) {
+            // Cacher toutes les vues
+            document.querySelectorAll('.plan-view').forEach(function(el) {
+                el.classList.remove('active');
+            });
+            // Désactiver tous les boutons
+            document.querySelectorAll('.tab-btn').forEach(function(el) {
+                el.classList.remove('active');
+            });
+            
+            // Afficher la vue demandée et activer le bouton correspondant
+            document.getElementById(viewId).classList.add('active');
+            
+            // Activer le bouton cliqué (gère aussi le cas où un bouton est cliqué)
+            const activeBtn = document.getElementById('btn-' + viewId);
+            if(activeBtn) {
+                activeBtn.classList.add('active');
+            }
+        }
+    </script>
+</body>
+</html>
