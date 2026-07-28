@@ -66,21 +66,28 @@
 
         svg { width: 100%; height: auto; border: 2px solid #bdc3c7; background-color: #fdfdfd; }
 
-        .g-wall-exterior { fill: none; stroke: #34495e; stroke-width: 4; stroke-linecap: square; }
-        .g-wall-interior { fill: none; stroke: #7f8c8d; stroke-width: 2; stroke-dasharray: 6,4; }
+        .wall-exterior { fill: none; stroke: #34495e; stroke-width: 4; stroke-linecap: square; }
+        .wall-interior { fill: none; stroke: #7f8c8d; stroke-width: 2; stroke-dasharray: 6,4; }
         
-        .g-zone-boutique { fill: rgba(52, 152, 219, 0.15); stroke: #2980b9; stroke-width: 1; }
-        .g-zone-meunerie { fill: rgba(241, 196, 15, 0.15); stroke: #f39c12; stroke-width: 1; }
-        .g-zone-fournil  { fill: rgba(231, 76, 60, 0.15); stroke: #c0392b; stroke-width: 1; }
-        .g-zone-stockage { fill: rgba(149, 165, 166, 0.15); stroke: #7f8c8d; stroke-width: 1; }
-        .g-zone-silo     { fill: rgba(155, 89, 182, 0.2); stroke: #8e44ad; stroke-width: 1.5; stroke-dasharray: 4,2; }
+        .zone-boutique { fill: rgba(52, 152, 219, 0.15); stroke: #2980b9; stroke-width: 1; }
+        .zone-meunerie { fill: rgba(241, 196, 15, 0.15); stroke: #f39c12; stroke-width: 1; }
+        .zone-fournil  { fill: rgba(231, 76, 60, 0.15); stroke: #c0392b; stroke-width: 1; }
+        .zone-stockage { fill: rgba(149, 165, 166, 0.15); stroke: #7f8c8d; stroke-width: 1; }
+        .zone-silo     { fill: rgba(155, 89, 182, 0.2); stroke: #8e44ad; stroke-width: 1.5; stroke-dasharray: 4,2; }
 
-        .g-text-titre { font-family: Arial, sans-serif; font-size: 50px; font-weight: bold; fill: #2c3e50; text-anchor: middle; dominant-baseline: middle; }
-        .g-text-surface { font-family: Arial, sans-serif; font-size: 40px; fill: #7f8c8d; text-anchor: middle; dominant-baseline: middle; }
-        .g-text-dim { font-family: Arial, sans-serif; font-size: 35px; fill: #c0392b; text-anchor: middle; }
+        .text-titre { font-family: Arial, sans-serif; font-size: 50px; font-weight: bold; fill: #2c3e50; text-anchor: middle; dominant-baseline: middle; }
+        .text-surface { font-family: Arial, sans-serif; font-size: 40px; fill: #7f8c8d; text-anchor: middle; dominant-baseline: middle; }
+        .text-dim { font-family: Arial, sans-serif; font-size: 35px; fill: #c0392b; text-anchor: middle; }
         
-        .g-door { fill: #ecf0f1; stroke: #e67e22; stroke-width: 2; }
-        .g-door-arc { fill: none; stroke: #e67e22; stroke-width: 1; stroke-dasharray: 2,2; }
+        .door { fill: #ecf0f1; stroke: #e67e22; stroke-width: 2; }
+        .door-arc { fill: none; stroke: #e67e22; stroke-width: 1; stroke-dasharray: 2,2; }
+
+        .m-machine-four { fill: #c0392b; stroke: #922b21; stroke-width: 2; }
+        .m-machine-petrin { fill: #bdc3c7; stroke: #7f8c8d; stroke-width: 2; }
+        .m-machine-pousse { fill: #3498db; stroke: #2980b9; stroke-width: 2; }
+        .m-machine-table { fill: #f3c68f; stroke: #d35400; stroke-width: 2; }
+        .m-container-grain { fill: #2ecc71; stroke: #27ae60; stroke-width: 2; }
+        .m-sanitaire-wall { fill: #ecf0f1; stroke: #95a5a6; stroke-width: 2; }
 
         .m-wall { fill: none; stroke: #34495e; stroke-width: 4; stroke-linecap: square; }
         .m-wall-dashed { fill: none; stroke: #7f8c8d; stroke-width: 2; stroke-dasharray: 6,4; }
@@ -105,143 +112,115 @@
 <body>
 
     <div class="header">
-        <h1>Explorateur d'Implantation - Meunerie de l'Aubetin</h1>
-        <p>Bâtiment Agricole (Dagny) - Échelle respectée pour tous les plans</p>
+        <h1>Implantation - Meunerie & Fournil de l'Aubetin</h1>
+        <p>Bâtiment Agricole (Dagny) - Version 1.2 - Échelle: 1 pixel = 1 cm</p>
     </div>
 
     <div class="tab-container">
-        <button class="tab-btn active" id="btn-global" onclick="switchView('global')"><i class="fa-solid fa-building"></i> 1. Plan du Bâtiment Entier</button>
-        <button class="tab-btn" id="btn-optA" onclick="switchView('optA')"><i class="fa-solid fa-cogs"></i> 2. Machinerie : Option A (en "L")</button>
-        <button class="tab-btn" id="btn-optB" onclick="switchView('optB')"><i class="fa-solid fa-stream"></i> 3. Machinerie : Option B (Linéaire)</button>
+        <button class="tab-btn active" id="btn-global" onclick="switchView('global')"><i class="fa-solid fa-building"></i> 1. Plan Global Révisé</button>
+        <button class="tab-btn" id="btn-boulangerie" onclick="switchView('boulangerie')"><i class="fa-solid fa-bread-slice"></i> 2. Détail Boulangerie (Zones 2, 3, 4)</button>
+        <button class="tab-btn" id="btn-meunerie" onclick="switchView('meunerie')"><i class="fa-solid fa-cogs"></i> 3. Détail Meunerie & Sanitaires (Zones 5, 6)</button>
     </div>
 
     <!-- ================= VUE 1 : PLAN GLOBAL DU BATIMENT ================= -->
     <div id="global" class="plan-view active">
         <h2 class="view-title">Vue d'ensemble de la structure</h2>
-        <p class="view-desc">Répartition des zones d'activités (Boutique, Meunerie, Réception, Fournil, Stockage).</p>
+        <p class="view-desc">Nouvelle répartition : Meunerie en zone 5, et Boulangerie (Marche en avant) répartie sur les zones 2, 3 et 4.</p>
         
         <svg viewBox="-250 -250 4100 1450" preserveAspectRatio="xMidYMid meet">
+            
             <defs>
                 <marker id="arrow" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
                     <path d="M 0 2 L 10 5 L 0 8 z" fill="#c0392b" />
                 </marker>
+                <marker id="arrow-blue3" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+                    <path d="M 0 2 L 10 5 L 0 8 z" fill="#3498db" />
+                </marker>
             </defs>
 
-            <!-- Fonds de zones -->
-            <rect class="g-zone-boutique" x="0" y="0" width="950" height="900" />
-            <rect class="g-zone-meunerie" x="950" y="0" width="400" height="900" />
-            <rect class="g-zone-silo" x="1350" y="455" width="375" height="445" />
-            <rect class="g-zone-meunerie" x="1350" y="0" width="375" height="455" />
-            <rect class="g-zone-meunerie" x="1725" y="0" width="400" height="900" />
-            <rect class="g-zone-fournil" x="2125" y="0" width="1250" height="900" />
-            <rect class="g-zone-stockage" x="3375" y="0" width="235" height="900" />
+            <rect class="zone-boutique" x="0" y="0" width="950" height="900" />
+            <rect class="zone-fournil" x="950" y="0" width="400" height="900" />
+            <rect class="zone-silo" x="1350" y="455" width="375" height="445" />
+            <rect class="zone-fournil" x="1350" y="0" width="375" height="455" />
+            <rect class="zone-fournil" x="1725" y="0" width="400" height="900" />
+            <rect class="zone-meunerie" x="2125" y="0" width="1250" height="900" />
+            <rect class="zone-stockage" x="3375" y="0" width="235" height="900" />
 
             <!-- Murs -->
-            <rect class="g-wall-exterior" x="0" y="0" width="3610" height="900" />
-            <line class="g-wall-interior" x1="950" y1="0" x2="950" y2="900" />
-            <line class="g-wall-interior" x1="1350" y1="0" x2="1350" y2="900" />
-            <line class="g-wall-interior" x1="1725" y1="0" x2="1725" y2="900" />
-            <line class="g-wall-interior" x1="2125" y1="0" x2="2125" y2="900" />
-            <line class="g-wall-interior" x1="3375" y1="0" x2="3375" y2="900" />
-            <line class="g-wall-interior" x1="1350" y1="455" x2="1725" y2="455" />
+            <rect class="wall-exterior" x="0" y="0" width="3610" height="900" />
+            <line class="wall-interior" x1="950" y1="0" x2="950" y2="900" />
+            <line class="wall-interior" x1="1350" y1="0" x2="1350" y2="900" />
+            <line class="wall-interior" x1="1725" y1="0" x2="1725" y2="900" />
+            <line class="wall-interior" x1="2125" y1="0" x2="2125" y2="900" />
+            <line class="wall-interior" x1="3375" y1="0" x2="3375" y2="900" />
+            <line class="wall-interior" x1="1350" y1="455" x2="1725" y2="455" />
             
-            <!-- Portes Façade (Bas) -->
-            <rect class="g-door" x="400" y="890" width="200" height="20" /> 
-            <rect class="g-door" x="1050" y="890" width="200" height="20" />
-            <rect class="g-door" x="2600" y="890" width="300" height="20" />
-            <rect class="g-door" x="3390" y="890" width="200" height="20" />
+            <!-- Portes Façade -->
+            <rect class="door" x="400" y="890" width="200" height="20" /> 
+            <rect class="door" x="1050" y="890" width="200" height="20" />
+            <rect class="door" x="3390" y="890" width="200" height="20" />
 
             <!-- Ouvertures intérieures -->
             <rect fill="white" x="940" y="400" width="20" height="150" />
-            <text x="870" y="475" class="g-text-dim" style="fill:#34495e; font-size:25px;">Ouverture</text>
             
-            <!-- Portes intérieures -->
-            <rect fill="white" x="1340" y="200" width="20" height="90" />
-            <path class="g-door-arc" d="M 1350 200 A 90 90 0 0 1 1260 290" />
-            <line stroke="#e67e22" x1="1350" y1="290" x2="1260" y2="290" />
+            <text x="475" y="410" class="text-titre">1. BOUTIQUE</text>
+            <text x="475" y="470" class="text-surface">85 m²</text>
             
-            <rect fill="white" x="1715" y="700" width="20" height="90" />
-            <path class="g-door-arc" d="M 1725 700 A 90 90 0 0 0 1815 790" />
-            <line stroke="#e67e22" x1="1725" y1="790" x2="1815" y2="790" />
+            <text x="1150" y="200" class="text-titre">2. CUISSON</text>
+            <text x="1150" y="260" class="text-surface">36 m²</text>
+            <text x="1150" y="310" class="text-surface" style="font-size:30px;">(Emballage)</text>
             
-            <!-- Balance et Ouverture Fournil (CORRIGÉS) -->
-            <rect fill="#bdc3c7" stroke="#7f8c8d" stroke-width="2" x="2135" y="250" width="80" height="150" /> 
-            <text x="2175" y="325" class="g-text-dim" transform="rotate(-90 2175 325)" style="fill:#2c3e50; font-weight:bold; font-size:25px;">BALANCE</text>
-            
-            <rect fill="white" x="2115" y="450" width="20" height="200" />
-            <text x="2040" y="550" class="g-text-dim" style="fill:#34495e; font-size:25px;">Ouverture</text>
+            <text x="1537" y="600" class="text-titre" style="fill:#8e44ad;">3. GRAIN</text>
+            <text x="1537" y="660" class="text-titre" style="fill:#8e44ad;">PROPRE</text>
+            <text x="1537" y="720" class="text-surface" style="font-size:30px; fill:#27ae60;">(Container)</text>
 
-            <rect fill="white" x="3365" y="600" width="20" height="150" />
-            <path class="g-door-arc" d="M 3375 600 A 150 150 0 0 0 3525 750" />
-            <line stroke="#e67e22" x1="3375" y1="750" x2="3525" y2="750" />
+            <text x="1537" y="220" class="text-titre">POUSSE</text>
+            
+            <text x="1925" y="410" class="text-titre">4. PÉTRISSAGE</text>
+            <text x="1925" y="470" class="text-surface">36 m²</text>
+            
+            <text x="2750" y="410" class="text-titre">5. MEUNERIE</text>
+            <text x="2750" y="470" class="text-surface">112,5 m²</text>
+            
+            <text x="3492" y="450" class="text-titre" transform="rotate(-90 3492 450)">6. SANITAIRES</text>
 
-            <!-- Textes des Zones -->
-            <text x="475" y="410" class="g-text-titre">1. BOUTIQUE</text>
-            <text x="475" y="470" class="g-text-surface">85 m²</text>
-            
-            <text x="1150" y="200" class="g-text-titre">2. MEUNERIE</text>
-            <text x="1150" y="260" class="g-text-surface">36 m²</text>
-            
-            <text x="1537" y="640" class="g-text-titre" style="fill:#8e44ad;">3. RÉCEPTION</text>
-            <text x="1537" y="700" class="g-text-surface">Silo enterré</text>
-            <text x="1537" y="740" class="g-text-surface" style="font-size:25px; fill:#27ae60;">(Descente Grain)</text>
+            <!-- Ligne Convoyeur -->
+            <path fill="none" stroke="#3498db" stroke-width="6" stroke-dasharray="10,5" marker-end="url(#arrow-blue3)" d="M 1600 650 L 2125 650" />
+            <text x="1925" y="620" class="text-dim" style="fill:#3498db; font-size:30px;">Convoyeur Grain -></text>
 
-            <text x="1537" y="220" class="g-text-titre">MEUNERIE</text>
-            
-            <text x="1925" y="410" class="g-text-titre">4. MEUNERIE</text>
-            <text x="1925" y="470" class="g-text-surface">36 m²</text>
-            
-            <text x="2750" y="410" class="g-text-titre">5. FOURNIL</text>
-            <text x="2750" y="470" class="g-text-surface">112,5 m²</text>
-            
-            <text x="3492" y="450" class="g-text-titre" transform="rotate(-90 3492 450)">6. STOCK.</text>
-            <text x="3492" y="450" class="g-text-surface" transform="translate(60, 0) rotate(-90 3492 450)">20 m²</text>
-
-            <!-- Cotation (CORRIGÉE) -->
+            <!-- Cotation globale -->
             <line x1="0" y1="-120" x2="3610" y2="-120" stroke="#c0392b" stroke-width="4" marker-start="url(#arrow)" marker-end="url(#arrow)" />
-            <text x="1805" y="-160" class="g-text-dim" style="font-size:45px; font-weight:bold;">Longueur Totale : 36,10 m</text>
+            <text x="1805" y="-160" class="text-dim" style="font-size:45px; font-weight:bold;">Longueur Totale : 36,10 m</text>
             
+            <!-- Cotations (Bas) -->
             <line x1="0" y1="1030" x2="950" y2="1030" stroke="#c0392b" stroke-width="3" marker-start="url(#arrow)" marker-end="url(#arrow)" />
-            <text x="475" y="1090" class="g-text-dim">9,50 m</text>
-
+            <text x="475" y="1090" class="text-dim">9,50 m</text>
             <line x1="950" y1="1030" x2="1350" y2="1030" stroke="#c0392b" stroke-width="3" marker-start="url(#arrow)" marker-end="url(#arrow)" />
-            <text x="1150" y="1090" class="g-text-dim">4,00 m</text>
-
+            <text x="1150" y="1090" class="text-dim">4,00 m</text>
             <line x1="1350" y1="1030" x2="1725" y2="1030" stroke="#c0392b" stroke-width="3" marker-start="url(#arrow)" marker-end="url(#arrow)" />
-            <text x="1537" y="1090" class="g-text-dim">3,75 m</text>
-
+            <text x="1537" y="1090" class="text-dim">3,75 m</text>
             <line x1="1725" y1="1030" x2="2125" y2="1030" stroke="#c0392b" stroke-width="3" marker-start="url(#arrow)" marker-end="url(#arrow)" />
-            <text x="1925" y="1090" class="g-text-dim">4,00 m</text>
-
+            <text x="1925" y="1090" class="text-dim">4,00 m</text>
             <line x1="2125" y1="1030" x2="3375" y2="1030" stroke="#c0392b" stroke-width="3" marker-start="url(#arrow)" marker-end="url(#arrow)" />
-            <text x="2750" y="1090" class="g-text-dim">12,50 m</text>
-
+            <text x="2750" y="1090" class="text-dim">12,50 m</text>
             <line x1="3375" y1="1030" x2="3610" y2="1030" stroke="#c0392b" stroke-width="3" marker-start="url(#arrow)" marker-end="url(#arrow)" />
-            <text x="3492" y="1090" class="g-text-dim">2,35 m</text>
-
+            <text x="3492" y="1090" class="text-dim">2,35 m</text>
             <line x1="-120" y1="0" x2="-120" y2="900" stroke="#c0392b" stroke-width="4" marker-start="url(#arrow)" marker-end="url(#arrow)" />
-            <text x="-160" y="450" class="g-text-dim" style="font-size:45px; font-weight:bold;" transform="rotate(-90 -160 450)">Largeur : 9,00 m</text>
-
-            <!-- Cotation interne decalee -->
-            <line x1="1290" y1="455" x2="1290" y2="900" stroke="#c0392b" stroke-width="2" marker-start="url(#arrow)" marker-end="url(#arrow)" />
-            <line x1="1290" y1="455" x2="1350" y2="455" stroke="#c0392b" stroke-width="1" stroke-dasharray="2,2" />
-            <text x="1255" y="677" class="g-text-dim" transform="rotate(-90 1255 677)">4,45 m</text>
-
+            <text x="-160" y="450" class="text-dim" style="font-size:45px; font-weight:bold;" transform="rotate(-90 -160 450)">Largeur : 9,00 m</text>
         </svg>
 
         <div class="legend">
             <div class="legend-item"><div class="legend-box" style="background-color: rgba(52, 152, 219, 0.15);"></div> Boutique</div>
+            <div class="legend-item"><div class="legend-box" style="background-color: rgba(231, 76, 60, 0.15);"></div> Boulangerie (Fournil)</div>
+            <div class="legend-item"><div class="legend-box" style="background-color: rgba(155, 89, 182, 0.2); border-color:#8e44ad; border-style:dashed;"></div> Zone Grain Propre</div>
             <div class="legend-item"><div class="legend-box" style="background-color: rgba(241, 196, 15, 0.15);"></div> Meunerie</div>
-            <div class="legend-item"><div class="legend-box" style="background-color: rgba(155, 89, 182, 0.2); border-color:#8e44ad; border-style:dashed;"></div> Fosse / Silo Grain</div>
-            <div class="legend-item"><div class="legend-box" style="background-color: rgba(231, 76, 60, 0.15);"></div> Fournil</div>
-            <div class="legend-item"><div class="legend-box" style="background-color: rgba(149, 165, 166, 0.15);"></div> Stockage</div>
-            <div class="legend-item"><div class="legend-box" style="background-color: #ecf0f1; border-color:#e67e22; border-width:2px;"></div> Portes Agricoles</div>
+            <div class="legend-item"><div class="legend-box" style="background-color: rgba(149, 165, 166, 0.15);"></div> Sanitaires</div>
         </div>
     </div>
 
-    <div id="optA" class="plan-view">
-        <h2 class="view-title">Détail Machinerie - Option A : Implantation en "L"</h2>
-        <p class="view-desc">La préparation (Brosse/Décortiqueuse) est isolée dans la Zone 2. Les moulins s'étendent sur les Zones 3 et 4.</p>
+    <div id="boulangerie" class="plan-view">
+        <h2 class="view-title">Détail Boulangerie (Zones 2, 3 et 4)</h2>
+        <p class="view-desc">Organisation en "Marche en avant" : Pétrissage (Zone 4) -> Fermentation/Pousse (Zone 3 Haut) -> Cuisson & Emballage (Zone 2).</p>
         
         <svg viewBox="-100 -100 1375 1100" preserveAspectRatio="xMidYMid meet">
             <defs>
@@ -250,128 +229,179 @@
                 </marker>
             </defs>
 
+            <!-- Murs -->
             <rect class="m-wall" x="0" y="0" width="1175" height="900" />
-            <rect fill="rgba(155, 89, 182, 0.1)" stroke="#8e44ad" stroke-width="2" stroke-dasharray="4,2" x="400" y="455" width="375" height="445" />
-            <text x="587" y="677" class="m-text-dim" style="font-size:20px; fill:#8e44ad;">Fosse de</text>
-            <text x="587" y="707" class="m-text-dim" style="font-size:20px; fill:#8e44ad;">Réception</text>
+            <line class="m-wall-dashed" x1="400" y1="0" x2="400" y2="900" />
+            <line class="m-wall-dashed" x1="775" y1="0" x2="775" y2="900" />
+            <line class="m-wall-dashed" x1="400" y1="455" x2="775" y2="455" />
 
-            <line class="m-wall" x1="400" y1="0" x2="400" y2="455" />
-            <rect fill="white" x="390" y="200" width="20" height="150" /> 
-            
-            <text x="200" y="-30" class="m-text-dim" style="fill:#2c3e50;">Zone 2: Nettoyage (4m)</text>
-            <text x="787" y="-30" class="m-text-dim" style="fill:#2c3e50;">Zones 3+4: Mouture (7,75m)</text>
+            <text x="200" y="-30" class="m-text-dim" style="fill:#c0392b;">Zone 2: Cuisson & Emballage</text>
+            <text x="587" y="-30" class="m-text-dim" style="fill:#2980b9;">Zone 3(H): Pousse</text>
+            <text x="975" y="-30" class="m-text-dim" style="fill:#7f8c8d;">Zone 4: Pétrissage</text>
 
-            <rect class="m-machine-brosse" x="50" y="100" width="120" height="71" />
-            <text x="110" y="135" class="m-text-machine" style="font-size:16px;">BROSSE</text>
-            <circle class="m-machine-cyclone" cx="250" cy="135" r="40" />
-            <text x="250" y="135" class="m-text-machine" style="font-size:12px;">Cy</text>
-            
-            <rect class="m-machine-brosse" x="50" y="250" width="105" height="72" />
-            <text x="102" y="286" class="m-text-machine" style="font-size:16px;">DÉCORT.</text>
-            <circle class="m-machine-cyclone" cx="250" cy="286" r="40" />
-            <text x="250" y="286" class="m-text-machine" style="font-size:12px;">Cy</text>
+            <!-- = ZONE 4 : PETRISSAGE = -->
+            <g transform="translate(800, 50)">
+                <rect class="m-machine-petrin" x="50" y="50" width="150" height="150" rx="30" />
+                <circle fill="white" cx="125" cy="125" r="45" />
+                <text x="125" y="125" class="m-text-machine" style="font-size:20px;">Pétrin 1</text>
 
-            <path class="m-flux-arrow" d="M 170 135 L 350 135 L 350 500 L 500 500" />
+                <rect class="m-machine-petrin" x="220" y="50" width="150" height="150" rx="30" />
+                <circle fill="white" cx="295" cy="125" r="45" />
+                <text x="295" y="125" class="m-text-machine" style="font-size:20px;">Pétrin 2</text>
 
-            <g transform="translate(450, 100)">
-                <rect class="m-machine-ensachage" x="0" y="0" width="152" height="152" />
-                <text x="76" y="76" class="m-text-machine" style="font-size:16px;">Trémie 2m3</text>
-                <line class="m-machine-vis" x1="152" y1="76" x2="250" y2="76" />
-                <circle class="m-machine-meule" cx="300" cy="76" r="50" />
-                <rect class="m-machine-bluterie" x="350" y="36" width="120" height="80" />
-                <text x="410" y="76" class="m-text-machine" style="font-size:16px;">ML100</text>
-                <line class="m-machine-vis" x1="470" y1="76" x2="520" y2="76" />
-                <rect class="m-machine-ensachage" x="520" y="25" width="246" height="103" />
-                <text x="643" y="76" class="m-text-machine" style="font-size:16px;">Rampe 14 Sacs</text>
+                <rect class="m-machine-table" x="50" y="275" width="320" height="150" />
+                <text x="210" y="350" class="m-text-machine" style="font-size:25px;">Table de Façonnage</text>
             </g>
 
-            <g transform="translate(850, 400)">
-                <rect class="m-machine-ensachage" x="0" y="0" width="100" height="100" />
-                <text x="50" y="50" class="m-text-machine" style="font-size:14px;">Trémie</text>
-                <line class="m-machine-vis" x1="50" y1="100" x2="50" y2="150" />
-                <circle class="m-machine-meule" cx="50" cy="175" r="25" />
-                <rect class="m-machine-bluterie" x="25" y="200" width="50" height="80" />
-                <text x="-30" y="175" class="m-text-machine" style="font-size:16px;">ML50</text>
-                <rect class="m-machine-ensachage" x="-25" y="300" width="150" height="80" />
-                <text x="50" y="340" class="m-text-machine" style="font-size:14px;">8 Sacs</text>
-                <line class="m-machine-vis" x1="50" y1="280" x2="50" y2="300" />
+            <!-- = ZONE 3 HAUT : POUSSE = -->
+            <g transform="translate(425, 50)">
+                <rect class="m-machine-pousse" x="25" y="50" width="300" height="150" />
+                <text x="175" y="125" class="m-text-machine" style="font-size:25px; fill:white;">Chambre Pousse</text>
+                
+                <rect class="m-machine-pousse" x="25" y="220" width="300" height="150" />
+                <text x="175" y="295" class="m-text-machine" style="font-size:25px; fill:white;">Chambre Blocage</text>
+            </g>
+
+            <!-- = ZONE 3 BAS : GRAIN PROPRE = -->
+            <g transform="translate(400, 455)">
+                <rect class="zone-silo" x="0" y="0" width="375" height="445" />
+                <rect class="m-container-grain" x="50" y="50" width="275" height="200" />
+                <text x="187" y="140" class="m-text-machine" style="font-size:28px; fill:white;">CONTAINER</text>
+                <text x="187" y="180" class="m-text-machine" style="font-size:22px; fill:white;">(Grain Propre)</text>
+                
+                <!-- Convoyeur sortant -->
+                <line fill="none" stroke="#3498db" stroke-width="8" x1="325" y1="150" x2="850" y2="150" />
+                <path fill="none" stroke="#3498db" stroke-width="8" marker-end="url(#arrow-blue)" d="M 350 110 L 750 110" />
+                <text x="550" y="80" class="m-text-dim" style="font-size:25px; fill:#3498db;">Transporteur vers Meunerie -></text>
+            </g>
+
+            <!-- = ZONE 2 : CUISSON & EMBALLAGE = -->
+            <g transform="translate(25, 50)">
+                <rect class="m-machine-four" x="25" y="50" width="320" height="300" />
+                <rect fill="#e74c3c" x="60" y="280" width="250" height="25" />
+                <text x="185" y="170" class="m-text-machine" style="font-size:35px; fill:white;">FOURS</text>
+                <text x="185" y="210" class="m-text-machine" style="font-size:22px; fill:white;">(Ventilés / Soles)</text>
+
+                <rect class="m-machine-table" x="25" y="425" width="320" height="150" />
+                <text x="185" y="500" class="m-text-machine" style="font-size:25px;">Table d'Emballage</text>
+                
+                <rect class="m-machine-table" x="25" y="650" width="320" height="120" />
+                <text x="185" y="710" class="m-text-machine" style="font-size:25px;">Chariots / Échelles Pains</text>
             </g>
         </svg>
 
         <div class="legend">
-            <div class="legend-item"><div class="legend-box" style="background-color: #f39c12; border-color:#d35400;"></div> Moulins (Châssis)</div>
-            <div class="legend-item"><div class="legend-box" style="background-color: #ecf0f1; border-color:#bdc3c7; border-radius:50%;"></div> Meules de pierre</div>
-            <div class="legend-item"><div class="legend-box" style="background-color: #f1c40f; border-color:#f39c12;"></div> Bluteries</div>
-            <div class="legend-item"><div class="legend-box" style="background-color: #ecf0f1; border-color:#95a5a6;"></div> Ensacheuses / Trémies</div>
-            <div class="legend-item"><div class="legend-box" style="background-color: #95a5a6; border-color:#7f8c8d;"></div> Nettoyage (Brosse/Décort.)</div>
-            <div class="legend-item"><div class="legend-box" style="background-color: transparent; border-color:#3498db; border-style:dashed;"></div> Flux du grain</div>
+            <div class="legend-item"><div class="legend-box" style="background-color: #bdc3c7; border-color:#7f8c8d;"></div> Pétrins</div>
+            <div class="legend-item"><div class="legend-box" style="background-color: #3498db; border-color:#2980b9;"></div> Chambres Froid (Pousse/Blocage)</div>
+            <div class="legend-item"><div class="legend-box" style="background-color: #c0392b; border-color:#922b21;"></div> Cuisson (Fours)</div>
+            <div class="legend-item"><div class="legend-box" style="background-color: #f3c68f; border-color:#d35400;"></div> Tables Inox / Bois</div>
+            <div class="legend-item"><div class="legend-box" style="background-color: #2ecc71; border-color:#27ae60;"></div> Container Grain Propre</div>
         </div>
     </div>
 
-    <div id="optB" class="plan-view">
-        <h2 class="view-title">Détail Machinerie - Option B : Implantation Linéaire</h2>
-        <p class="view-desc">Les cloisons internes sont supprimées. Le flux traverse l'atelier de gauche à droite le long du mur.</p>
+    <div id="meunerie" class="plan-view">
+        <h2 class="view-title">Détail Meunerie Astréïa & Sanitaires (Zones 5 et 6)</h2>
+        <p class="view-desc">Le grain arrive par le transporteur depuis la zone 3. Un élévateur remplit les trémies de stockage en surplomb des deux moulins.</p>
         
-        <svg viewBox="-100 -100 1375 1100" preserveAspectRatio="xMidYMid meet">
+        <svg viewBox="-100 -100 1685 1100" preserveAspectRatio="xMidYMid meet">
             <defs>
                 <marker id="arrow-blue2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
                     <path d="M 0 2 L 10 5 L 0 8 z" fill="#3498db" />
                 </marker>
             </defs>
 
-            <rect class="m-wall" x="0" y="0" width="1175" height="900" />
-            <rect fill="rgba(155, 89, 182, 0.1)" stroke="#8e44ad" stroke-width="2" stroke-dasharray="4,2" x="400" y="455" width="375" height="445" />
-            <text x="587" y="677" class="m-text-dim" style="font-size:20px; fill:#8e44ad;">Fosse de Réception</text>
+            <!-- Murs extérieurs (1250 Zone 5 + 235 Zone 6 = 1485) -->
+            <rect class="m-wall" x="0" y="0" width="1485" height="900" />
+            <!-- Cloison Séparation Sanitaires -->
+            <line class="m-wall-dashed" x1="1250" y1="0" x2="1250" y2="900" />
 
-            <line class="m-wall-dashed" x1="400" y1="0" x2="400" y2="455" />
-            <line class="m-wall-dashed" x1="775" y1="0" x2="775" y2="900" />
+            <text x="625" y="-30" class="m-text-dim" style="fill:#f39c12; font-weight:bold;">Zone 5: MEUNERIE (12,50m)</text>
+            <text x="1367" y="-30" class="m-text-dim" style="fill:#7f8c8d;">Zone 6: SANITAIRES</text>
 
-            <g transform="translate(50, 100)">
-                <rect class="m-machine-brosse" x="0" y="0" width="120" height="71" />
-                <text x="60" y="35" class="m-text-machine" style="font-size:16px;">BROSSE</text>
-                <circle class="m-machine-cyclone" cx="60" cy="110" r="30" />
-                
-                <rect class="m-machine-brosse" x="150" y="0" width="105" height="72" />
-                <text x="202" y="36" class="m-text-machine" style="font-size:16px;">DÉCORT.</text>
-                <circle class="m-machine-cyclone" cx="202" cy="110" r="30" />
+            <!-- = ZONE 5 : MEUNERIE = -->
+            <!-- Arrivée du convoyeur de la zone 3 -->
+            <path fill="none" stroke="#3498db" stroke-width="8" marker-end="url(#arrow-blue2)" d="M -50 600 L 120 600" />
+            <text x="35" y="560" class="m-text-machine" style="font-size:22px; fill:#3498db;">Arrivée du Grain</text>
 
-                <path class="m-flux-arrow" d="M 280 35 L 350 35" />
+            <!-- Elévateur principal -->
+            <rect fill="#7f8c8d" stroke="#34495e" stroke-width="4" x="120" y="550" width="100" height="120" />
+            <text x="170" y="610" class="m-text-machine" style="font-size:16px; fill:white;">ELÉVATEUR</text>
 
-                <rect class="m-machine-ensachage" x="380" y="-30" width="152" height="152" />
-                <text x="456" y="46" class="m-text-machine" style="font-size:14px;">Trémie 2m3</text>
-                <line class="m-machine-vis" x1="456" y1="122" x2="456" y2="180" />
-                <circle class="m-machine-meule" cx="456" cy="230" r="50" />
-                <rect class="m-machine-bluterie" x="416" y="280" width="80" height="120" />
-                <text x="360" y="230" class="m-text-machine" style="font-size:16px;">ML100</text>
-                <line class="m-machine-vis" x1="456" y1="400" x2="456" y2="450" />
-                <rect class="m-machine-ensachage" x="333" y="450" width="246" height="103" />
-                <text x="456" y="501" class="m-text-machine" style="font-size:16px;">Rampe 14 Sacs</text>
+            <path fill="none" stroke="#3498db" stroke-width="8" marker-end="url(#arrow-blue2)" d="M 170 550 L 170 200 L 400 200" />
 
-                <path class="m-flux-arrow" d="M 550 35 L 750 35" />
+            <!-- Trémies en surplomb (dessinées en pointillés) -->
+            <g transform="translate(350, 50)">
+                <rect fill="rgba(241, 196, 15, 0.2)" stroke="#f39c12" stroke-width="4" stroke-dasharray="10,5" x="0" y="0" width="280" height="280" />
+                <text x="140" y="130" class="m-text-machine" style="font-size:30px; fill:#d35400;">Trémie ML100</text>
+                <text x="140" y="170" class="m-text-machine" style="font-size:22px; fill:#d35400;">(Suspendue Étage)</text>
 
-                <rect class="m-machine-ensachage" x="780" y="-30" width="100" height="100" />
-                <text x="830" y="20" class="m-text-machine" style="font-size:14px;">Trémie</text>
-                <line class="m-machine-vis" x1="830" y1="70" x2="830" y2="110" />
-                <circle class="m-machine-meule" cx="830" cy="135" r="25" />
-                <rect class="m-machine-bluterie" x="805" y="160" width="50" height="80" />
-                <text x="760" y="135" class="m-text-machine" style="font-size:16px;">ML50</text>
-                <line class="m-machine-vis" x1="830" y1="240" x2="830" y2="280" />
-                <rect class="m-machine-ensachage" x="755" y="280" width="150" height="80" />
-                <text x="830" y="320" class="m-text-machine" style="font-size:14px;">8 Sacs</text>
+                <rect fill="rgba(241, 196, 15, 0.2)" stroke="#f39c12" stroke-width="4" stroke-dasharray="10,5" x="500" y="50" width="200" height="200" />
+                <text x="600" y="140" class="m-text-machine" style="font-size:25px; fill:#d35400;">Trémie ML50</text>
+                <text x="600" y="175" class="m-text-machine" style="font-size:18px; fill:#d35400;">(Étage)</text>
             </g>
 
-            <rect fill="rgba(46, 204, 113, 0.1)" stroke="#2ecc71" stroke-width="2" stroke-dasharray="4,2" x="50" y="700" width="1050" height="150" />
-            <text x="575" y="775" class="m-text-machine" style="font-size:20px; fill:#27ae60;">Couloir de circulation et d'évacuation (Transpalettes)</text>
+            <!-- Ligne de répartition de grain en l'air -->
+            <path fill="none" stroke="#3498db" stroke-width="6" marker-end="url(#arrow-blue2)" d="M 400 200 L 450 170" />
+            <path fill="none" stroke="#3498db" stroke-width="6" marker-end="url(#arrow-blue2)" d="M 600 170 L 925 170" />
 
+            <!-- Moulin ML100 Révolution sous la trémie -->
+            <g transform="translate(420, 380)">
+                <circle class="m-machine-meule" cx="75" cy="75" r="75" />
+                <rect class="m-machine-bluterie" x="125" y="35" width="120" height="80" />
+                <text x="185" y="75" class="m-text-machine" style="font-size:25px;">ML100</text>
+                
+                <!-- Vis Relevage Farine -->
+                <line class="m-machine-vis" x1="245" y1="75" x2="300" y2="75" />
+                <!-- Ensacheuse 14 sacs -->
+                <rect class="m-machine-ensachage" x="300" y="25" width="300" height="120" />
+                <text x="450" y="85" class="m-text-machine" style="font-size:22px;">Rampe 14 Sacs</text>
+            </g>
+
+            <!-- Moulin ML50 sous la trémie -->
+            <g transform="translate(900, 420)">
+                <circle class="m-machine-meule" cx="50" cy="50" r="50" />
+                <rect class="m-machine-bluterie" x="75" y="20" width="80" height="60" />
+                <text x="115" y="50" class="m-text-machine" style="font-size:20px;">ML50</text>
+                
+                <!-- Vis Relevage -->
+                <line class="m-machine-vis" x1="155" y1="50" x2="200" y2="50" />
+                <!-- Ensacheuse 8 sacs -->
+                <rect class="m-machine-ensachage" x="200" y="10" width="180" height="90" />
+                <text x="290" y="55" class="m-text-machine" style="font-size:20px;">8 Sacs</text>
+            </g>
+
+            <!-- Espace Logistique -->
+            <rect fill="rgba(149, 165, 166, 0.1)" stroke="#7f8c8d" stroke-width="2" stroke-dasharray="6,4" x="100" y="700" width="1100" height="150" />
+            <text x="650" y="775" class="m-text-machine" style="font-size:25px; fill:#7f8c8d;">Zone de circulation, stockage palettes & manutention</text>
+
+            <!-- = ZONE 6 : SANITAIRES ET SOCIAUX = -->
+            <g transform="translate(1250, 0)">
+                <!-- WC -->
+                <rect class="m-sanitaire-wall" x="0" y="0" width="235" height="150" />
+                <text x="117" y="75" class="m-text-machine" style="font-size:25px;">Toilettes</text>
+                
+                <!-- Douche -->
+                <rect class="m-sanitaire-wall" x="0" y="150" width="235" height="150" />
+                <text x="117" y="225" class="m-text-machine" style="font-size:25px;">Douches</text>
+                
+                <!-- Kitchenette / Repos -->
+                <rect class="m-sanitaire-wall" x="0" y="300" width="235" height="300" />
+                <text x="117" y="440" class="m-text-machine" style="font-size:30px;">Kitchenette</text>
+                <text x="117" y="480" class="m-text-machine" style="font-size:20px;">(Salle de repos)</text>
+
+                <!-- Stockage divers -->
+                <rect class="m-sanitaire-wall" x="0" y="600" width="235" height="300" />
+                <text x="117" y="750" class="m-text-machine" style="font-size:25px;">Local Entretien</text>
+            </g>
         </svg>
 
         <div class="legend">
-            <div class="legend-item"><div class="legend-box" style="background-color: #f39c12; border-color:#d35400;"></div> Moulins (Châssis)</div>
-            <div class="legend-item"><div class="legend-box" style="background-color: #ecf0f1; border-color:#bdc3c7; border-radius:50%;"></div> Meules de pierre</div>
+            <div class="legend-item"><div class="legend-box" style="background-color: rgba(241, 196, 15, 0.2); border-color:#f39c12; border-style:dashed;"></div> Trémies Stockage (À l'étage)</div>
+            <div class="legend-item"><div class="legend-box" style="background-color: #ecf0f1; border-color:#bdc3c7; border-radius:50%;"></div> Meules Astréïa</div>
             <div class="legend-item"><div class="legend-box" style="background-color: #f1c40f; border-color:#f39c12;"></div> Bluteries</div>
-            <div class="legend-item"><div class="legend-box" style="background-color: #ecf0f1; border-color:#95a5a6;"></div> Ensacheuses / Trémies</div>
-            <div class="legend-item"><div class="legend-box" style="background-color: #95a5a6; border-color:#7f8c8d;"></div> Nettoyage (Brosse/Décort.)</div>
-            <div class="legend-item"><div class="legend-box" style="background-color: transparent; border-color:#3498db; border-style:dashed;"></div> Flux du grain</div>
+            <div class="legend-item"><div class="legend-box" style="background-color: #ecf0f1; border-color:#95a5a6;"></div> Ensacheuses</div>
+            <div class="legend-item"><div class="legend-box" style="background-color: #ecf0f1; border-color:#95a5a6;"></div> Bloc Sanitaire</div>
+            <div class="legend-item"><div class="legend-box" style="background-color: transparent; border-color:#3498db; border-style:dashed;"></div> Flux du grain (Convoyeur + Élevateur)</div>
         </div>
     </div>
 
