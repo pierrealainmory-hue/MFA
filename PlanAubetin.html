@@ -122,6 +122,40 @@
 </head>
 <body>
 
+    <div id="custom-object-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center; font-family:'Inter', sans-serif;">
+        <div style="background:white; padding:20px; border-radius:8px; width:350px; box-shadow:0 10px 25px rgba(0,0,0,0.2);">
+            <h3 style="margin-top:0; color:#1e293b; font-size:18px;">Créer un élément sur-mesure</h3>
+            
+            <label style="display:block; margin-top:15px; font-size:12px; color:#475569; font-weight:bold;">Nom de l'élément</label>
+            <input type="text" id="co-name" placeholder="Ex: Echelle à bacs" style="width:100%; padding:8px; margin-top:4px; border:1px solid #cbd5e1; border-radius:4px; box-sizing:border-box; outline:none;">
+            
+            <div style="display:flex; gap:10px; margin-top:15px;">
+                <div style="flex:1;">
+                    <label style="font-size:12px; color:#475569; font-weight:bold;">Largeur (X) cm</label>
+                    <input type="number" id="co-width" value="100" style="width:100%; padding:8px; margin-top:4px; border:1px solid #cbd5e1; border-radius:4px; box-sizing:border-box; outline:none;">
+                </div>
+                <div style="flex:1;">
+                    <label style="font-size:12px; color:#475569; font-weight:bold;">Profondeur (Y) cm</label>
+                    <input type="number" id="co-height" value="100" style="width:100%; padding:8px; margin-top:4px; border:1px solid #cbd5e1; border-radius:4px; box-sizing:border-box; outline:none;">
+                </div>
+            </div>
+
+            <label style="display:block; margin-top:15px; font-size:12px; color:#475569; font-weight:bold;">Affectation (Couleur)</label>
+            <select id="co-category" style="width:100%; padding:8px; margin-top:4px; border:1px solid #cbd5e1; border-radius:4px; box-sizing:border-box; outline:none;">
+                <option value="cat-astreia">Meunerie (Jaune/Orange)</option>
+                <option value="cat-fournil">Fournil (Rouge)</option>
+                <option value="cat-stockage">Stockage & Logistique (Violet)</option>
+                <option value="cat-structure">Mobilier & Sanitaire (Gris)</option>
+                <option value="cat-zone">Zone Virtuelle (Bleu pointillé)</option>
+            </select>
+
+            <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:25px;">
+                <button onclick="closeCustomObjectModal()" style="padding:8px 12px; border:none; background:#e2e8f0; color:#475569; border-radius:4px; cursor:pointer;">Annuler</button>
+                <button onclick="createCustomObject()" style="padding:8px 12px; border:none; background:#3b82f6; color:white; border-radius:4px; cursor:pointer; font-weight:bold;">Créer et Placer</button>
+            </div>
+        </div>
+    </div>
+
     <div id="top-bar">
         <div class="flex items-center gap-4">
             <i class="fa-solid fa-industry text-2xl text-amber-500"></i>
@@ -151,8 +185,11 @@
     <div id="app-container">
         <div id="sidebar">
             <div class="sidebar-section bg-slate-50">
-                <div class="sidebar-title"><i class="fa-solid fa-toolbox mr-2"></i>Outils</div>
-                <div class="grid grid-cols-2 gap-2">
+                <div class="sidebar-title flex justify-between items-center">
+                    <span><i class="fa-solid fa-toolbox mr-2"></i>Outils</span>
+                    <button onclick="openCustomObjectModal()" class="text-xs bg-blue-100 text-blue-700 hover:bg-blue-200 px-2 py-1 rounded font-normal" title="Créer un élément sur mesure"><i class="fa-solid fa-plus"></i> Créer</button>
+                </div>
+                <div class="grid grid-cols-2 gap-2 mt-2">
                     <button class="tool-btn active" id="tool-select" onclick="setTool('select')"><i class="fa-solid fa-arrow-pointer mb-1 block"></i>Sélection</button>
                     <button class="tool-btn" id="tool-wall" onclick="setTool('wall')"><i class="fa-solid fa-trowel-bricks mb-1 block"></i>Tracer Mur</button>
                     <button class="tool-btn" id="tool-measure" onclick="setTool('measure')"><i class="fa-solid fa-ruler-combined mb-1 block"></i>Cote</button>
@@ -869,6 +906,37 @@
             };
             reader.readAsText(file);
             event.target.value = '';
+        }
+
+        function openCustomObjectModal() {
+            document.getElementById('custom-object-modal').style.display = 'flex';
+            document.getElementById('co-name').value = '';
+            document.getElementById('co-name').focus();
+        }
+
+        function closeCustomObjectModal() {
+            document.getElementById('custom-object-modal').style.display = 'none';
+        }
+
+        function createCustomObject() {
+            const name = document.getElementById('co-name').value || 'Nouvel Élément';
+            const w = parseFloat(document.getElementById('co-width').value) || 100;
+            const h = parseFloat(document.getElementById('co-height').value) || 100;
+            const category = document.getElementById('co-category').value;
+
+            // Placer l'élément au centre exact de la vue actuelle
+            const rect = workspace.getBoundingClientRect();
+            const centerX = (rect.width / 2 - panX) / scale;
+            const centerY = (rect.height / 2 - panY) / scale;
+
+            const el = createMachineElement(name, w, h, category, centerX - (w/2), centerY - (h/2), 0);
+            canvas.appendChild(el);
+            
+            closeCustomObjectModal();
+            setTool('select');
+            selectElement(el);
+            autoSave();
+            showBanner('Élément sur-mesure créé avec succès');
         }
     </script>
 </body>
