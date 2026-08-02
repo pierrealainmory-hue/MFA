@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Outil d'Implantation 3.0 - Multi-projets</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body, html { height: 100%; margin: 0; overflow: hidden; background-color: #f8fafc; font-family: 'Inter', sans-serif; }
+        
+        #app-container { display: flex; height: calc(100vh - 60px); }
+        
+        #sidebar { 
+            width: 340px; 
+            background: white; 
+            border-right: 1px solid #e2e8f0; 
+            display: flex; 
+            flex-direction: column; 
+            box-shadow: 2px 0 10px rgba(0,0,0,0.05);
+            z-index: 10;
+        }
+
+        #workspace { 
+            flex-grow: 1; 
+            position: relative; 
+            overflow: hidden; 
+            background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+            background-size: 20px 20px; /* Grille de 20cm */
+            cursor: grab;
+        }
+        #workspace:active { cursor: grabbing; }
+        
+        #canvas {
+            position: absolute;
+            transform-origin: 0 0;
+            width: 5000px;
+            height: 3000px;
+        }
+
+        .data-item {
+            position: absolute;
+            border: 2px solid #333;
+            background-color: white;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            user-select: none;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: box-shadow 0.2s, filter 0.2s;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .data-item:hover { filter: brightness(0.95); }
+        .data-item.selected { border-color: #3b82f6; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.3); z-index: 100; }
+        
+        .dim-label { font-size: 10px; color: #64748b; margin-top: 2px; }
+
+        .cat-astreia { background-color: rgba(245, 158, 11, 0.2); border-color: #f59e0b; color: #b45309; }
+        .cat-almapro { background-color: rgba(16, 185, 129, 0.2); border-color: #10b981; color: #047857; }
+        .cat-fournil { background-color: rgba(239, 68, 68, 0.2); border-color: #ef4444; color: #b91c1c; }
+        .cat-stockage { background-color: rgba(139, 92, 246, 0.2); border-color: #8b5cf6; color: #5b21b6; }
+        .cat-zone { background-color: rgba(59, 130, 246, 0.1); border-color: #3b82f6; color: #1d4ed8; border-style: dashed; }
+        .cat-structure { background-color: #cbd5e1; border-color: #475569; color: #1e293b; }
+
+        .wall-line {
+            position: absolute; background-color: #1e293b; border: 1px solid #0f172a;
+            transform-origin: top left; cursor: pointer; z-index: 50; display: flex; align-items: center; justify-content: center;
+        }
+        .wall-line.selected { background-color: #3b82f6; box-shadow: 0 0 5px #3b82f6; }
+        .wall-label { position: absolute; top: -25px; font-size: 14px; color: #1e293b; font-weight: bold; pointer-events: none; white-space: nowrap; background: rgba(255,255,255,0.8); padding: 0 4px; border-radius: 4px;}
+
+        .measure-line {
+            position: absolute; border-top: 2px dashed #ef4444; transform-origin: top left;
+            z-index: 60; pointer-events: none; display: flex; justify-content: center;
+        }
+        .measure-line::before, .measure-line::after { content: ''; position: absolute; top: -6px; width: 2px; height: 14px; background: #ef4444; }
+        .measure-line::before { left: 0; }
+        .measure-line::after { right: 0; }
+        .measure-label {
+            position: absolute; top: -25px; background: white; padding: 2px 6px; border: 1px solid #ef4444;
+            color: #ef4444; font-size: 14px; font-weight: bold; border-radius: 4px; pointer-events: auto; cursor: pointer;
+        }
+
+        .custom-text {
+            position: absolute; font-size: 24px; font-weight: bold; color: #334155;
+            cursor: pointer; user-select: none; padding: 5px; border: 1px solid transparent; z-index: 40; white-space: nowrap;
+        }
+        .custom-text.selected { border-color: #3b82f6; background-color: rgba(59, 130, 246, 0.1); }
+
+        .sidebar-section { border-bottom: 1px solid #e2e8f0; padding: 15px; }
+        .sidebar-title { font-weight: bold; color: #475569; margin-bottom: 10px; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .item-template { 
+            background: white; border: 1px solid #cbd5e1; padding: 8px 10px; margin-bottom: 8px; 
+            border-radius: 6px; cursor: grab; font-size: 13px; display: flex; justify-content: space-between;
+        }
+        .item-template:hover { border-color: #94a3b8; background-color: #f8fafc; }
+        .item-template:active { cursor: grabbing; }
+        
+        .tool-btn {
+            padding: 8px; text-align: center; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer;
+            background: white; font-size: 13px; font-weight: 500; color: #475569;
+        }
+        .tool-btn:hover { background: #f1f5f9; }
+        .tool-btn.active { background: #3b82f6; color: white; border-color: #2563eb; }
+
+        #sidebar-scroll { overflow-y: auto; flex-grow: 1; }
+        
+        #top-bar { background: #1e293b; color: white; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; height: 60px;}
+        .top-btn { background: #334155; padding: 6px 12px; border-radius: 4px; font-size: 14px; cursor: pointer; border: 1px solid #475569;}
+        .top-btn:hover { background: #475569; }
+        .btn-action { background: #10b981; color: white; padding: 6px 12px; border-radius: 4px; font-weight: bold; cursor: pointer; border:none;}
+        .btn-action:hover { background: #059669; }
+        .btn-orange { background: #f59e0b; color: white; padding: 6px 12px; border-radius: 4px; font-weight: bold; cursor: pointer; border:none;}
+        .btn-orange:hover { background: #d97706; }
+    </style>
+</head>
+<body>
+
+    <div id="top-bar">
+        <div class="flex items-center gap-4">
+            <i class="fa-solid fa-industry text-2xl text-amber-500"></i>
+            <div class="flex items-center gap-2 bg-slate-800 p-1 pr-3 rounded-lg border border-slate-700">
+                <select id="project-select" onchange="switchProject(this.value)" class="bg-slate-700 text-white border-none rounded p-1 text-sm outline-none cursor-pointer">
+                    <!-- Options injectées par JS -->
+                </select>
+                <button onclick="createNewProject()" class="text-xs text-emerald-400 hover:text-emerald-300 ml-1" title="Nouveau Projet"><i class="fa-solid fa-plus"></i></button>
+                <button onclick="deleteCurrentProject()" class="text-xs text-red-400 hover:text-red-300 ml-1" title="Supprimer Projet"><i class="fa-solid fa-trash"></i></button>
+            </div>
+        </div>
+        <div class="flex gap-2">
+            <button class="btn-orange" onclick="loadBasePlan()"><i class="fa-solid fa-map mr-2"></i>Générer Plan de Base</button>
+            <div class="w-px h-8 bg-slate-600 mx-1"></div>
+            <button class="top-btn" onclick="zoomIn()"><i class="fa-solid fa-magnifying-glass-plus"></i></button>
+            <button class="top-btn" onclick="zoomOut()"><i class="fa-solid fa-magnifying-glass-minus"></i></button>
+            <button class="top-btn" onclick="resetView()"><i class="fa-solid fa-expand"></i> Centrer</button>
+            <div class="w-px h-8 bg-slate-600 mx-1"></div>
+            <button class="btn-action" onclick="exportPlanFile()" title="Télécharger le fichier"><i class="fa-solid fa-download mr-1"></i> Exporter</button>
+            <label class="top-btn cursor-pointer">
+                <i class="fa-solid fa-upload mr-1"></i> Importer
+                <input type="file" id="file-upload" class="hidden" accept=".json" onchange="importPlanFile(event)">
+            </label>
+        </div>
+    </div>
+
+    <div id="app-container">
+        <div id="sidebar">
+            <div class="sidebar-section bg-slate-50">
+                <div class="sidebar-title"><i class="fa-solid fa-toolbox mr-2"></i>Outils</div>
+                <div class="grid grid-cols-2 gap-2">
+                    <button class="tool-btn active" id="tool-select" onclick="setTool('select')"><i class="fa-solid fa-arrow-pointer mb-1 block"></i>Sélection</button>
+                    <button class="tool-btn" id="tool-wall" onclick="setTool('wall')"><i class="fa-solid fa-trowel-bricks mb-1 block"></i>Tracer Mur</button>
+                    <button class="tool-btn" id="tool-measure" onclick="setTool('measure')"><i class="fa-solid fa-ruler-combined mb-1 block"></i>Cote</button>
+                    <button class="tool-btn" id="tool-text" onclick="setTool('text')"><i class="fa-solid fa-font mb-1 block"></i>Texte</button>
+                </div>
+            </div>
+
+            <!-- NOUVEAU: Panneau de propriétés dynamiques -->
+            <div id="properties-panel" class="sidebar-section bg-indigo-50 hidden border-l-4 border-indigo-500">
+                <div class="sidebar-title text-indigo-700 flex justify-between">
+                    <span><i class="fa-solid fa-sliders mr-2"></i>Dimensions (cm)</span>
+                    <button onclick="deleteSelected()" class="text-red-500 hover:text-red-700" title="Supprimer"><i class="fa-solid fa-trash"></i></button>
+                </div>
+                <div class="grid grid-cols-2 gap-2 text-sm text-slate-700 mb-2">
+                    <div>
+                        <label class="block text-xs mb-1">Longueur (X)</label>
+                        <input type="number" id="prop-length" class="w-full border border-slate-300 rounded p-1 outline-none focus:border-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs mb-1">Épaisseur/Larg (Y)</label>
+                        <input type="number" id="prop-thickness" class="w-full border border-slate-300 rounded p-1 outline-none focus:border-indigo-500">
+                    </div>
+                </div>
+                <button class="btn-action w-full py-1 text-sm bg-indigo-600 hover:bg-indigo-700" onclick="applyProperties()">Appliquer / Redimensionner</button>
+            </div>
+
+            <div id="sidebar-scroll">
+                <div class="sidebar-section">
+                    <div class="sidebar-title text-blue-600">Zones & Modulaires</div>
+                    <div class="item-template" draggable="true" ondragstart="handleDragStart(event, 'Espace Modulable', 200, 200, 'cat-zone')">
+                        <span><i class="fa-solid fa-square-dashed mr-2"></i>Espace Modulable</span><span class="text-xs text-slate-400">200x200</span>
+                    </div>
+                    <div class="item-template" draggable="true" ondragstart="handleDragStart(event, 'Stockage Farine', 300, 200, 'cat-zone')">
+                        <span><i class="fa-solid fa-cubes-stacked mr-2"></i>Stockage Farine</span><span class="text-xs text-slate-400">300x200</span>
+                    </div>
+                    <div class="item-template" draggable="true" ondragstart="handleDragStart(event, 'Zone Ensachage', 250, 150, 'cat-zone')">
+                        <span><i class="fa-solid fa-sack-dollar mr-2"></i>Zone Ensachage</span><span class="text-xs text-slate-400">250x150</span>
+                    </div>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-title text-amber-600">Meunerie Astréïa</div>
+                    <div class="item-template" draggable="true" ondragstart="handleDragStart(event, 'ML100 Révolution', 290, 150, 'cat-astreia')">
+                        <span><i class="fa-solid fa-gear mr-2"></i>ML100 + Rampe</span><span class="text-xs text-slate-400">290x150</span>
+                    </div>
+                    <div class="item-template" draggable="true" ondragstart="handleDragStart(event, 'ML50 Authentique', 190, 90, 'cat-astreia')">
+                        <span><i class="fa-solid fa-gear mr-2"></i>ML50 + Rampe</span><span class="text-xs text-slate-400">190x90</span>
+                    </div>
+                    <div class="item-template" draggable="true" ondragstart="handleDragStart(event, 'Trémie 2m3', 152, 152, 'cat-astreia')">
+                        <span><i class="fa-solid fa-box-open mr-2"></i>Trémie 2m3</span><span class="text-xs text-slate-400">152x152</span>
+                    </div>
+                    <div class="item-template" draggable="true" ondragstart="handleDragStart(event, 'Brosse à Grain', 120, 71, 'cat-astreia')">
+                        <span><i class="fa-solid fa-broom mr-2"></i>Brosse</span><span class="text-xs text-slate-400">120x71</span>
+                    </div>
+                    <div class="item-template" draggable="true" ondragstart="handleDragStart(event, 'Décortiqueuse', 105, 72, 'cat-astreia')">
+                        <span><i class="fa-solid fa-fan mr-2"></i>Décortiqueuse</span><span class="text-xs text-slate-400">105x72</span>
+                    </div>
+                    <div class="item-template" draggable="true" ondragstart="handleDragStart(event, 'Bluterie Seule', 120, 80, 'cat-astreia')">
+                        <span><i class="fa-solid fa-filter mr-2"></i>Bluterie (Astreïa)</span><span class="text-xs text-slate-400">120x80</span>
+                    </div>
+                    <div class="item-template" draggable="true" ondragstart="handleDragStart(event, 'Séparateur Cyclone', 60, 60, 'cat-astreia')">
+                        <span><i class="fa-solid fa-tornado mr-2"></i>Cyclone</span><span class="text-xs text-slate-400">Ø60</span>
+                    </div>
+                    <div class="item-template" draggable="true" ondragstart="handleDragStart(event, 'Support Big-Bag', 120, 120, 'cat-astreia')">
+                        <span><i class="fa-solid fa-sack-xmark mr-2"></i>Support Big-Bag</span><span class="text-xs text-slate-400">120x120</span>
+                    </div>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-title text-emerald-600">Meunerie Alma Pro</div>
+                    <div class="item-template" draggable="true" ondragstart="handleDragStart(event, 'Moulin PRO100', 130, 130, 'cat-almapro')">
+                        <span><i class="fa-solid fa-circle-notch mr-2"></i>Moulin PRO100</span><span class="text-xs text-slate-400">130x130</span>
+                    </div>
+                    <div class="item-template" draggable="true" ondragstart="handleDragStart(event, 'Tamiseuse Alma', 150, 100, 'cat-almapro')">
+                        <span><i class="fa-solid fa-boxes-stacked mr-2"></i>Tamiseuse</span><span class="text-xs text-slate-400">150x100</span>
+                    </div>
+                    <div class="item-template" draggable="true" ondragstart="handleDragStart(event, 'Ligne Plain-Pied', 670, 400, 'cat-almapro')">
+                        <span><i class="fa-solid fa-gears mr-2"></i>Ligne Plain-Pied</span><span class="text-xs text-slate-400">670x400</span>
+                    </div>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-title text-red-600">Fournil & Boulangerie</div>
+                    <div class="item-template" draggable="true" ondragstart="handleDragStart(event, 'Fours (Bloc)', 320, 300, 'cat-fournil')">
+                        <span><i class="fa-solid fa-fire-burner mr-2"></i>Fours (Bloc)</span><span class="text-xs text-slate-400">320x300</span>
+                    </div>
+                    <div class="item-template" draggable="true" ondragstart="handleDragStart(event, 'Pétrin', 150, 150, 'cat-fournil')">
+                        <span><i class="fa-solid fa-blender mr-2"></i>Pétrin</span><span class="text-xs text-slate-400">150x150</span>
+                    </div>
+                    <div class="item-template" draggable="true" ondragstart="handleDragStart(event, 'Chambre Pousse/Froid', 300, 150, 'cat-fournil')">
+                        <span><i class="fa-solid fa-snowflake mr-2"></i>Chambre Froid</span><span class="text-xs text-slate-400">300x150</span>
+                    </div>
+                    <div class="item-template" draggable="true" ondragstart="handleDragStart(event, 'Table Façonnage', 320, 120, 'cat-fournil')">
+                        <span><i class="fa-solid fa-table mr-2"></i>Table Façonnage</span><span class="text-xs text-slate-400">320x120</span>
+                    </div>
+                    <div class="item-template" draggable="true" ondragstart="handleDragStart(event, 'Plonge Inox', 200, 80, 'cat-fournil')">
+                        <span><i class="fa-solid fa-sink mr-2"></i>Plonge Inox</span><span class="text-xs text-slate-400">200x80</span>
+                    </div>
+                    <div class="item-template" draggable="true" ondragstart="handleDragStart(event, 'Balance', 100, 100, 'cat-fournil')">
+                        <span><i class="fa-solid fa-scale-balanced mr-2"></i>Balance</span><span class="text-xs text-slate-400">100x100</span>
+                    </div>
+                    <div class="item-template" draggable="true" ondragstart="handleDragStart(event, 'Échelle Pains', 60, 80, 'cat-fournil')">
+                        <span><i class="fa-solid fa-cart-flatbed mr-2"></i>Échelle Pains</span><span class="text-xs text-slate-400">60x80</span>
+                    </div>
+                </div>
+                
+                <div class="sidebar-section">
+                    <div class="sidebar-title text-slate-600">Général & Structure</div>
+                    <div class="item-template" draggable="true" ondragstart="handleDragStart(event, 'Porte Simple', 90, 10, 'cat-structure')">
+                        <span><i class="fa-solid fa-door-open mr-2"></i>Porte Simple</span><span class="text-xs text-slate-400">90x10</span>
+                    </div>
+                    <div class="item-template" draggable="true" ondragstart="handleDragStart(event, 'Porte Double', 200, 20, 'cat-structure')">
+                        <span><i class="fa-solid fa-door-closed mr-2"></i>Porte Double</span><span class="text-xs text-slate-400">200x20</span>
+                    </div>
+                    <div class="item-template" draggable="true" ondragstart="handleDragStart(event, 'Container (PCMA)', 250, 200, 'cat-stockage')">
+                        <span><i class="fa-solid fa-box-archive mr-2"></i>Container Grain</span><span class="text-xs text-slate-400">250x200</span>
+                    </div>
+                    <div class="item-template" draggable="true" ondragstart="handleDragStart(event, 'Quai Départ', 375, 450, 'cat-stockage')">
+                        <span><i class="fa-solid fa-truck-fast mr-2"></i>Quai Départ</span><span class="text-xs text-slate-400">375x450</span>
+                    </div>
+                    <div class="item-template" draggable="true" ondragstart="handleDragStart(event, 'Cabine WC', 150, 150, 'cat-structure')">
+                        <span><i class="fa-solid fa-restroom mr-2"></i>Cabine WC</span><span class="text-xs text-slate-400">150x150</span>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div id="workspace" ondragover="handleDragOver(event)" ondrop="handleDrop(event)">
+            <!-- Indicateur central -->
+            <div style="position:absolute; top:50%; left:50%; width:20px; height:2px; background:rgba(0,0,0,0.1); transform:translate(-50%, -50%); pointer-events:none;"></div>
+            <div style="position:absolute; top:50%; left:50%; width:2px; height:20px; background:rgba(0,0,0,0.1); transform:translate(-50%, -50%); pointer-events:none;"></div>
+            
+            <div id="banner" style="display:none; position:absolute; top:20px; left:50%; transform:translateX(-50%); background:#3b82f6; color:white; padding:8px 16px; border-radius:20px; z-index:200; font-weight:bold; box-shadow:0 4px 6px rgba(0,0,0,0.1); transition: 0.3s;">
+                <i class="fa-solid fa-info-circle mr-2"></i><span id="banner-text"></span>
+            </div>
+
+            <div id="canvas">
+                <!-- Injection dynamique des éléments -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const workspace = document.getElementById('workspace');
+        const canvas = document.getElementById('canvas');
+        const banner = document.getElementById('banner');
+        const propPanel = document.getElementById('properties-panel');
+        const propLength = document.getElementById('prop-length');
+        const propThickness = document.getElementById('prop-thickness');
+
+        // État de la vue
+        let scale = 0.5;
+        let panX = 0;
+        let panY = 0;
+        
+        // État des outils
+        let currentTool = 'select';
+        let selectedElement = null;
+        
+        // État de dessin dynamique
+        let isDrawingWall = false;
+        let isMeasuring = false;
+        let startPoint = null;
+        let currentTempLine = null;
+
+        // État Drag & Drop et Panning
+        let isPanning = false;
+        let startPanX = 0; let startPanY = 0;
+        let isDraggingItem = false;
+        let activeDragItem = null;
+        let itemOffsetX = 0; let itemOffsetY = 0;
+
+        // GESTION MULTI-PROJETS (LocalStorage)
+        let projects = {};
+        let currentProjectName = "";
+
+        window.onload = function() {
+            initProjectManager();
+            resetView();
+        };
+
+        function initProjectManager() {
+            const savedData = localStorage.getItem('aubetin_projects');
+            if (savedData) {
+                try {
+                    projects = JSON.parse(savedData);
+                    currentProjectName = localStorage.getItem('aubetin_current_project');
+                    if(!projects[currentProjectName]) currentProjectName = Object.keys(projects)[0];
+                } catch(e) { projects = { "Projet Initial": [] }; currentProjectName = "Projet Initial"; }
+            } else {
+                projects = { "Projet 1 (Vide)": [] };
+                currentProjectName = "Projet 1 (Vide)";
+            }
+            updateProjectSelectUI();
+            renderPlanData(projects[currentProjectName]);
+        }
+
+        function updateProjectSelectUI() {
+            const select = document.getElementById('project-select');
+            select.innerHTML = '';
+            for (let name in projects) {
+                const opt = document.createElement('option');
+                opt.value = name;
+                opt.innerText = name;
+                if(name === currentProjectName) opt.selected = true;
+                select.appendChild(opt);
+            }
+        }
+
+        function switchProject(name) {
+            saveCurrentToMemory(); // Sauve l'état actuel avant de changer
+            currentProjectName = name;
+            localStorage.setItem('aubetin_current_project', name);
+            renderPlanData(projects[name]);
+            selectElement(null);
+            showBanner("Projet chargé : " + name);
+        }
+
+        function createNewProject() {
+            const name = prompt("Nom du nouveau projet ? (ex: Variante Alma Pro)");
+            if (name && name.trim() !== "") {
+                if(!projects[name]) {
+                    saveCurrentToMemory();
+                    projects[name] = [];
+                    currentProjectName = name;
+                    localStorage.setItem('aubetin_current_project', name);
+                    updateProjectSelectUI();
+                    renderPlanData([]);
+                    showBanner("Nouveau projet créé");
+                } else {
+                    alert("Ce nom existe déjà.");
+                }
+            }
+        }
+
+        function deleteCurrentProject() {
+            if(Object.keys(projects).length <= 1) {
+                alert("Impossible de supprimer le dernier projet. Renommez-le ou créez-en un autre d'abord.");
+                return;
+            }
+            if(confirm("Supprimer définitivement le projet '" + currentProjectName + "' ?")) {
+                delete projects[currentProjectName];
+                currentProjectName = Object.keys(projects)[0];
+                localStorage.setItem('aubetin_current_project', currentProjectName);
+                localStorage.setItem('aubetin_projects', JSON.stringify(projects));
+                updateProjectSelectUI();
+                renderPlanData(projects[currentProjectName]);
+            }
+        }
+
+        function saveCurrentToMemory() {
+            projects[currentProjectName] = extractPlanData();
+            localStorage.setItem('aubetin_projects', JSON.stringify(projects));
+        }
+
+        function autoSave() {
+            saveCurrentToMemory();
+        }
+
+        function showBanner(text) {
+            document.getElementById('banner-text').innerText = text;
+            banner.style.display = 'block';
+            setTimeout(() => { banner.style.display = 'none'; }, 3000);
+        }
+
+        function setTool(tool) {
+            currentTool = tool;
+            document.querySelectorAll('.tool-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById('tool-' + tool).classList.add('active');
+            
+            isDrawingWall = false; isMeasuring = false;
+            if(currentTempLine) { currentTempLine.remove(); currentTempLine = null; }
+            
+            canvas.style.cursor = (tool === 'wall' || tool === 'measure') ? 'crosshair' : (tool === 'text' ? 'text' : 'default');
+            
+            if(tool === 'wall') showBanner('Cliquez pour démarrer un mur');
+            else if (tool === 'measure') showBanner('Cliquez-glissez pour mesurer');
+        }
+
+        function selectElement(el) {
+            if(currentTool !== 'select') return;
+            if(selectedElement) selectedElement.classList.remove('selected');
+            selectedElement = el;
+            
+            if(el) {
+                el.classList.add('selected');
+                propPanel.classList.remove('hidden');
+                
+                // Remplir les champs de propriétés
+                if(el.dataset.type === 'wall' || el.dataset.type === 'measure') {
+                    propLength.value = parseFloat(el.dataset.length || 0).toFixed(0);
+                    propThickness.value = parseFloat(el.style.height || 0).toFixed(0);
+                } else {
+                    propLength.value = parseFloat(el.style.width || 0).toFixed(0);
+                    propThickness.value = parseFloat(el.style.height || 0).toFixed(0);
+                }
+            } else {
+                propPanel.classList.add('hidden');
+            }
+        }
+
+        function deleteSelected() {
+            if(selectedElement) {
+                selectedElement.remove();
+                selectElement(null);
+                autoSave();
+            }
+        }
+
+        function applyProperties() {
+            if(!selectedElement) return;
+            const w = parseFloat(propLength.value);
+            const h = parseFloat(propThickness.value);
+            if(isNaN(w) || isNaN(h) || w <= 0 || h <= 0) return;
+
+            if(selectedElement.dataset.type === 'wall' || selectedElement.dataset.type === 'measure') {
+                selectedElement.style.width = w + 'px';
+                selectedElement.style.height = h + 'px';
+                selectedElement.dataset.length = w;
+                
+                let labelClass = selectedElement.dataset.type === 'wall' ? '.wall-label' : '.measure-label';
+                let label = selectedElement.querySelector(labelClass);
+                if(label) label.innerText = (w / 100).toFixed(2) + 'm';
+            } else {
+                selectedElement.style.width = w + 'px';
+                selectedElement.style.height = h + 'px';
+                let dimLabel = selectedElement.querySelector('.dim-label');
+                if(dimLabel) dimLabel.innerText = `${w}x${h}`;
+            }
+            autoSave();
+        }
+
+        function updateTransform() { canvas.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`; }
+        function zoomIn() { scale *= 1.2; updateTransform(); }
+        function zoomOut() { scale /= 1.2; updateTransform(); }
+        function resetView() {
+            scale = 0.5;
+            panX = workspace.clientWidth / 2 - (3600 * scale) / 2;
+            panY = 100;
+            updateTransform();
+        }
+
+        workspace.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            const zoomAmount = e.deltaY > 0 ? 0.9 : 1.1;
+            const rect = workspace.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+
+            panX = mouseX - (mouseX - panX) * zoomAmount;
+            panY = mouseY - (mouseY - panY) * zoomAmount;
+            scale *= zoomAmount;
+            updateTransform();
+        });
+
+        function handleDragStart(e, name, width, height, className) {
+            const data = { name, width, height, className };
+            e.dataTransfer.setData('text/plain', JSON.stringify(data));
+            e.dataTransfer.effectAllowed = 'copy';
+        }
+        function handleDragOver(e) { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; }
+        function handleDrop(e) {
+            e.preventDefault();
+            const dataStr = e.dataTransfer.getData('text/plain');
+            if(!dataStr) return;
+            try {
+                const data = JSON.parse(dataStr);
+                const rect = workspace.getBoundingClientRect();
+                const mouseX = e.clientX - rect.left;
+                const mouseY = e.clientY - rect.top;
+                const x = (mouseX - panX) / scale - (data.width / 2);
+                const y = (mouseY - panY) / scale - (data.height / 2);
+                
+                const el = createMachineElement(data.name, data.width, data.height, data.className, x, y, 0);
+                canvas.appendChild(el);
+                setTool('select');
+                selectElement(el);
+                autoSave();
+            } catch(err) { console.error(err); }
+        }
+
+        function makeDraggable(el) {
+            el.addEventListener('mousedown', (e) => {
+                if(currentTool !== 'select') return;
+                e.stopPropagation();
+                selectElement(el);
+                isDraggingItem = true; activeDragItem = el;
+                const rect = workspace.getBoundingClientRect();
+                itemOffsetX = (e.clientX - rect.left - panX) / scale - parseFloat(el.style.left);
+                itemOffsetY = (e.clientY - rect.top - panY) / scale - parseFloat(el.style.top);
+            });
+        }
+
+        function createMachineElement(name, w, h, className, x, y, rot) {
+            const el = document.createElement('div');
+            el.className = `data-item machine ${className}`;
+            el.style.width = w + 'px'; el.style.height = h + 'px';
+            el.style.left = x + 'px'; el.style.top = y + 'px';
+            el.style.transform = `rotate(${rot}deg)`;
+            el.dataset.type = 'machine'; el.dataset.rotation = rot;
+            
+            el.innerHTML = `<span>${name}</span><span class="dim-label">${w}x${h}</span>`;
+            
+            // Correction de l'orientation du texte si la machine a été pivotée
+            if(rot !== 0) {
+                const spans = el.querySelectorAll('span');
+                spans.forEach(span => span.style.transform = `rotate(${-rot}deg)`);
+            }
+            
+            makeDraggable(el);
+            return el;
+        }
+
+        workspace.addEventListener('mousedown', (e) => {
+            const rect = workspace.getBoundingClientRect();
+            
+            // Pan du canevas
+            if (e.button === 1 || (e.button === 0 && currentTool === 'select' && e.target === workspace)) {
+                isPanning = true;
+                startPanX = e.clientX - panX; startPanY = e.clientY - panY;
+                selectElement(null);
+            } 
+            // Dessin Mur & Cote
+            else if (e.button === 0 && e.target === canvas && (currentTool === 'wall' || currentTool === 'measure')) {
+                const x = (e.clientX - rect.left - panX) / scale;
+                const y = (e.clientY - rect.top - panY) / scale;
+
+                if (!isDrawingWall && !isMeasuring) {
+                    startPoint = {x, y};
+                    currentTempLine = document.createElement('div');
+                    
+                    if(currentTool === 'wall') {
+                        isDrawingWall = true;
+                        currentTempLine.className = 'wall-line data-item';
+                        currentTempLine.dataset.type = 'wall';
+                        currentTempLine.style.height = '10px';
+                    } else {
+                        isMeasuring = true;
+                        currentTempLine.className = 'measure-line data-item';
+                        currentTempLine.dataset.type = 'measure';
+                        const label = document.createElement('div');
+                        label.className = 'measure-label'; label.innerText = '0.00m';
+                        currentTempLine.appendChild(label);
+                    }
+                    
+                    currentTempLine.style.left = x + 'px'; currentTempLine.style.top = y + 'px';
+                    currentTempLine.style.width = '0px';
+                    canvas.appendChild(currentTempLine);
+                } else {
+                    // Fin du tracé
+                    makeDraggable(currentTempLine);
+                    if(currentTool === 'measure') {
+                        // Le label ferme la cote au clic
+                        const lbl = currentTempLine.querySelector('.measure-label');
+                        const lineRef = currentTempLine;
+                        lbl.onclick = function(ev) { ev.stopPropagation(); lineRef.remove(); autoSave(); };
+                    }
+                    isDrawingWall = false; isMeasuring = false;
+                    currentTempLine = null;
+                    autoSave();
+                    showBanner('Tracé terminé.');
+                }
+            }
+            // Texte
+            else if (e.button === 0 && e.target === canvas && currentTool === 'text') {
+                const x = (e.clientX - rect.left - panX) / scale;
+                const y = (e.clientY - rect.top - panY) / scale;
+                const text = prompt("Texte de la zone :");
+                if(text) {
+                    const el = document.createElement('div');
+                    el.className = 'custom-text data-item'; el.dataset.type = 'text';
+                    el.innerText = text; el.style.left = x + 'px'; el.style.top = y + 'px';
+                    makeDraggable(el);
+                    canvas.appendChild(el);
+                    setTool('select');
+                    autoSave();
+                }
+            }
+        });
+
+        window.addEventListener('mousemove', (e) => {
+            const rect = workspace.getBoundingClientRect();
+            if (isPanning) {
+                panX = e.clientX - startPanX; panY = e.clientY - startPanY;
+                updateTransform();
+            } 
+            else if (isDraggingItem && activeDragItem && currentTool === 'select') {
+                const x = (e.clientX - rect.left - panX) / scale - itemOffsetX;
+                const y = (e.clientY - rect.top - panY) / scale - itemOffsetY;
+                activeDragItem.style.left = x + 'px'; activeDragItem.style.top = y + 'px';
+            }
+            else if ((isDrawingWall || isMeasuring) && currentTempLine) {
+                const x = (e.clientX - rect.left - panX) / scale;
+                const y = (e.clientY - rect.top - panY) / scale;
+                const dx = x - startPoint.x; const dy = y - startPoint.y;
+                const length = Math.sqrt(dx*dx + dy*dy);
+                const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+                
+                currentTempLine.style.width = length + 'px';
+                currentTempLine.style.transform = `rotate(${angle}deg)`;
+                currentTempLine.dataset.length = length; currentTempLine.dataset.angle = angle;
+                
+                let labelClass = isDrawingWall ? '.wall-label' : '.measure-label';
+                let label = currentTempLine.querySelector(labelClass);
+                
+                if(isDrawingWall && !label) {
+                    label = document.createElement('div');
+                    label.className = 'wall-label'; currentTempLine.appendChild(label);
+                }
+                
+                if(label) {
+                    label.innerText = (length / 100).toFixed(2) + 'm';
+                    if (angle > 90 || angle < -90) label.style.transform = 'rotate(180deg)';
+                    else label.style.transform = 'rotate(0deg)';
+                }
+            }
+        });
+
+        window.addEventListener('mouseup', () => {
+            isPanning = false;
+            if(isDraggingItem) { isDraggingItem = false; autoSave(); }
+            // Si on lâche au milieu d'une mesure (Cote), on valide la fin. (Moins de clics)
+            if(isMeasuring && currentTempLine && parseFloat(currentTempLine.style.width) > 10) {
+                 makeDraggable(currentTempLine);
+                 const lbl = currentTempLine.querySelector('.measure-label');
+                 const lineRef = currentTempLine;
+                 lbl.onclick = function(ev) { ev.stopPropagation(); lineRef.remove(); autoSave(); };
+                 isMeasuring = false; currentTempLine = null; autoSave();
+            }
+        });
+
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Delete' || e.key === 'Backspace') {
+                if(e.target.tagName !== 'INPUT') deleteSelected();
+            }
+            if ((e.key === 'r' || e.key === 'R') && selectedElement && selectedElement.dataset.type === 'machine') {
+                let currentRot = parseFloat(selectedElement.dataset.rotation || 0);
+                currentRot = (currentRot + 90) % 360;
+                selectedElement.style.transform = `rotate(${currentRot}deg)`;
+                selectedElement.dataset.rotation = currentRot;
+                const spans = selectedElement.querySelectorAll('span');
+                spans.forEach(span => span.style.transform = `rotate(${-currentRot}deg)`);
+                autoSave();
+            }
+        });
+
+        function createBaseSegment(x, y, l, angle, th, isWall=true) {
+            const el = document.createElement('div');
+            el.className = isWall ? 'wall-line data-item' : 'measure-line data-item';
+            el.dataset.type = isWall ? 'wall' : 'measure';
+            el.style.left = x + 'px'; el.style.top = y + 'px';
+            el.style.width = l + 'px'; el.style.transform = `rotate(${angle}deg)`;
+            el.dataset.length = l; el.dataset.angle = angle;
+            
+            if(isWall) {
+                el.style.height = th + 'px';
+                el.style.backgroundColor = '#1e293b'; el.style.border = '1px solid #0f172a';
+                const lbl = document.createElement('div');
+                lbl.className = 'wall-label'; lbl.innerText = (l/100).toFixed(2) + 'm';
+                if (angle > 90 || angle < -90) lbl.style.transform = 'rotate(180deg)';
+                el.appendChild(lbl);
+            } else {
+                const lbl = document.createElement('div');
+                lbl.className = 'measure-label'; lbl.innerText = (l/100).toFixed(2) + 'm';
+                if (angle > 90 || angle < -90) lbl.style.transform = 'rotate(180deg)';
+                lbl.onclick = function(ev) { ev.stopPropagation(); el.remove(); autoSave(); };
+                el.appendChild(lbl);
+            }
+            
+            makeDraggable(el);
+            canvas.appendChild(el);
+            return el;
+        }
+
+        function createBaseText(txt, x, y, color, dashed) {
+            const el = document.createElement('div');
+            el.className = 'custom-text data-item'; el.dataset.type = 'text';
+            el.innerText = txt; el.style.left = x + 'px'; el.style.top = y + 'px';
+            if(color) el.style.color = color;
+            if(dashed) el.style.border = `2px dashed ${color}`;
+            makeDraggable(el);
+            canvas.appendChild(el);
+        }
+
+        function loadBasePlan() {
+            if(!confirm("Attention : Écraser le projet actuel avec le plan de base vierge ?")) return;
+            
+            canvas.innerHTML = '';
+            selectedElement = null; selectElement(null);
+            
+            // Lignes Extérieures (Sécables)
+            for(let i=0; i<9; i++) {
+                createBaseSegment(20 + i*400, 0, 400, 0, 20);      // Haut
+                createBaseSegment(20 + i*400, 880, 400, 0, 20);    // Bas
+            }
+            createBaseSegment(20, 0, 450, 90, 20); createBaseSegment(20, 450, 450, 90, 20); // Gauche
+            createBaseSegment(3600, 0, 450, 90, 20); createBaseSegment(3600, 450, 450, 90, 20); // Droite
+            
+            // Cloisons intérieures (10cm) - Segmentation pour permettre des portes
+            // Mur 1 (Boutique/Cuisson) x=950
+            createBaseSegment(950, 20, 200, 90, 10); createBaseSegment(950, 220, 230, 90, 10);
+            createBaseSegment(950, 450, 200, 90, 10); createBaseSegment(950, 650, 230, 90, 10);
+            
+            // Mur 2 (Cuisson/Pousse) x=1350
+            createBaseSegment(1350, 20, 430, 90, 10); createBaseSegment(1350, 450, 430, 90, 10);
+            
+            // Mur Horizontal (Pousse/Quai) y=450
+            createBaseSegment(1350, 450, 187, 0, 10); createBaseSegment(1537, 450, 188, 0, 10);
+            
+            // Mur 3 (Pousse/Pétrissage) x=1725
+            createBaseSegment(1725, 20, 430, 90, 10); createBaseSegment(1725, 450, 430, 90, 10);
+            
+            // Mur 4 (Pétrissage/Meunerie) x=2125
+            createBaseSegment(2125, 20, 430, 90, 10); createBaseSegment(2125, 450, 430, 90, 10);
+            
+            // Mur 5 (Meunerie/Sanitaire) x=3375
+            createBaseSegment(3375, 20, 430, 90, 10); createBaseSegment(3375, 450, 430, 90, 10);
+
+            // Cotes initiales (Lignes de repère rouges)
+            createBaseSegment(20, -100, 3600, 0, 0, false).querySelector('.measure-label').innerText = '36.00m (Total)';
+            createBaseSegment(-80, 20, 880, 90, 0, false).querySelector('.measure-label').innerText = '9.00m';
+            
+            createBaseSegment(20, 950, 930, 0, 0, false);   // Boutique
+            createBaseSegment(950, 950, 400, 0, 0, false);  // Cuisson
+            createBaseSegment(1350, 950, 375, 0, 0, false); // Quai
+            createBaseSegment(1725, 950, 400, 0, 0, false); // Petrissage
+            createBaseSegment(2125, 950, 1250, 0, 0, false);// Meunerie
+            createBaseSegment(3375, 950, 245, 0, 0, false); // Sanitaires
+
+            // Textes des Zones
+            createBaseText("1. BOUTIQUE (85m2)", 300, 400);
+            createBaseText("2. CUISSON & EMBALLAGE (36m2)", 970, 400);
+            createBaseText("3A. POUSSE (16m2)", 1400, 200);
+            createBaseText("3B. QUAI EXPÉDITION (16m2)", 1370, 600, '#8b5cf6', true);
+            createBaseText("4. PÉTRISSAGE (36m2)", 1800, 400);
+            createBaseText("5. MEUNERIE ASTRÉÏA (112,5m2)", 2600, 400);
+            createBaseText("6. SANITAIRES", 3400, 400);
+            createBaseText("ESPACE PESÉE", 2000, 380, '#ef4444', true);
+
+            resetView();
+            autoSave();
+            showBanner('Plan de base généré et sauvegardé.');
+        }
+
+        function extractPlanData() {
+            const items = [];
+            document.querySelectorAll('.data-item').forEach(el => {
+                const data = { type: el.dataset.type, left: el.style.left, top: el.style.top };
+                if (data.type === 'machine') {
+                    data.width = el.style.width; data.height = el.style.height;
+                    data.className = el.className.replace('data-item machine selected', '').replace('data-item machine ', '').trim();
+                    data.innerHTML = el.innerHTML;
+                    data.rotation = el.dataset.rotation || 0;
+                } else if (data.type === 'wall' || data.type === 'measure') {
+                    data.width = el.style.width; data.height = el.style.height;
+                    data.angle = el.dataset.angle; data.length = el.dataset.length;
+                } else if (data.type === 'text') {
+                    data.text = el.innerText; data.color = el.style.color; data.border = el.style.border;
+                }
+                items.push(data);
+            });
+            return items;
+        }
+
+        function renderPlanData(items) {
+            canvas.innerHTML = '';
+            if(!items) return;
+            items.forEach(data => {
+                if (data.type === 'machine') {
+                    const el = createMachineElement("tmp", parseFloat(data.width), parseFloat(data.height), data.className, parseFloat(data.left), parseFloat(data.top), parseFloat(data.rotation||0));
+                    el.innerHTML = data.innerHTML; // Restaure le contenu exact
+                    canvas.appendChild(el);
+                } else if (data.type === 'wall') {
+                    createBaseSegment(parseFloat(data.left), parseFloat(data.top), parseFloat(data.length), parseFloat(data.angle), parseFloat(data.height), true);
+                } else if (data.type === 'measure') {
+                    createBaseSegment(parseFloat(data.left), parseFloat(data.top), parseFloat(data.length), parseFloat(data.angle), 0, false);
+                } else if (data.type === 'text') {
+                    createBaseText(data.text, parseFloat(data.left), parseFloat(data.top), data.color, data.border && data.border.includes('dashed'));
+                }
+            });
+        }
+
+        function exportPlanFile() {
+            const json = JSON.stringify(extractPlanData());
+            const blob = new Blob([json], {type: "application/json"});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a'); a.href = url;
+            a.download = `aubetin_${currentProjectName.replace(/\s+/g, '_')}.json`;
+            a.click(); URL.revokeObjectURL(url);
+        }
+
+        function importPlanFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const items = JSON.parse(e.target.result);
+                    let projName = file.name.replace('.json', '');
+                    if(!projects[projName]) {
+                        projects[projName] = items;
+                        currentProjectName = projName;
+                        updateProjectSelectUI();
+                    } else {
+                        projects[currentProjectName] = items;
+                    }
+                    localStorage.setItem('aubetin_current_project', currentProjectName);
+                    renderPlanData(items);
+                    resetView();
+                    autoSave();
+                    showBanner("Fichier importé !");
+                } catch(err) { alert("Fichier invalide."); }
+            };
+            reader.readAsText(file);
+            event.target.value = '';
+        }
+    </script>
+</body>
+</html>
