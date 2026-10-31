@@ -3,78 +3,60 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Outil d'Implantation 3.0 - Multi-projets</title>
+    <title>Outil d'Implantation Architecturale 4.0 - RDC & Étage R+1 (Aubetin)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         body, html { height: 100%; margin: 0; overflow: hidden; background-color: #f8fafc; font-family: 'Inter', sans-serif; }
-        
-        #app-container { display: flex; height: calc(100vh - 60px); }
-        
+        #app-container { display: flex; height: calc(100vh - 64px); }
         #sidebar { 
-            width: 340px; 
-            background: white; 
-            border-right: 1px solid #e2e8f0; 
-            display: flex; 
-            flex-direction: column; 
-            box-shadow: 2px 0 10px rgba(0,0,0,0.05);
-            z-index: 10;
+            width: 350px; background: white; border-right: 1px solid #e2e8f0; 
+            display: flex; flex-direction: column; box-shadow: 2px 0 10px rgba(0,0,0,0.05); z-index: 10;
         }
-
         #workspace { 
-            flex-grow: 1; 
-            position: relative; 
-            overflow: hidden; 
+            flex-grow: 1; position: relative; overflow: hidden; 
             background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
-            background-size: 20px 20px; /* Grille de 20cm */
-            cursor: grab;
+            background-size: 20px 20px; cursor: grab;
         }
         #workspace:active { cursor: grabbing; }
-        
-        #canvas {
-            position: absolute;
-            transform-origin: 0 0;
-            width: 5000px;
-            height: 3000px;
+        #canvas, #ghost-canvas {
+            position: absolute; transform-origin: 0 0; width: 5000px; height: 3000px; top: 0; left: 0;
         }
+        #ghost-canvas {
+            pointer-events: none; opacity: 0.22; filter: grayscale(60%); z-index: 1;
+        }
+        #canvas { z-index: 5; }
 
         .data-item {
-            position: absolute;
-            border: 2px solid #333;
-            background-color: white;
-            cursor: pointer;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            user-select: none;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            transition: box-shadow 0.2s, filter 0.2s;
-            border-radius: 4px;
-            font-size: 14px;
-            font-weight: 500;
+            position: absolute; border: 2px solid #333; background-color: white; cursor: pointer;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            text-align: center; user-select: none; box-shadow: 0 4px 6px rgba(0,0,0,0.08);
+            transition: box-shadow 0.2s, filter 0.2s; border-radius: 4px; font-size: 13px; font-weight: 600;
+            padding: 2px; box-sizing: border-box;
         }
-
         .data-item:hover { filter: brightness(0.95); }
-        .data-item.selected { border-color: #3b82f6; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.3); z-index: 100; }
-        
-        .dim-label { font-size: 10px; color: #64748b; margin-top: 2px; }
+        .data-item.selected { border-color: #2563eb; box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.35); z-index: 100 !important; }
+        .dim-label { font-size: 10px; color: #475569; margin-top: 2px; font-weight: 400; }
 
-        .cat-astreia { background-color: rgba(245, 158, 11, 0.2); border-color: #f59e0b; color: #b45309; }
-        .cat-almapro { background-color: rgba(16, 185, 129, 0.2); border-color: #10b981; color: #047857; }
-        .cat-fournil { background-color: rgba(239, 68, 68, 0.2); border-color: #ef4444; color: #b91c1c; }
-        .cat-stockage { background-color: rgba(139, 92, 246, 0.2); border-color: #8b5cf6; color: #5b21b6; }
-        .cat-zone { background-color: rgba(59, 130, 246, 0.1); border-color: #3b82f6; color: #1d4ed8; border-style: dashed; }
-        .cat-structure { background-color: #cbd5e1; border-color: #475569; color: #1e293b; }
+        /* Catégories métiers & architecturales */
+        .cat-astreia { background-color: rgba(245, 158, 11, 0.22); border-color: #d97706; color: #92400e; }
+        .cat-almapro { background-color: rgba(16, 185, 129, 0.22); border-color: #059669; color: #065f46; }
+        .cat-fournil { background-color: rgba(239, 68, 68, 0.2); border-color: #dc2626; color: #991b1b; }
+        .cat-stockage { background-color: rgba(139, 92, 246, 0.2); border-color: #7c3aed; color: #5b21b6; }
+        .cat-zone { background-color: rgba(59, 130, 246, 0.12); border-color: #3b82f6; color: #1d4ed8; border-style: dashed; }
+        .cat-structure { background-color: #e2e8f0; border-color: #475569; color: #1e293b; }
+        .cat-pmr { background-color: rgba(6, 182, 212, 0.25); border-color: #0891b2; color: #155e75; border-width: 3px; }
+        .cat-opening { background-color: rgba(14, 165, 233, 0.18); border: 2px dashed #0284c7; color: #0369a1; font-weight: 800; z-index: 55; }
+        .cat-circulation { background-color: rgba(34, 197, 94, 0.10); border: 2px dashed #16a34a; color: #15803d; font-weight: 700; z-index: 2; }
+        .cat-etage { background-color: rgba(99, 102, 241, 0.18); border-color: #4f46e5; color: #312e81; }
 
         .wall-line {
             position: absolute; background-color: #1e293b; border: 1px solid #0f172a;
             transform-origin: top left; cursor: pointer; z-index: 50; display: flex; align-items: center; justify-content: center;
         }
-        .wall-line.selected { background-color: #3b82f6; box-shadow: 0 0 5px #3b82f6; }
-        .wall-label { position: absolute; top: -25px; font-size: 14px; color: #1e293b; font-weight: bold; pointer-events: none; white-space: nowrap; background: rgba(255,255,255,0.8); padding: 0 4px; border-radius: 4px;}
-
+        .wall-line.selected { background-color: #3b82f6; box-shadow: 0 0 6px #3b82f6; }
+        .wall-label { position: absolute; top: -24px; font-size: 13px; color: #1e293b; font-weight: bold; pointer-events: none; white-space: nowrap; background: rgba(255,255,255,0.85); padding: 0 4px; border-radius: 4px;}
+        
         .measure-line {
             position: absolute; border-top: 2px dashed #ef4444; transform-origin: top left;
             z-index: 60; pointer-events: none; display: flex; justify-content: center;
@@ -84,308 +66,727 @@
         .measure-line::after { right: 0; }
         .measure-label {
             position: absolute; top: -25px; background: white; padding: 2px 6px; border: 1px solid #ef4444;
-            color: #ef4444; font-size: 14px; font-weight: bold; border-radius: 4px; pointer-events: auto; cursor: pointer;
+            color: #ef4444; font-size: 13px; font-weight: bold; border-radius: 4px; pointer-events: auto; cursor: pointer;
         }
 
         .custom-text {
-            position: absolute; font-size: 24px; font-weight: bold; color: #334155;
-            cursor: pointer; user-select: none; padding: 5px; border: 1px solid transparent; z-index: 40; white-space: nowrap;
+            position: absolute; font-size: 20px; font-weight: bold; color: #1e293b;
+            cursor: pointer; user-select: none; padding: 4px 8px; border: 1px solid transparent; z-index: 40; white-space: nowrap;
+            background: rgba(255,255,255,0.65); border-radius: 4px;
         }
-        .custom-text.selected { border-color: #3b82f6; background-color: rgba(59, 130, 246, 0.1); }
+        .custom-text.selected { border-color: #3b82f6; background-color: rgba(59, 130, 246, 0.15); }
 
-        .sidebar-section { border-bottom: 1px solid #e2e8f0; padding: 15px; }
-        .sidebar-title { font-weight: bold; color: #475569; margin-bottom: 10px; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .sidebar-section { border-bottom: 1px solid #e2e8f0; padding: 12px 15px; }
+        .sidebar-title { font-weight: 700; color: #334155; margin-bottom: 8px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
         .item-template { 
-            background: white; border: 1px solid #cbd5e1; padding: 8px 10px; margin-bottom: 8px; 
-            border-radius: 6px; cursor: grab; font-size: 13px; display: flex; justify-content: space-between;
+            background: white; border: 1px solid #cbd5e1; padding: 7px 10px; margin-bottom: 6px; 
+            border-radius: 6px; cursor: grab; font-size: 12.5px; display: flex; justify-content: space-between; align-items: center;
         }
-        .item-template:hover { border-color: #94a3b8; background-color: #f8fafc; }
+        .item-template:hover { border-color: #64748b; background-color: #f8fafc; }
         .item-template:active { cursor: grabbing; }
         
         .tool-btn {
-            padding: 8px; text-align: center; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer;
-            background: white; font-size: 13px; font-weight: 500; color: #475569;
+            padding: 7px; text-align: center; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer;
+            background: white; font-size: 12px; font-weight: 600; color: #475569; transition: 0.15s;
         }
         .tool-btn:hover { background: #f1f5f9; }
-        .tool-btn.active { background: #3b82f6; color: white; border-color: #2563eb; }
+        .tool-btn.active { background: #2563eb; color: white; border-color: #1d4ed8; }
 
         #sidebar-scroll { overflow-y: auto; flex-grow: 1; }
-        
-        #top-bar { background: #1e293b; color: white; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; height: 60px;}
-        .top-btn { background: #334155; padding: 6px 12px; border-radius: 4px; font-size: 14px; cursor: pointer; border: 1px solid #475569;}
-        .top-btn:hover { background: #475569; }
-        .btn-action { background: #10b981; color: white; padding: 6px 12px; border-radius: 4px; font-weight: bold; cursor: pointer; border:none;}
-        .btn-action:hover { background: #059669; }
-        .btn-orange { background: #f59e0b; color: white; padding: 6px 12px; border-radius: 4px; font-weight: bold; cursor: pointer; border:none;}
-        .btn-orange:hover { background: #d97706; }
+        #top-bar { background: #0f172a; color: white; padding: 6px 12px; display: flex; justify-content: space-between; align-items: center; height: 64px; gap: 8px; overflow-x: auto; white-space: nowrap; }
+        .top-btn { background: #1e293b; padding: 6px 10px; border-radius: 6px; font-size: 12px; cursor: pointer; border: 1px solid #334155; color: #e2e8f0; transition: 0.15s; white-space: nowrap; }
+        .top-btn:hover { background: #334155; }
+        .floor-btn { padding: 6px 10px; font-size: 12px; font-weight: 700; border-radius: 6px; cursor: pointer; transition: 0.15s; white-space: nowrap; }
+        .floor-btn.active { background: #f59e0b; color: #0f172a; box-shadow: 0 0 10px rgba(245, 158, 11, 0.4); }
+        .floor-btn.inactive { background: #1e293b; color: #94a3b8; border: 1px solid #334155; }
     </style>
 </head>
 <body>
 
-    <div id="custom-object-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center; font-family:'Inter', sans-serif;">
-        <div style="background:white; padding:20px; border-radius:8px; width:350px; box-shadow:0 10px 25px rgba(0,0,0,0.2);">
-            <h3 style="margin-top:0; color:#1e293b; font-size:18px;">Créer un élément sur-mesure</h3>
+    <!-- MODALE : CRÉATION D'ÉLÉMENT SUR-MESURE -->
+    <div id="custom-object-modal" class="hidden fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center">
+        <div class="bg-white p-6 rounded-xl w-96 shadow-2xl">
+            <h3 class="text-lg font-bold text-slate-800 mb-3">Créer un élément sur-mesure</h3>
+            <label class="block text-xs font-bold text-slate-600 mt-3">Nom de l'élément</label>
+            <input type="text" id="co-name" placeholder="Ex: Bureau 160x80" class="w-full p-2 mt-1 border border-slate-300 rounded-lg text-sm outline-none focus:border-blue-500">
             
-            <label style="display:block; margin-top:15px; font-size:12px; color:#475569; font-weight:bold;">Nom de l'élément</label>
-            <input type="text" id="co-name" placeholder="Ex: Echelle à bacs" style="width:100%; padding:8px; margin-top:4px; border:1px solid #cbd5e1; border-radius:4px; box-sizing:border-box; outline:none;">
-            
-            <div style="display:flex; gap:10px; margin-top:15px;">
-                <div style="flex:1;">
-                    <label style="font-size:12px; color:#475569; font-weight:bold;">Largeur (X) cm</label>
-                    <input type="number" id="co-width" value="100" style="width:100%; padding:8px; margin-top:4px; border:1px solid #cbd5e1; border-radius:4px; box-sizing:border-box; outline:none;">
+            <div class="flex gap-3 mt-3">
+                <div class="flex-1">
+                    <label class="text-xs font-bold text-slate-600">Largeur (X) cm</label>
+                    <input type="number" id="co-width" value="150" class="w-full p-2 mt-1 border border-slate-300 rounded-lg text-sm outline-none">
                 </div>
-                <div style="flex:1;">
-                    <label style="font-size:12px; color:#475569; font-weight:bold;">Profondeur (Y) cm</label>
-                    <input type="number" id="co-height" value="100" style="width:100%; padding:8px; margin-top:4px; border:1px solid #cbd5e1; border-radius:4px; box-sizing:border-box; outline:none;">
+                <div class="flex-1">
+                    <label class="text-xs font-bold text-slate-600">Profondeur (Y) cm</label>
+                    <input type="number" id="co-height" value="120" class="w-full p-2 mt-1 border border-slate-300 rounded-lg text-sm outline-none">
                 </div>
             </div>
 
-            <label style="display:block; margin-top:15px; font-size:12px; color:#475569; font-weight:bold;">Affectation (Couleur)</label>
-            <select id="co-category" style="width:100%; padding:8px; margin-top:4px; border:1px solid #cbd5e1; border-radius:4px; box-sizing:border-box; outline:none;">
-                <option value="cat-astreia">Meunerie (Jaune/Orange)</option>
-                <option value="cat-fournil">Fournil (Rouge)</option>
+            <label class="block text-xs font-bold text-slate-600 mt-3">Affectation (Couleur)</label>
+            <select id="co-category" class="w-full p-2 mt-1 border border-slate-300 rounded-lg text-sm outline-none">
+                <option value="cat-astreia">Meunerie & Grain (Ambre)</option>
+                <option value="cat-fournil">Fournil & Cuisson (Rouge)</option>
                 <option value="cat-stockage">Stockage & Logistique (Violet)</option>
-                <option value="cat-structure">Mobilier & Sanitaire (Gris)</option>
+                <option value="cat-pmr">Accès PMR, Douches & Sanitaires (Cyan)</option>
+                <option value="cat-etage">Bureaux, Vestiaires & Mobilier R+1 (Indigo)</option>
+                <option value="cat-almapro">Kitchenette & Épicerie (Vert)</option>
+                <option value="cat-structure">Structure & Technique (Gris)</option>
                 <option value="cat-zone">Zone Virtuelle (Bleu pointillé)</option>
             </select>
 
-            <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:25px;">
-                <button onclick="closeCustomObjectModal()" style="padding:8px 12px; border:none; background:#e2e8f0; color:#475569; border-radius:4px; cursor:pointer;">Annuler</button>
-                <button onclick="createCustomObject()" style="padding:8px 12px; border:none; background:#3b82f6; color:white; border-radius:4px; cursor:pointer; font-weight:bold;">Créer et Placer</button>
+            <div class="flex justify-end gap-2 mt-6">
+                <button onclick="closeCustomObjectModal()" class="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg text-sm font-medium">Annuler</button>
+                <button onclick="createCustomObject()" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-bold hover:bg-blue-700">Créer et Placer</button>
             </div>
         </div>
     </div>
 
-    <div id="top-bar">
-        <div class="flex items-center gap-4">
-            <i class="fa-solid fa-industry text-2xl text-amber-500"></i>
-            <div class="flex items-center gap-2 bg-slate-800 p-1 pr-3 rounded-lg border border-slate-700">
-                <select id="project-select" onchange="switchProject(this.value)" class="bg-slate-700 text-white border-none rounded p-1 text-sm outline-none cursor-pointer">
-                    <!-- Options injectées par JS -->
-                </select>
-                <button onclick="createNewProject()" class="text-xs text-emerald-400 hover:text-emerald-300 ml-1" title="Nouveau Projet"><i class="fa-solid fa-plus"></i></button>
-                <button onclick="deleteCurrentProject()" class="text-xs text-red-400 hover:text-red-300 ml-1" title="Supprimer Projet"><i class="fa-solid fa-trash"></i></button>
+    <!-- MODALE : MÉTRÉS & DEVIS ARTISANS -->
+    <div id="metres-modal" class="hidden fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center">
+        <div class="bg-white p-6 rounded-xl w-[680px] max-h-[85vh] flex flex-col shadow-2xl">
+            <div class="flex justify-between items-center border-b pb-3 mb-4">
+                <div>
+                    <h3 class="text-lg font-bold text-slate-800"><i class="fa-solid fa-calculator text-amber-500 mr-2"></i>Synthèse des Métrés & Équipements pour Devis</h3>
+                    <p class="text-xs text-slate-500" id="metres-subtitle">Calculé en temps réel sur le projet actif (RDC + Étage R+1)</p>
+                </div>
+                <button onclick="document.getElementById('metres-modal').classList.add('hidden')" class="text-slate-400 hover:text-slate-700 text-xl">&times;</button>
+            </div>
+            <div id="metres-content" class="overflow-y-auto flex-1 space-y-4 text-sm text-slate-700 pr-2">
+                <!-- Injecté par JS -->
+            </div>
+            <div class="border-t pt-3 mt-4 flex justify-end">
+                <button onclick="document.getElementById('metres-modal').classList.add('hidden')" class="px-4 py-2 bg-slate-800 text-white rounded-lg text-sm font-semibold">Fermer</button>
             </div>
         </div>
-        <div class="flex gap-2">
-            <button class="btn-orange" onclick="loadBasePlan()"><i class="fa-solid fa-map mr-2"></i>Générer Plan de Base</button>
-            <div class="w-px h-8 bg-slate-600 mx-1"></div>
-            <button class="top-btn" onclick="zoomIn()"><i class="fa-solid fa-magnifying-glass-plus"></i></button>
-            <button class="top-btn" onclick="zoomOut()"><i class="fa-solid fa-magnifying-glass-minus"></i></button>
-            <button class="top-btn" onclick="resetView()"><i class="fa-solid fa-expand"></i> Centrer</button>
-            <div class="w-px h-8 bg-slate-600 mx-1"></div>
-            <button class="btn-action" onclick="exportPlanFile()" title="Télécharger le fichier"><i class="fa-solid fa-download mr-1"></i> Exporter</button>
-            <label class="top-btn cursor-pointer">
-                <i class="fa-solid fa-upload mr-1"></i> Importer
+    </div>
+
+    <!-- BARRE SUPÉRIEURE -->
+    <div id="top-bar">
+        <div class="flex items-center gap-2">
+            <div class="flex items-center gap-2">
+                <i class="fa-solid fa-wheat-awn text-xl text-amber-500"></i>
+                <div class="leading-tight">
+                    <div class="text-xs font-bold tracking-wider text-amber-400 uppercase">L'Aubetin</div>
+                    <div class="text-[10px] text-slate-400">36m x 9m</div>
+                </div>
+            </div>
+
+            <!-- Sélecteur de Projet -->
+            <div class="flex items-center gap-1 bg-slate-800 p-1 rounded-lg border border-slate-700 ml-1">
+                <select id="project-select" onchange="switchProject(this.value)" class="bg-slate-900 text-white border-none rounded px-2 py-1 text-xs font-semibold outline-none cursor-pointer max-w-[230px] truncate">
+                </select>
+                <button onclick="createNewProject()" class="px-2 py-1 text-xs text-emerald-400 hover:bg-slate-700 rounded" title="Nouveau Projet"><i class="fa-solid fa-plus"></i></button>
+                <button onclick="deleteCurrentProject()" class="px-2 py-1 text-xs text-red-400 hover:bg-slate-700 rounded" title="Supprimer Projet"><i class="fa-solid fa-trash"></i></button>
+            </div>
+
+            <!-- Sélecteur d'Étage (RDC / R+1) -->
+            <div class="flex items-center gap-1 bg-slate-800 p-1 rounded-lg border border-slate-700">
+                <button id="btn-floor-rdc" onclick="switchFloor('rdc')" class="floor-btn active">
+                    <i class="fa-solid fa-industry mr-1"></i>RDC (H=4.00m)
+                </button>
+                <button id="btn-floor-r1" onclick="switchFloor('r1')" class="floor-btn inactive">
+                    <i class="fa-solid fa-stairs mr-1"></i>Étage R+1 (+4.00m)
+                </button>
+                <button id="btn-ghost" onclick="toggleGhost()" class="top-btn text-xs ml-1 hidden" title="Afficher/Masquer les murs et trémies du RDC en transparence">
+                    <i class="fa-solid fa-layer-group text-cyan-400 mr-1"></i>Calque RDC : <span id="ghost-status">ON</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+            <button class="bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow" onclick="openMetresModal()">
+                <i class="fa-solid fa-clipboard-check mr-1"></i>Métrés Devis
+            </button>
+            <button class="bg-amber-500 hover:bg-amber-600 text-slate-950 px-3 py-1.5 rounded-lg text-xs font-bold shadow" onclick="restoreDefaultProjects()" title="Réinitialiser votre JSON et la variante Architecte">
+                <i class="fa-solid fa-rotate-left mr-1"></i>Plans Types
+            </button>
+            <div class="w-px h-6 bg-slate-700 mx-1"></div>
+            <button class="top-btn" onclick="zoomIn()" title="Zoom +"><i class="fa-solid fa-magnifying-glass-plus"></i></button>
+            <button class="top-btn" onclick="zoomOut()" title="Zoom -"><i class="fa-solid fa-magnifying-glass-minus"></i></button>
+            <button class="top-btn" onclick="resetView()" title="Centrer"><i class="fa-solid fa-expand"></i></button>
+            <div class="w-px h-6 bg-slate-700 mx-1"></div>
+            <button class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold" onclick="exportPlanFile()">
+                <i class="fa-solid fa-download mr-1"></i>JSON
+            </button>
+            <label class="top-btn cursor-pointer text-xs">
+                <i class="fa-solid fa-upload mr-1"></i>Importer
                 <input type="file" id="file-upload" class="hidden" accept=".json" onchange="importPlanFile(event)">
             </label>
         </div>
     </div>
 
+    <!-- CONTENEUR PRINCIPAL -->
     <div id="app-container">
+        <!-- BARRE LATÉRALE -->
         <div id="sidebar">
             <div class="sidebar-section bg-slate-50">
                 <div class="sidebar-title flex justify-between items-center">
-                    <span><i class="fa-solid fa-toolbox mr-2"></i>Outils</span>
-                    <button onclick="openCustomObjectModal()" class="text-xs bg-blue-100 text-blue-700 hover:bg-blue-200 px-2 py-1 rounded font-normal" title="Créer un élément sur mesure"><i class="fa-solid fa-plus"></i> Créer</button>
+                    <span><i class="fa-solid fa-compass-drafting mr-1.5 text-blue-600"></i>Outils Dessin</span>
+                    <button onclick="openCustomObjectModal()" class="text-xs bg-blue-600 text-white hover:bg-blue-700 px-2.5 py-1 rounded font-semibold"><i class="fa-solid fa-plus mr-1"></i>Sur-mesure</button>
                 </div>
-                <div class="grid grid-cols-2 gap-2 mt-2">
-                    <button class="tool-btn active" id="tool-select" onclick="setTool('select')"><i class="fa-solid fa-arrow-pointer mb-1 block"></i>Sélection</button>
-                    <button class="tool-btn" id="tool-wall" onclick="setTool('wall')"><i class="fa-solid fa-trowel-bricks mb-1 block"></i>Tracer Mur</button>
-                    <button class="tool-btn" id="tool-measure" onclick="setTool('measure')"><i class="fa-solid fa-ruler-combined mb-1 block"></i>Cote</button>
-                    <button class="tool-btn" id="tool-text" onclick="setTool('text')"><i class="fa-solid fa-font mb-1 block"></i>Texte</button>
+                <div class="grid grid-cols-4 gap-1.5 mt-2">
+                    <button class="tool-btn active" id="tool-select" onclick="setTool('select')"><i class="fa-solid fa-arrow-pointer block mb-1"></i>Sélect.</button>
+                    <button class="tool-btn" id="tool-wall" onclick="setTool('wall')"><i class="fa-solid fa-trowel-bricks block mb-1"></i>Cloison</button>
+                    <button class="tool-btn" id="tool-measure" onclick="setTool('measure')"><i class="fa-solid fa-ruler-combined block mb-1"></i>Cote</button>
+                    <button class="tool-btn" id="tool-text" onclick="setTool('text')"><i class="fa-solid fa-font block mb-1"></i>Texte</button>
+                </div>
+                <div class="mt-2 text-[11px] text-slate-500 flex justify-between">
+                    <span><kbd class="bg-slate-200 px-1 rounded">R</kbd> Pivoter 90°</span>
+                    <span><kbd class="bg-slate-200 px-1 rounded">Suppr</kbd> Effacer</span>
+                    <span>Grille : 20cm</span>
                 </div>
             </div>
 
-            <!-- NOUVEAU: Panneau de propriétés dynamiques -->
-            <div id="properties-panel" class="sidebar-section bg-indigo-50 hidden border-l-4 border-indigo-500">
-                <div class="sidebar-title text-indigo-700 flex justify-between">
-                    <span><i class="fa-solid fa-sliders mr-2"></i>Dimensions (cm)</span>
-                    <button onclick="deleteSelected()" class="text-red-500 hover:text-red-700" title="Supprimer"><i class="fa-solid fa-trash"></i></button>
-                </div>
-                <div class="grid grid-cols-2 gap-2 text-sm text-slate-700 mb-2">
-                    <div>
-                        <label class="block text-xs mb-1">Longueur (X)</label>
-                        <input type="number" id="prop-length" class="w-full border border-slate-300 rounded p-1 outline-none focus:border-indigo-500">
-                    </div>
-                    <div>
-                        <label class="block text-xs mb-1">Épaisseur/Larg (Y)</label>
-                        <input type="number" id="prop-thickness" class="w-full border border-slate-300 rounded p-1 outline-none focus:border-indigo-500">
+            <!-- Panneau de propriétés dynamiques -->
+            <div id="properties-panel" class="sidebar-section bg-blue-50/80 hidden border-l-4 border-blue-600">
+                <div class="sidebar-title text-blue-800 flex justify-between items-center">
+                    <span><i class="fa-solid fa-sliders mr-1.5"></i>Propriétés (cm)</span>
+                    <div class="flex gap-2">
+                        <button onclick="rotateSelected()" class="text-blue-600 hover:text-blue-800 text-xs font-bold px-1.5 py-0.5 bg-blue-100 rounded" title="Pivoter (R)"><i class="fa-solid fa-rotate-right"></i> 90°</button>
+                        <button onclick="deleteSelected()" class="text-red-500 hover:text-red-700 px-1" title="Supprimer"><i class="fa-solid fa-trash"></i></button>
                     </div>
                 </div>
-                <button class="btn-action w-full py-1 text-sm bg-indigo-600 hover:bg-indigo-700" onclick="applyProperties()">Appliquer / Redimensionner</button>
+                <div class="grid grid-cols-2 gap-2 text-xs text-slate-700 mb-2">
+                    <div>
+                        <label class="block font-semibold mb-1">Longueur (X)</label>
+                        <input type="number" id="prop-length" class="w-full border border-slate-300 rounded p-1.5 outline-none focus:border-blue-600">
+                    </div>
+                    <div>
+                        <label class="block font-semibold mb-1">Largeur/Ép. (Y)</label>
+                        <input type="number" id="prop-thickness" class="w-full border border-slate-300 rounded p-1.5 outline-none focus:border-blue-600">
+                    </div>
+                </div>
+                <button class="w-full py-1.5 rounded text-xs font-bold bg-blue-600 text-white hover:bg-blue-700" onclick="applyProperties()">Appliquer les dimensions</button>
             </div>
 
+            <!-- Bibliothèque d'éléments -->
             <div id="sidebar-scroll">
                 <div class="sidebar-section">
-                    <div class="sidebar-title text-blue-600">Zones & Modulaires</div>
-                    <div class="item-template" draggable="true" ondragstart="handleDragStart(event, 'Espace Modulable', 200, 200, 'cat-zone')">
-                        <span><i class="fa-solid fa-square-dashed mr-2"></i>Espace Modulable</span><span class="text-xs text-slate-400">200x200</span>
+                    <div class="sidebar-title text-indigo-700"><i class="fa-solid fa-stairs mr-1.5"></i>Étage R+1 (Bureaux, Vestiaires, Sanitaires)</div>
+                    <div class="item-template" draggable="true" ondragstart="handleDragStart(event, 'Poste Bureau (160x80)', 160, 80, 'cat-etage')">
+                        <span><i class="fa-solid fa-desktop mr-2 text-indigo-600"></i>Bureau 160x80</span><span class="text-xs text-slate-400">160x80</span>
                     </div>
-                    <div class="item-template" draggable="true" ondragstart="handleDragStart(event, 'Stockage Farine', 300, 200, 'cat-zone')">
-                        <span><i class="fa-solid fa-cubes-stacked mr-2"></i>Stockage Farine</span><span class="text-xs text-slate-400">300x200</span>
+                    <div class="item-template" draggable="true" ondragstart="handleDragStart(event, 'Cabine Douche Individuelle', 100, 100, 'cat-pmr')">
+                        <span><i class="fa-solid fa-shower mr-2 text-cyan-600"></i>Douche Individuelle</span><span class="text-xs text-slate-400">100x100</span>
                     </div>
-                    <div class="item-template" draggable="true" ondragstart="handleDragStart(event, 'Zone Ensachage', 250, 150, 'cat-zone')">
-                        <span><i class="fa-solid fa-sack-dollar mr-2"></i>Zone Ensachage</span><span class="text-xs text-slate-400">250x150</span>
+                    <div class="item-template" draggable="true" ondragstart="handleDragStart(event, 'Cabine WC PMR (160x210)', 160, 210, 'cat-pmr')">
+                        <span><i class="fa-solid fa-wheelchair mr-2 text-cyan-600"></i>Cabine WC PMR</span><span class="text-xs text-slate-400">160x210</span>
                     </div>
-                </div>
-
-                <div class="sidebar-section">
-                    <div class="sidebar-title text-amber-600">Meunerie Astréïa</div>
-                    <div class="item-template" draggable="true" ondragstart="handleDragStart(event, 'ML100 Révolution', 290, 150, 'cat-astreia')">
-                        <span><i class="fa-solid fa-gear mr-2"></i>ML100 + Rampe</span><span class="text-xs text-slate-400">290x150</span>
+                    <div class="item-template" draggable="true" ondragstart="handleDragStart(event, 'Casiers Vestiaires Double Compartiment', 240, 55, 'cat-etage')">
+                        <span><i class="fa-solid fa-shirt mr-2"></i>Casiers Vestiaires</span><span class="text-xs text-slate-400">240x55</span>
                     </div>
-                    <div class="item-template" draggable="true" ondragstart="handleDragStart(event, 'ML50 Authentique', 190, 90, 'cat-astreia')">
-                        <span><i class="fa-solid fa-gear mr-2"></i>ML50 + Rampe</span><span class="text-xs text-slate-400">190x90</span>
+                    <div class="item-template" draggable="true" ondragstart="handleDragStart(event, 'Kitchenette Équipée (Évier/Frigo/MO)', 340, 65, 'cat-almapro')">
+                        <span><i class="fa-solid fa-sink mr-2 text-emerald-600"></i>Kitchenette Équipée</span><span class="text-xs text-slate-400">340x65</span>
                     </div>
-                    <div class="item-template" draggable="true" ondragstart="handleDragStart(event, 'Trémie 2m3', 152, 152, 'cat-astreia')">
-                        <span><i class="fa-solid fa-box-open mr-2"></i>Trémie 2m3</span><span class="text-xs text-slate-400">152x152</span>
-                    </div>
-                    <div class="item-template" draggable="true" ondragstart="handleDragStart(event, 'Brosse à Grain', 120, 71, 'cat-astreia')">
-                        <span><i class="fa-solid fa-broom mr-2"></i>Brosse</span><span class="text-xs text-slate-400">120x71</span>
-                    </div>
-                    <div class="item-template" draggable="true" ondragstart="handleDragStart(event, 'Décortiqueuse', 105, 72, 'cat-astreia')">
-                        <span><i class="fa-solid fa-fan mr-2"></i>Décortiqueuse</span><span class="text-xs text-slate-400">105x72</span>
-                    </div>
-                    <div class="item-template" draggable="true" ondragstart="handleDragStart(event, 'Bluterie Seule', 120, 80, 'cat-astreia')">
-                        <span><i class="fa-solid fa-filter mr-2"></i>Bluterie (Astreïa)</span><span class="text-xs text-slate-400">120x80</span>
-                    </div>
-                    <div class="item-template" draggable="true" ondragstart="handleDragStart(event, 'Séparateur Cyclone', 60, 60, 'cat-astreia')">
-                        <span><i class="fa-solid fa-tornado mr-2"></i>Cyclone</span><span class="text-xs text-slate-400">Ø60</span>
-                    </div>
-                    <div class="item-template" draggable="true" ondragstart="handleDragStart(event, 'Support Big-Bag', 120, 120, 'cat-astreia')">
-                        <span><i class="fa-solid fa-sack-xmark mr-2"></i>Support Big-Bag</span><span class="text-xs text-slate-400">120x120</span>
+                    <div class="item-template" draggable="true" ondragstart="handleDragStart(event, 'Table Réfectoire (8 pers.)', 220, 95, 'cat-etage')">
+                        <span><i class="fa-solid fa-utensils mr-2"></i>Table Réfectoire</span><span class="text-xs text-slate-400">220x95</span>
                     </div>
                 </div>
 
                 <div class="sidebar-section">
-                    <div class="sidebar-title text-emerald-600">Meunerie Alma Pro</div>
-                    <div class="item-template" draggable="true" ondragstart="handleDragStart(event, 'Moulin PRO100', 130, 130, 'cat-almapro')">
-                        <span><i class="fa-solid fa-circle-notch mr-2"></i>Moulin PRO100</span><span class="text-xs text-slate-400">130x130</span>
+                    <div class="sidebar-title text-amber-600"><i class="fa-solid fa-wheat-awn mr-1.5"></i>Meunerie (Implantation Plain-Pied)</div>
+                    <div class="item-template" draggable="true" ondragstart="handleDragStart(event, 'Ligne Plain-Pied 6.70m (Gabarit)', 260, 670, 'cat-zone')">
+                        <span><i class="fa-solid fa-ruler-vertical mr-2 text-amber-600"></i>Gabarit Ligne 6.70m</span><span class="text-xs text-slate-400">260x670</span>
                     </div>
-                    <div class="item-template" draggable="true" ondragstart="handleDragStart(event, 'Tamiseuse Alma', 150, 100, 'cat-almapro')">
-                        <span><i class="fa-solid fa-boxes-stacked mr-2"></i>Tamiseuse</span><span class="text-xs text-slate-400">150x100</span>
+                    <div class="item-template" draggable="true" ondragstart="handleDragStart(event, 'Caisson Mobile Grain (Palox)', 120, 100, 'cat-stockage')">
+                        <span><i class="fa-solid fa-box-open mr-2 text-purple-600"></i>Caisson Mobile (Grain/Son)</span><span class="text-xs text-slate-400">120x100</span>
                     </div>
-                    <div class="item-template" draggable="true" ondragstart="handleDragStart(event, 'Ligne Plain-Pied', 670, 400, 'cat-almapro')">
-                        <span><i class="fa-solid fa-gears mr-2"></i>Ligne Plain-Pied</span><span class="text-xs text-slate-400">670x400</span>
+                    <div class="item-template" draggable="true" ondragstart="handleDragStart(event, 'Moulin ML100 + Aspiration', 160, 150, 'cat-astreia')">
+                        <span><i class="fa-solid fa-gear mr-2"></i>Moulin ML100 (Seul)</span><span class="text-xs text-slate-400">160x150</span>
+                    </div>
+                    <div class="item-template" draggable="true" ondragstart="handleDragStart(event, 'Moulin ML50 + Aspiration', 140, 120, 'cat-astreia')">
+                        <span><i class="fa-solid fa-gear mr-2"></i>Moulin ML50 (Seul)</span><span class="text-xs text-slate-400">140x120</span>
                     </div>
                 </div>
 
                 <div class="sidebar-section">
-                    <div class="sidebar-title text-red-600">Fournil & Boulangerie</div>
-                    <div class="item-template" draggable="true" ondragstart="handleDragStart(event, 'Fours (Bloc)', 320, 300, 'cat-fournil')">
-                        <span><i class="fa-solid fa-fire-burner mr-2"></i>Fours (Bloc)</span><span class="text-xs text-slate-400">320x300</span>
+                    <div class="sidebar-title text-red-600"><i class="fa-solid fa-fire-burner mr-1.5"></i>Fournil & Boulangerie</div>
+                    <div class="item-template" draggable="true" ondragstart="handleDragStart(event, 'Fours (Bloc Soles+Rotatif)', 320, 300, 'cat-fournil')">
+                        <span><i class="fa-solid fa-fire-burner mr-2"></i>Fours (Soles + Rotatif)</span><span class="text-xs text-slate-400">320x300</span>
                     </div>
                     <div class="item-template" draggable="true" ondragstart="handleDragStart(event, 'Pétrin', 150, 150, 'cat-fournil')">
                         <span><i class="fa-solid fa-blender mr-2"></i>Pétrin</span><span class="text-xs text-slate-400">150x150</span>
                     </div>
-                    <div class="item-template" draggable="true" ondragstart="handleDragStart(event, 'Chambre Pousse/Froid', 300, 150, 'cat-fournil')">
-                        <span><i class="fa-solid fa-snowflake mr-2"></i>Chambre Froid</span><span class="text-xs text-slate-400">300x150</span>
+                    <div class="item-template" draggable="true" ondragstart="handleDragStart(event, 'Chambre Pousse/Froid', 170, 280, 'cat-fournil')">
+                        <span><i class="fa-solid fa-snowflake mr-2"></i>Chambre Pousse/Froid</span><span class="text-xs text-slate-400">170x280</span>
                     </div>
-                    <div class="item-template" draggable="true" ondragstart="handleDragStart(event, 'Table Façonnage', 320, 120, 'cat-fournil')">
-                        <span><i class="fa-solid fa-table mr-2"></i>Table Façonnage</span><span class="text-xs text-slate-400">320x120</span>
-                    </div>
-                    <div class="item-template" draggable="true" ondragstart="handleDragStart(event, 'Plonge Inox', 200, 80, 'cat-fournil')">
-                        <span><i class="fa-solid fa-sink mr-2"></i>Plonge Inox</span><span class="text-xs text-slate-400">200x80</span>
-                    </div>
-                    <div class="item-template" draggable="true" ondragstart="handleDragStart(event, 'Balance', 100, 100, 'cat-fournil')">
-                        <span><i class="fa-solid fa-scale-balanced mr-2"></i>Balance</span><span class="text-xs text-slate-400">100x100</span>
-                    </div>
-                    <div class="item-template" draggable="true" ondragstart="handleDragStart(event, 'Échelle Pains', 60, 80, 'cat-fournil')">
-                        <span><i class="fa-solid fa-cart-flatbed mr-2"></i>Échelle Pains</span><span class="text-xs text-slate-400">60x80</span>
+                    <div class="item-template" draggable="true" ondragstart="handleDragStart(event, 'Table Façonnage (90°)', 100, 200, 'cat-fournil')">
+                        <span><i class="fa-solid fa-table mr-2"></i>Table Façonnage (90°)</span><span class="text-xs text-slate-400">100x200</span>
                     </div>
                 </div>
-                
-                <div class="sidebar-section">
-                    <div class="sidebar-title text-slate-600">Général & Structure</div>
-                    <div class="item-template" draggable="true" ondragstart="handleDragStart(event, 'Porte Simple', 90, 10, 'cat-structure')">
-                        <span><i class="fa-solid fa-door-open mr-2"></i>Porte Simple</span><span class="text-xs text-slate-400">90x10</span>
-                    </div>
-                    <div class="item-template" draggable="true" ondragstart="handleDragStart(event, 'Porte Double', 200, 20, 'cat-structure')">
-                        <span><i class="fa-solid fa-door-closed mr-2"></i>Porte Double</span><span class="text-xs text-slate-400">200x20</span>
-                    </div>
-                    <div class="item-template" draggable="true" ondragstart="handleDragStart(event, 'Container (PCMA)', 250, 200, 'cat-stockage')">
-                        <span><i class="fa-solid fa-box-archive mr-2"></i>Container Grain</span><span class="text-xs text-slate-400">250x200</span>
-                    </div>
-                    <div class="item-template" draggable="true" ondragstart="handleDragStart(event, 'Quai Départ', 375, 450, 'cat-stockage')">
-                        <span><i class="fa-solid fa-truck-fast mr-2"></i>Quai Départ</span><span class="text-xs text-slate-400">375x450</span>
-                    </div>
-                    <div class="item-template" draggable="true" ondragstart="handleDragStart(event, 'Cabine WC', 150, 150, 'cat-structure')">
-                        <span><i class="fa-solid fa-restroom mr-2"></i>Cabine WC</span><span class="text-xs text-slate-400">150x150</span>
-                    </div>
-                </div>
-
             </div>
         </div>
 
+        <!-- ZONE DE TRAVAIL -->
         <div id="workspace" ondragover="handleDragOver(event)" ondrop="handleDrop(event)">
-            <!-- Indicateur central -->
-            <div style="position:absolute; top:50%; left:50%; width:20px; height:2px; background:rgba(0,0,0,0.1); transform:translate(-50%, -50%); pointer-events:none;"></div>
-            <div style="position:absolute; top:50%; left:50%; width:2px; height:20px; background:rgba(0,0,0,0.1); transform:translate(-50%, -50%); pointer-events:none;"></div>
-            
-            <div id="banner" style="display:none; position:absolute; top:20px; left:50%; transform:translateX(-50%); background:#3b82f6; color:white; padding:8px 16px; border-radius:20px; z-index:200; font-weight:bold; box-shadow:0 4px 6px rgba(0,0,0,0.1); transition: 0.3s;">
+            <!-- Bandeau d'information -->
+            <div id="banner" class="hidden absolute top-4 left-1/2 -translate-x-1/2 bg-blue-600 text-white px-4 py-2 rounded-full z-50 text-xs font-bold shadow-lg">
                 <i class="fa-solid fa-info-circle mr-2"></i><span id="banner-text"></span>
             </div>
 
-            <div id="canvas">
-                <!-- Injection dynamique des éléments -->
+            <!-- Légende d'étage flottante -->
+            <div class="absolute bottom-4 left-4 bg-white/95 backdrop-blur border border-slate-200 px-3.5 py-2.5 rounded-xl shadow-lg z-40 text-xs flex items-center gap-4 pointer-events-none">
+                <div class="font-bold text-slate-800" id="active-floor-badge"><i class="fa-solid fa-layer-group text-amber-500 mr-1.5"></i>Niveau actif : RDC (0.00m)</div>
+                <div class="flex items-center gap-2 text-[11px] text-slate-600">
+                    <span class="w-3 h-3 inline-block rounded bg-amber-500/30 border border-amber-600"></span>Meunerie ATEX
+                    <span class="w-3 h-3 inline-block rounded bg-red-500/30 border border-red-600 ml-1"></span>Fournil
+                    <span class="w-3 h-3 inline-block rounded bg-cyan-500/30 border border-cyan-600 ml-1"></span>PMR, Douches & WC
+                    <span class="w-3 h-3 inline-block rounded bg-indigo-500/30 border border-indigo-600 ml-1"></span>R+1 (Bureaux/Vestiaires)
+                </div>
             </div>
+
+            <!-- Calque fantôme du RDC (visible quand on est au R+1) -->
+            <div id="ghost-canvas" class="hidden"></div>
+            <!-- Canevas principal -->
+            <div id="canvas"></div>
         </div>
     </div>
 
     <script>
         const workspace = document.getElementById('workspace');
         const canvas = document.getElementById('canvas');
+        const ghostCanvas = document.getElementById('ghost-canvas');
         const banner = document.getElementById('banner');
         const propPanel = document.getElementById('properties-panel');
         const propLength = document.getElementById('prop-length');
         const propThickness = document.getElementById('prop-thickness');
 
-        // État de la vue
-        let scale = 0.5;
-        let panX = 0;
-        let panY = 0;
-        
-        // État des outils
+        let scale = 0.44;
+        let panX = 40;
+        let panY = 80;
         let currentTool = 'select';
         let selectedElement = null;
-        
-        // État de dessin dynamique
+        let currentFloor = 'rdc'; // 'rdc' ou 'r1'
+        let showGhostRdc = true;
+
         let isDrawingWall = false;
         let isMeasuring = false;
         let startPoint = null;
         let currentTempLine = null;
-
-        // État Drag & Drop et Panning
         let isPanning = false;
-        let startPanX = 0; let startPanY = 0;
+        let startPanX = 0, startPanY = 0;
         let isDraggingItem = false;
         let activeDragItem = null;
-        let itemOffsetX = 0; let itemOffsetY = 0;
+        let itemOffsetX = 0, itemOffsetY = 0;
 
-        // GESTION MULTI-PROJETS (LocalStorage)
+        // ============================================================================
+        // 1. BASE UTILISATEUR RDC (CONSERVÉE POUR COMPARAISON)
+        // ============================================================================
+        const USER_JSON_RDC = [
+            {"type":"wall","left":"20px","top":"0px","width":"3580px","height":"20px","angle":"0","length":"3580"},
+            {"type":"wall","left":"20px","top":"0px","width":"880px","height":"20px","angle":"90","length":"880"},
+            {"type":"wall","left":"3600px","top":"0px","width":"880px","height":"20px","angle":"90","length":"880"},
+            {"type":"wall","left":"20px","top":"880px","width":"3580px","height":"20px","angle":"0","length":"3580"},
+            {"type":"wall","left":"950px","top":"20px","width":"860px","height":"10px","angle":"90","length":"860"},
+            {"type":"wall","left":"1350px","top":"20px","width":"860px","height":"10px","angle":"90","length":"860"},
+            {"type":"wall","left":"1728px","top":"20px","width":"860px","height":"10px","angle":"90","length":"860"},
+            {"type":"wall","left":"2125px","top":"20px","width":"860px","height":"10px","angle":"90","length":"860"}
+        ];
+
+        // ============================================================================
+        // 2. PLAN CONSOLIDÉ RDC (H = 4,00m) : ZONES 1 À 5 VALIDÉES
+        // ============================================================================
+        function buildArchitectRDC() {
+            return [
+                // --- MURS PÉRIMÉTRIQUES DU BÂTIMENT (36m x 9m) DÉCOUPÉS AUX OUVERTURES ---
+                // Mur Nord (y=0) plein
+                {"type":"wall","left":"20px","top":"0px","width":"3580px","height":"20px","angle":"0","length":"3580"},
+                // Pignon Ouest (x=20) découpé pour la Fenêtre sous linteau (2,20m : y=330 à y=550)
+                {"type":"wall","left":"20px","top":"0px","width":"330px","height":"20px","angle":"90","length":"330"},
+                {"type":"wall","left":"20px","top":"550px","width":"330px","height":"20px","angle":"90","length":"330"},
+                // Pignon Est (x=3600) plein
+                {"type":"wall","left":"3600px","top":"0px","width":"880px","height":"20px","angle":"90","length":"880"},
+                // Façade Sud (y=880) découpée aux 3 ouvertures :
+                // 1. Entrée Boutique 3.00m (x=60..360) | 2. Porte Quai 2.40m (x=1390..1630) | 3. Porte Double Meunerie 3.00m (x=2816..3116)
+                {"type":"wall","left":"20px","top":"880px","width":"40px","height":"20px","angle":"0","length":"40"},
+                {"type":"wall","left":"360px","top":"880px","width":"1030px","height":"20px","angle":"0","length":"1030"},
+                {"type":"wall","left":"1630px","top":"880px","width":"1186px","height":"20px","angle":"0","length":"1186"},
+                {"type":"wall","left":"3116px","top":"880px","width":"484px","height":"20px","angle":"0","length":"484"},
+
+                // --- CLOISONS INTERNES DU RDC ---
+                // 1. Cloison Boutique / Zone 2 (x=950) avec Porte centrée de 1,40m (y=380..520)
+                {"type":"wall","left":"950px","top":"20px","width":"360px","height":"10px","angle":"90","length":"360"},
+                {"type":"wall","left":"950px","top":"520px","width":"360px","height":"10px","angle":"90","length":"360"},
+
+                // 2. Cloison Zone 2 / Zones 3A & 3B (x=1350) avec Porte Pousse 1,40m (y=350..490) et Porte Quai 1,40m (y=575..715)
+                {"type":"wall","left":"1350px","top":"20px","width":"330px","height":"10px","angle":"90","length":"330"},
+                {"type":"wall","left":"1350px","top":"490px","width":"85px","height":"10px","angle":"90","length":"85"},
+                {"type":"wall","left":"1350px","top":"715px","width":"165px","height":"10px","angle":"90","length":"165"},
+
+                // 3. Cloison horizontale entre Pousse 3A et Quai 3B + Paroi Nord Laverie (y=508, de x=1350 à x=1850)
+                {"type":"wall","left":"1350px","top":"508px","width":"500px","height":"10px","angle":"0","length":"500"},
+
+                // 4. Cloisons de la Laverie Centrale Mutualisée (x=1585 à x=1850, y=508 à y=710) :
+                // - Paroi Ouest côté Quai 3B (x=1585) avec Porte Laverie Quai 1,15m (y=585..700)
+                {"type":"wall","left":"1585px","top":"508px","width":"77px","height":"10px","angle":"90","length":"77"},
+                // - Paroi Sud Laverie (y=710, de x=1585 à x=1850)
+                {"type":"wall","left":"1585px","top":"710px","width":"265px","height":"10px","angle":"0","length":"265"},
+                // - Paroi Est côté Zone 4 (x=1850) avec Porte Laverie Zone 4 1,15m (y=585..700)
+                {"type":"wall","left":"1850px","top":"508px","width":"77px","height":"10px","angle":"90","length":"77"},
+
+                // 5. Cloison entre Zone 3A/3B et Zone 4 (x=1728) :
+                // - Au Nord : de y=20 à y=350 (Porte Pousse/Pétrissage 1,40m de y=350 à y=490)
+                {"type":"wall","left":"1728px","top":"20px","width":"330px","height":"10px","angle":"90","length":"330"},
+                {"type":"wall","left":"1728px","top":"490px","width":"18px","height":"10px","angle":"90","length":"18"},
+                // - Au Sud de la Laverie : de y=710 à y=880
+                {"type":"wall","left":"1728px","top":"710px","width":"170px","height":"10px","angle":"90","length":"170"},
+
+                // 6. Cloison Coupe-Feu EI60 entre Fournil (Zone 4) et Meunerie (Zone 5) (x=2125) avec Passage 1,90m (y=360..550)
+                {"type":"wall","left":"2125px","top":"20px","width":"340px","height":"12px","angle":"90","length":"340"},
+                {"type":"wall","left":"2125px","top":"550px","width":"330px","height":"12px","angle":"90","length":"330"},
+
+                // 7. Cloisons de l'Espace de Stockage Fermé des Consommables (x=2125 à x=2485, y=20 à y=350) :
+                // - Paroi Est 100% pleine (x=2485, de y=20 à y=350)
+                {"type":"wall","left":"2485px","top":"20px","width":"330px","height":"10px","angle":"90","length":"330"},
+                // - Paroi Sud (y=350, de x=2125 à x=2485) avec 1 SEULE PORTE de 1,20m côté fournil (x=2145..2265)
+                {"type":"wall","left":"2125px","top":"350px","width":"20px","height":"10px","angle":"0","length":"20"},
+                {"type":"wall","left":"2265px","top":"350px","width":"220px","height":"10px","angle":"0","length":"220"},
+
+                // 8. Murs du Local Pont-Bascule Externe (x=2125 à x=2477, y=682 à y=880) avec Porte d'accès 0,90m sous volée haute de l'escalier (x=2355..2445)
+                {"type":"wall","left":"2125px","top":"682px","width":"230px","height":"12px","angle":"0","length":"230"},
+                {"type":"wall","left":"2445px","top":"682px","width":"32px","height":"12px","angle":"0","length":"32"},
+                {"type":"wall","left":"2477px","top":"682px","width":"198px","height":"12px","angle":"90","length":"198"},
+
+                // --- PORTES & OUVERTURES DU RDC (CAT-OPENING) ---
+                {"type":"machine","left":"8px","top":"330px","width":"26px","height":"220px","className":"cat-opening","innerHTML":"<span>FENÊTRE SOUS LINTEAU (2,20m)</span><span class=\"dim-label\">Allège +1,15m</span>","rotation":"0"},
+                {"type":"machine","left":"60px","top":"868px","width":"300px","height":"26px","className":"cat-opening","innerHTML":"<span>ENTRÉE BOUTIQUE PMR (3,00m)</span><span class=\"dim-label\">Baie vitrée seuil PMR</span>","rotation":"0"},
+                {"type":"machine","left":"938px","top":"380px","width":"24px","height":"140px","className":"cat-opening","innerHTML":"<span>PORTE BOUTIQUE (1,40m)</span><span class=\"dim-label\">Centrée EI30</span>","rotation":"0"},
+                {"type":"machine","left":"1338px","top":"350px","width":"24px","height":"140px","className":"cat-opening","innerHTML":"<span>PORTE POUSSE 2/3A (1,40m)</span><span class=\"dim-label\">Sans seuil</span>","rotation":"0"},
+                {"type":"machine","left":"1338px","top":"575px","width":"24px","height":"140px","className":"cat-opening","innerHTML":"<span>PORTE QUAI 2/3B (1,40m)</span><span class=\"dim-label\">Passage Rolls</span>","rotation":"0"},
+                {"type":"machine","left":"1390px","top":"868px","width":"240px","height":"26px","className":"cat-opening","innerHTML":"<span>PORTE QUAI EXPÉDITION (2,40m)</span><span class=\"dim-label\">Sectionnelle isolée + Rideau PVC</span>","rotation":"0"},
+                {"type":"machine","left":"1573px","top":"585px","width":"24px","height":"115px","className":"cat-opening","innerHTML":"<span>PORTE LAVERIE QUAI 3B (1,15m)</span><span class=\"dim-label\">Entrée Rolls & Bacs Retour</span>","rotation":"0"},
+                {"type":"machine","left":"1838px","top":"585px","width":"24px","height":"115px","className":"cat-opening","innerHTML":"<span>PORTE LAVERIE ZONE 4 (1,15m)</span><span class=\"dim-label\">Sortie Propre & Batterie</span>","rotation":"0"},
+                {"type":"machine","left":"1716px","top":"350px","width":"24px","height":"140px","className":"cat-opening","innerHTML":"<span>PORTE POUSSE 3A/4 (1,40m)</span><span class=\"dim-label\">Coulissante Inox</span>","rotation":"0"},
+                {"type":"machine","left":"2113px","top":"360px","width":"24px","height":"190px","className":"cat-opening","innerHTML":"<span>PASSAGE EI60 MEUNERIE (1,90m)</span><span class=\"dim-label\">Coupe-Feu ATEX</span>","rotation":"0"},
+                {"type":"machine","left":"2145px","top":"338px","width":"120px","height":"24px","className":"cat-opening","innerHTML":"<span>PORTE UNIQUE CONSOMMABLES (1,20m)</span><span class=\"dim-label\">Accès direct côté Fournil</span>","rotation":"0"},
+                {"type":"machine","left":"2355px","top":"670px","width":"90px","height":"24px","className":"cat-opening","innerHTML":"<span>PORTE PONT-BASCULE (0,90m)</span><span class=\"dim-label\">Sous volée haute escalier (H>2,20m)</span>","rotation":"0"},
+                {"type":"machine","left":"2816px","top":"868px","width":"300px","height":"26px","className":"cat-opening","innerHTML":"<span>PORTE DOUBLE MEUNERIE FIXE (3,00m)</span><span class=\"dim-label\">Entrée Caissons Grain / Palox</span>","rotation":"0"},
+
+                // =========================================================================
+                // ZONE 1 : BOUTIQUE & ÉPICERIE FERMIÈRE (85 m²)
+                // =========================================================================
+                {"type":"text","left":"280px","top":"-45px","text":"1. BOUTIQUE & ÉPICERIE FERMIÈRE (85m2)","color":"#065f46","border":""},
+                {"type":"machine","left":"40px","top":"25px","width":"200px","height":"150px","className":"cat-fournil","innerHTML":"<span>Chambre Froide Positive #1</span><span class=\"dim-label\">200x150</span>","rotation":"0"},
+                {"type":"machine","left":"250px","top":"25px","width":"200px","height":"150px","className":"cat-fournil","innerHTML":"<span>Chambre Froide Positive #2</span><span class=\"dim-label\">200x150</span>","rotation":"0"},
+                {"type":"machine","left":"460px","top":"25px","width":"380px","height":"150px","className":"cat-stockage","innerHTML":"<span>Stockage Sec (Farine, Épicerie & Emballages)</span><span class=\"dim-label\">380x150</span>","rotation":"0"},
+                {"type":"machine","left":"460px","top":"185px","width":"240px","height":"75px","className":"cat-almapro","innerHTML":"<span>Vitrine Frais Libre-Service (2,40m)</span><span class=\"dim-label\">240x75 (Laisse 1,35m à droite pour palette)</span>","rotation":"0"},
+                {"type":"machine","left":"705px","top":"180px","width":"135px","height":"90px","className":"cat-circulation","innerHTML":"<span>↕ PASSAGE PALETTE (1,35m) ↕</span><span class=\"dim-label\">135x90 cm vers Stockage Sec</span>","rotation":"0"},
+                {"type":"machine","left":"40px","top":"185px","width":"80px","height":"140px","className":"cat-pmr","innerHTML":"<span>Plonge Inox + Lave-Mains</span><span class=\"dim-label\">80x140</span>","rotation":"0"},
+                {"type":"machine","left":"40px","top":"330px","width":"90px","height":"220px","className":"cat-almapro","innerHTML":"<span>Vitrine Fromage (Sous fenêtre 2,20m)</span><span class=\"dim-label\">90x220</span>","rotation":"0"},
+                {"type":"machine","left":"195px","top":"380px","width":"100px","height":"120px","className":"cat-almapro","innerHTML":"<span>Billot Coupe Fromage</span><span class=\"dim-label\">100x120</span>","rotation":"0"},
+                {"type":"machine","left":"40px","top":"560px","width":"90px","height":"160px","className":"cat-almapro","innerHTML":"<span>Meuble Caisse PMR</span><span class=\"dim-label\">90x160</span>","rotation":"0"},
+                {"type":"machine","left":"380px","top":"350px","width":"260px","height":"100px","className":"cat-almapro","innerHTML":"<span>Îlot Central #1 (Fruits & Légumes Bio)</span><span class=\"dim-label\">260x100</span>","rotation":"0"},
+                {"type":"machine","left":"380px","top":"530px","width":"260px","height":"100px","className":"cat-almapro","innerHTML":"<span>Îlot Central #2 (Épicerie Salée/Sucrée)</span><span class=\"dim-label\">260x100</span>","rotation":"0"},
+                {"type":"machine","left":"855px","top":"155px","width":"80px","height":"215px","className":"cat-astreia","innerHTML":"<span>Casiers à Pain Nord</span><span class=\"dim-label\">80x215</span>","rotation":"0"},
+                {"type":"machine","left":"855px","top":"530px","width":"80px","height":"175px","className":"cat-astreia","innerHTML":"<span>Casiers à Pain Sud</span><span class=\"dim-label\">80x175</span>","rotation":"0"},
+                {"type":"machine","left":"855px","top":"715px","width":"80px","height":"150px","className":"cat-almapro","innerHTML":"<span>Épicerie Est</span><span class=\"dim-label\">80x150</span>","rotation":"0"},
+                {"type":"machine","left":"385px","top":"810px","width":"460px","height":"55px","className":"cat-almapro","innerHTML":"<span>Linéaire Étagères Épicerie Sud</span><span class=\"dim-label\">460x55</span>","rotation":"0"},
+
+                // =========================================================================
+                // ZONE 2 : CUISSON, RESSUAGE, ENSACHAGE & POSTE BL (36 m²)
+                // =========================================================================
+                {"type":"text","left":"960px","top":"-45px","text":"2. CUISSON & EMBALLAGE (36m2)","color":"#991b1b","border":""},
+                {"type":"machine","left":"990px","top":"30px","width":"320px","height":"300px","className":"cat-fournil","innerHTML":"<span>Fours (Four à Soles + Four Rotatif + Hotte & Récup. Chaleur)</span><span class=\"dim-label\">320x300</span>","rotation":"0"},
+                {"type":"machine","left":"965px","top":"338px","width":"370px","height":"142px","className":"cat-circulation","innerHTML":"<span>⬅ ALLÉE DE DÉFOURNEMENT & FLUX POUSSE ➔ BOUTIQUE ➡</span><span class=\"dim-label\">370x142 cm (100% libre devant les fours)</span>","rotation":"0"},
+                {"type":"machine","left":"1045px","top":"485px","width":"192px","height":"290px","className":"cat-circulation","innerHTML":"<span>↕ ALLÉE CENTRALE EMBALLAGE & DÉPART QUAI ↕</span><span class=\"dim-label\">192x290 cm</span>","rotation":"0"},
+                {"type":"machine","left":"965px","top":"530px","width":"70px","height":"75px","className":"cat-fournil","innerHTML":"<span>Ressuage 1</span><span class=\"dim-label\">70x75</span>","rotation":"0"},
+                {"type":"machine","left":"965px","top":"612px","width":"70px","height":"75px","className":"cat-fournil","innerHTML":"<span>Ressuage 2</span><span class=\"dim-label\">70x75</span>","rotation":"0"},
+                {"type":"machine","left":"965px","top":"694px","width":"70px","height":"75px","className":"cat-fournil","innerHTML":"<span>Ressuage 3</span><span class=\"dim-label\">70x75</span>","rotation":"0"},
+                {"type":"machine","left":"965px","top":"785px","width":"80px","height":"80px","className":"cat-fournil","innerHTML":"<span>Trancheuse</span><span class=\"dim-label\">80x80</span>","rotation":"0"},
+                {"type":"machine","left":"1052px","top":"785px","width":"185px","height":"80px","className":"cat-fournil","innerHTML":"<span>Table Ensachage + Étagères Inox</span><span class=\"dim-label\">185x80</span>","rotation":"0"},
+                {"type":"machine","left":"1245px","top":"492px","width":"92px","height":"78px","className":"cat-stockage","innerHTML":"<span>Rolls Produits Finis (Z2)</span><span class=\"dim-label\">92x78</span>","rotation":"0"},
+                {"type":"machine","left":"1245px","top":"722px","width":"92px","height":"145px","className":"cat-almapro","innerHTML":"<span>Poste BL, Balance & Étiquetage</span><span class=\"dim-label\">92x145 (Pied Porte Quai)</span>","rotation":"0"},
+
+                // =========================================================================
+                // ZONE 3A : FERMENTATION / POUSSE (2 CHAMBRES CÔTE À CÔTE - 16 m²)
+                // =========================================================================
+                {"type":"text","left":"1380px","top":"-45px","text":"3A. POUSSE (16m2)","color":"#991b1b","border":""},
+                {"type":"machine","left":"1365px","top":"28px","width":"170px","height":"280px","className":"cat-fournil","innerHTML":"<span>Chambre Pousse / Froid #1</span><span class=\"dim-label\">170x280 (Sans seuil)</span>","rotation":"0"},
+                {"type":"machine","left":"1543px","top":"28px","width":"170px","height":"280px","className":"cat-fournil","innerHTML":"<span>Chambre Pousse / Froid #2</span><span class=\"dim-label\">170x280 (Sans seuil)</span>","rotation":"0"},
+                {"type":"machine","left":"1365px","top":"318px","width":"348px","height":"178px","className":"cat-circulation","innerHTML":"<span>⬅ AIRE DE MANŒUVRE ÉCHELLES & ACCÈS FRONTAL POUSSE ➡</span><span class=\"dim-label\">348x178 cm (Alignée Portes 1,40m)</span>","rotation":"0"},
+
+                // =========================================================================
+                // ZONE 3B : QUAI D'EXPÉDITION (13 m²) & LAVERIE CENTRALE MUTUALISÉE (5,4 m²)
+                // =========================================================================
+                {"type":"machine","left":"1362px","top":"520px","width":"210px","height":"52px","className":"cat-stockage","innerHTML":"<span>Rolls Produits Finis Prêts #1</span><span class=\"dim-label\">210x52</span>","rotation":"0"},
+                {"type":"machine","left":"1362px","top":"580px","width":"210px","height":"282px","className":"cat-circulation","innerHTML":"<span>↕ SAS CHARGEMENT QUAI 3B & ENTRÉE ROLLS LAVERIE ↕</span><span class=\"dim-label\">210x282 cm (Vers Porte 2,40m et Porte Laverie 1,15m)</span>","rotation":"0"},
+                {"type":"machine","left":"1582px","top":"722px","width":"135px","height":"145px","className":"cat-stockage","innerHTML":"<span>Rolls Produits Finis #2 + Transpalette</span><span class=\"dim-label\">135x145</span>","rotation":"0"},
+                {"type":"machine","left":"1390px","top":"902px","width":"240px","height":"42px","className":"cat-pmr","innerHTML":"<span>Auvent Extérieur + 2 Bornes IRVE 22kW (Délestage)</span><span class=\"dim-label\">240x42 (Façade Sud)</span>","rotation":"0"},
+
+                // LAVERIE CENTRALE MUTUALISÉE (x=1585..1850, y=508..710)
+                {"type":"machine","left":"1596px","top":"518px","width":"242px","height":"64px","className":"cat-pmr","innerHTML":"<span>1. Plonge Trempage + Bac Fécule ➔ 2. Lave-Bacs Capot 85°C ➔ 3. Égouttage</span><span class=\"dim-label\">242x64 (Train de lavage + Étagères Inox)</span>","rotation":"0"},
+                {"type":"machine","left":"1596px","top":"588px","width":"242px","height":"112px","className":"cat-circulation","innerHTML":"<span>⬅ COULOIR LAVERIE MUTUALISÉE (2 PORTES 1,15m) ➡</span><span class=\"dim-label\">242x112 cm (Entrée Rolls 3B / Sortie Propre Z4 & Z2)</span>","rotation":"0"},
+
+                // =========================================================================
+                // ZONE 4 : PÉTRISSAGE & FAÇONNAGE À 90° (36 m²)
+                // =========================================================================
+                {"type":"text","left":"1745px","top":"-45px","text":"4. PÉTRISSAGE & FAÇONNAGE (36m2)","color":"#991b1b","border":""},
+                // 5 Échelles à gauche pivotées à 90° (78x56 cm)
+                {"type":"machine","left":"1742px","top":"25px","width":"78px","height":"56px","className":"cat-fournil","innerHTML":"<span>Échelle 1</span><span class=\"dim-label\">78x56</span>","rotation":"0"},
+                {"type":"machine","left":"1742px","top":"85px","width":"78px","height":"56px","className":"cat-fournil","innerHTML":"<span>Échelle 2</span><span class=\"dim-label\">78x56</span>","rotation":"0"},
+                {"type":"machine","left":"1742px","top":"145px","width":"78px","height":"56px","className":"cat-fournil","innerHTML":"<span>Échelle 3</span><span class=\"dim-label\">78x56</span>","rotation":"0"},
+                {"type":"machine","left":"1742px","top":"205px","width":"78px","height":"56px","className":"cat-fournil","innerHTML":"<span>Échelle 4</span><span class=\"dim-label\">78x56</span>","rotation":"0"},
+                {"type":"machine","left":"1742px","top":"265px","width":"78px","height":"56px","className":"cat-fournil","innerHTML":"<span>Échelle 5</span><span class=\"dim-label\">78x56</span>","rotation":"0"},
+                // Allée verticale de façonnage au centre (105x296 cm)
+                {"type":"machine","left":"1825px","top":"25px","width":"105px","height":"296px","className":"cat-circulation","innerHTML":"<span>↕ ALLÉE DE FAÇONNAGE & CHARGEMENT ÉCHELLES (1,05m) ↕</span><span class=\"dim-label\">105x296 cm</span>","rotation":"0"},
+                // Table de façonnage à 90° (100x200 cm) + Diviseuse + Mouleuse à baguettes à droite
+                {"type":"machine","left":"1935px","top":"25px","width":"100px","height":"200px","className":"cat-fournil","innerHTML":"<span>Table Façonnage Bois/Inox (90°)</span><span class=\"dim-label\">100x200 (Accès 2 faces)</span>","rotation":"0"},
+                {"type":"machine","left":"1935px","top":"232px","width":"85px","height":"88px","className":"cat-fournil","innerHTML":"<span>Diviseuse Hydraulique</span><span class=\"dim-label\">85x88</span>","rotation":"0"},
+                {"type":"machine","left":"2026px","top":"232px","width":"88px","height":"88px","className":"cat-fournil","innerHTML":"<span>Mouleuse à Baguettes</span><span class=\"dim-label\">88x88 (+ Étagères)</span>","rotation":"0"},
+                // Couloir central Est-Ouest Zone 4
+                {"type":"machine","left":"1742px","top":"335px","width":"368px","height":"162px","className":"cat-circulation","innerHTML":"<span>⬅ FLUX FARINE, ÉCHELLES & RETOUR BACS PROPRES LAVERIE VERS ZONE 2 ➡</span><span class=\"dim-label\">368x162 cm</span>","rotation":"0"},
+                // Partie Sud Zone 4 : Lave-mains, Poste Pesée, Pétrins 1 & 2 et Doseur/Refroidisseur d'eau au centre
+                {"type":"machine","left":"1858px","top":"515px","width":"55px","height":"62px","className":"cat-pmr","innerHTML":"<span>Lave-Mains Fémoral</span><span class=\"dim-label\">55x62</span>","rotation":"0"},
+                {"type":"machine","left":"1858px","top":"585px","width":"140px","height":"125px","className":"cat-circulation","innerHTML":"<span>↕ DÉGAGEMENT SORTIE LAVERIE & PÉTRINS ↕</span><span class=\"dim-label\">140x125 cm</span>","rotation":"0"},
+                {"type":"machine","left":"2006px","top":"515px","width":"105px","height":"195px","className":"cat-fournil","innerHTML":"<span>Poste Pesée, Levain & Étagères Murales Inox</span><span class=\"dim-label\">105x195</span>","rotation":"0"},
+                {"type":"machine","left":"1742px","top":"725px","width":"135px","height":"145px","className":"cat-fournil","innerHTML":"<span>Pétrin 1 (Capot Anti-Poussière)</span><span class=\"dim-label\">135x145</span>","rotation":"0"},
+                {"type":"machine","left":"1882px","top":"815px","width":"88px","height":"55px","className":"cat-pmr","innerHTML":"<span>Doseur & Refroidisseur Eau</span><span class=\"dim-label\">88x55 (Mural en hauteur)</span>","rotation":"0"},
+                {"type":"machine","left":"1975px","top":"725px","width":"138px","height":"145px","className":"cat-fournil","innerHTML":"<span>Pétrin 2 (Capot Anti-Poussière)</span><span class=\"dim-label\">138x145</span>","rotation":"0"},
+
+                // =========================================================================
+                // ZONE 5 : MEUNERIE PLAIN-PIED (H = 4,00m), CONSOMMABLES, ESCALIER (OUEST ➔ EST), PORTE BASCULE & ÉLÉVATEUR PMR (132 m²)
+                // =========================================================================
+                {"type":"text","left":"2520px","top":"-45px","text":"5. MEUNERIE PLAIN-PIED (H=4,00m), STOCKAGES & ACCÈS R+1 (132m2)","color":"#92400e","border":""},
+
+                // 1. Local Fermé de Stockage des Consommables (1 seule porte côté Fournil)
+                {"type":"machine","left":"2138px","top":"30px","width":"335px","height":"302px","className":"cat-stockage","innerHTML":"<span>Espace Fermé Stockage Consommables (Moulin & Boulangerie)</span><span class=\"dim-label\">335x302 cm (Cloison Est pleine anti-poussière + 1 seule porte 1,20m côté fournil)</span>","rotation":"0"},
+
+                // 2. Stockage Farine Ouvert (face aux rampes d'ensachage)
+                {"type":"machine","left":"2510px","top":"35px","width":"360px","height":"210px","className":"cat-zone","innerHTML":"<span>Zone Stockage Farine sur Palettes (Face aux Rampes 6 sacs)</span><span class=\"dim-label\">360x210 cm (À l'extérieur du local consommables)</span>","rotation":"0"},
+
+                // 3. Escalier (Sens Ouest ➔ Est vers +4,00m), Local Pont-Bascule (Porte sous volée haute) & Élévateur PMR adossé au mur Sud
+                {"type":"machine","left":"2131px","top":"572px","width":"346px","height":"100px","className":"cat-pmr","innerHTML":"<span>Escalier vers R+1 (+4,00m) : SENS DE MONTÉE OUEST ➔ EST</span><span class=\"dim-label\">346x100 (Départ RDC à gauche x=21,31m ➔ Volée haute à droite H=2,20m..3,70m)</span>","rotation":"0"},
+                {"type":"machine","left":"2135px","top":"695px","width":"332px","height":"175px","className":"cat-structure","innerHTML":"<span>LOCAL PONT-BASCULE EXTERNE (Accès par Porte 0,90m sous volée haute escalier)</span><span class=\"dim-label\">332x175 cm</span>","rotation":"0"},
+                {"type":"machine","left":"2482px","top":"560px","width":"165px","height":"150px","className":"cat-circulation","innerHTML":"<span>⬅ PALIER PMR & ACCÈS BASCULE SOUS VOLÉE HAUTE ESCALIER ⬇</span><span class=\"dim-label\">165x150 cm (Passage debout H>2,20m vers Porte Bascule)</span>","rotation":"0"},
+                {"type":"machine","left":"2482px","top":"715px","width":"165px","height":"162px","className":"cat-pmr","innerHTML":"<span>Élévateur PMR (Course 4,00m - Adossé au Mur Sud)</span><span class=\"dim-label\">165x162 cm (100% hors emprise Bascule & Escalier)</span>","rotation":"0"},
+
+                // 4. Ligne 1 Meunerie Plain-Pied ML50 (6,70m)
+                {"type":"machine","left":"2900px","top":"35px","width":"280px","height":"670px","className":"cat-zone","innerHTML":"<span></span><span class=\"dim-label\">LIGNE 1 PLAIN-PIED ML50 (280x670 - H=2,50m sous plafond 4,00m)</span>","rotation":"0"},
+                {"type":"machine","left":"2920px","top":"50px","width":"240px","height":"140px","className":"cat-astreia","innerHTML":"<span>Rampe Ensachage 6 sacs (ML50)</span><span class=\"dim-label\">240x140</span>","rotation":"0"},
+                {"type":"machine","left":"2920px","top":"215px","width":"240px","height":"195px","className":"cat-astreia","innerHTML":"<span>Tamiseur 3 fractions + 2 Caissons Son/Semoule</span><span class=\"dim-label\">240x195</span>","rotation":"0"},
+                {"type":"machine","left":"2960px","top":"435px","width":"160px","height":"130px","className":"cat-astreia","innerHTML":"<span>Moulin ML50 + Transfert Pneumatique</span><span class=\"dim-label\">160x130</span>","rotation":"0"},
+                {"type":"machine","left":"2980px","top":"585px","width":"120px","height":"105px","className":"cat-stockage","innerHTML":"<span>Caisson Mobile Grain #1</span><span class=\"dim-label\">120x105</span>","rotation":"0"},
+
+                // 5. Ligne 2 Meunerie Plain-Pied ML100 (6,70m)
+                {"type":"machine","left":"3250px","top":"35px","width":"300px","height":"670px","className":"cat-zone","innerHTML":"<span></span><span class=\"dim-label\">LIGNE 2 PLAIN-PIED ML100 (300x670 - H=2,50m sous plafond 4,00m)</span>","rotation":"0"},
+                {"type":"machine","left":"3270px","top":"50px","width":"260px","height":"140px","className":"cat-astreia","innerHTML":"<span>Rampe Ensachage 6 sacs (ML100)</span><span class=\"dim-label\">260x140</span>","rotation":"0"},
+                {"type":"machine","left":"3270px","top":"215px","width":"260px","height":"195px","className":"cat-astreia","innerHTML":"<span>Tamiseur 3 fractions + 2 Caissons Son/Semoule</span><span class=\"dim-label\">260x195</span>","rotation":"0"},
+                {"type":"machine","left":"3310px","top":"435px","width":"180px","height":"130px","className":"cat-astreia","innerHTML":"<span>Moulin ML100 + Transfert Pneumatique</span><span class=\"dim-label\">180x130</span>","rotation":"0"},
+                {"type":"machine","left":"3340px","top":"585px","width":"120px","height":"105px","className":"cat-stockage","innerHTML":"<span>Caisson Mobile Grain #2</span><span class=\"dim-label\">120x105</span>","rotation":"0"},
+
+                // Couloir de roulage des caissons de grain depuis la Porte Double de 3,00m
+                {"type":"machine","left":"2665px","top":"725px","width":"885px","height":"135px","className":"cat-circulation","innerHTML":"<span>⬅ ALLÉE DE ROULAGE DES CAISSONS DE GRAIN DEPUIS LA PORTE DOUBLE DE 3,00m ➡</span><span class=\"dim-label\">885x135 cm</span>","rotation":"0"}
+            ];
+        }
+
+        // ============================================================================
+        // 3. PLAN ÉTAGE R+1 (+4.00m) : 1 SEUL OPEN-SPACE BUREAUX, ACCÈS LOCAL TECHNIQUE BALLON/TRÉMIE & SANITAIRES SANS SAS
+        // ============================================================================
+        function buildArchitectR1() {
+            return [
+                // --- CONTOUR GLOBAL DU BÂTIMENT (36m x 9m) ---
+                {"type":"wall","left":"20px","top":"0px","width":"3580px","height":"20px","angle":"0","length":"3580"},
+                {"type":"wall","left":"20px","top":"880px","width":"3580px","height":"20px","angle":"0","length":"3580"},
+                {"type":"wall","left":"20px","top":"0px","width":"880px","height":"20px","angle":"90","length":"880"},
+                {"type":"wall","left":"3600px","top":"0px","width":"880px","height":"20px","angle":"90","length":"880"},
+
+                // --- LIMITES OUEST (x=950) ET EST (x=2900) DU PLANCHER CLASSIQUE R+1 (+4,00m) ---
+                {"type":"wall","left":"950px","top":"20px","width":"860px","height":"15px","angle":"90","length":"860"},
+                {"type":"wall","left":"2900px","top":"20px","width":"860px","height":"15px","angle":"90","length":"860"},
+
+                // --- CLOISONS DU R+1 (PLANCHER PLEIN CLASSIQUE + COULOIR CENTRAL DE 1,50m : y=410 à y=560) ---
+                // 1. Cloison Est du Local Technique Trémie Fours / Ballon ECS 500L (x=1390, de y=20 à y=410)
+                // Permet d'ouvrir une Porte Technique de 0,90m (x=1295..1385) directement sur le Couloir Central de 1,50m !
+                {"type":"wall","left":"1390px","top":"20px","width":"390px","height":"10px","angle":"90","length":"390"},
+                {"type":"wall","left":"950px","top":"410px","width":"345px","height":"10px","angle":"0","length":"345"},
+
+                // 2. Paroi Nord du Couloir Central de 1,50m (y=410, de x=1290 à x=2900) :
+                // - Porte Local Technique Ballon ECS / Trémie 0.90m (x=1295..1385)
+                // - UN SEUL BUREAU OPEN-SPACE (x=1390..2125) avec Porte Double PMR 1.20m centrée (x=1695..1815)
+                // - Vestiaire Femmes (x=2125..2510) avec Porte 0.90m centrée sur son allée interne (x=2275..2365)
+                // - Vestiaire Hommes (x=2510..2900) avec Porte 0.90m centrée sur son allée interne (x=2660..2750)
+                {"type":"wall","left":"1385px","top":"410px","width":"310px","height":"10px","angle":"0","length":"310"},
+                {"type":"wall","left":"1815px","top":"410px","width":"460px","height":"10px","angle":"0","length":"460"},
+                {"type":"wall","left":"2365px","top":"410px","width":"295px","height":"10px","angle":"0","length":"295"},
+                {"type":"wall","left":"2750px","top":"410px","width":"150px","height":"10px","angle":"0","length":"150"},
+
+                // Cloisons verticales Nord (y=20 à y=410) :
+                // - Entre Open-Space Unique et Vestiaire Femmes (x=2125)
+                {"type":"wall","left":"2125px","top":"20px","width":"390px","height":"10px","angle":"90","length":"390"},
+                // - Entre Vestiaire Femmes et Vestiaire Hommes (x=2510)
+                {"type":"wall","left":"2510px","top":"20px","width":"390px","height":"10px","angle":"90","length":"390"},
+
+                // 3. Paroi Ouest du Couloir Central (x=1290, de y=410 à y=880) : sépare la Salle de Réunion (Ouest) du Couloir et de la Salle de Pause
+                // Découpée pour Porte Salle de Réunion 1.20m (y=425..545)
+                {"type":"wall","left":"1290px","top":"410px","width":"15px","height":"10px","angle":"90","length":"15"},
+                {"type":"wall","left":"1290px","top":"545px","width":"335px","height":"10px","angle":"90","length":"335"},
+
+                // 4. Paroi Sud du Couloir Central de 1,50m (y=560, de x=1290 à x=2125) :
+                // Découpée pour Porte Double Salle de Pause / Kitchenette 1.20m (x=1695..1815)
+                {"type":"wall","left":"1290px","top":"560px","width":"405px","height":"10px","angle":"0","length":"405"},
+                {"type":"wall","left":"1815px","top":"560px","width":"310px","height":"10px","angle":"0","length":"310"},
+
+                // Cloison Est de la Salle de Pause (x=2125, de y=560 à y=880)
+                {"type":"wall","left":"2125px","top":"560px","width":"320px","height":"10px","angle":"90","length":"320"},
+
+                // Cloison Sud de la Trémie d'Escalier (y=682, de x=2125 à x=2480) et Cloison Est du Local Archives/EPI (x=2480, de y=682 à y=880) :
+                // Découpée pour Porte Local Archives/EPI 0.80m (y=690..770)
+                {"type":"wall","left":"2125px","top":"682px","width":"355px","height":"10px","angle":"0","length":"355"},
+                {"type":"wall","left":"2480px","top":"770px","width":"110px","height":"10px","angle":"90","length":"110"},
+
+                // 5. Pôle Sanitaires Est SANS SAS (Accès direct depuis le Couloir / Palier Est) :
+                // - Cloison Ouest de la Cabine WC PMR (x=2655, de y=670 à y=880)
+                {"type":"wall","left":"2655px","top":"670px","width":"210px","height":"10px","angle":"90","length":"210"},
+                // - Cloison Nord de la Cabine WC PMR (y=670, de x=2655 à x=2900) avec Porte WC PMR 0.90m (x=2665..2755)
+                {"type":"wall","left":"2755px","top":"670px","width":"145px","height":"10px","angle":"0","length":"145"},
+                // - Cloison Ouest du WC Bureaux et du Local Ménage (x=2765, de y=410 à y=670) découpée aux 2 portes de 0.80m (y=425..505 et y=560..640)
+                {"type":"wall","left":"2765px","top":"410px","width":"15px","height":"10px","angle":"90","length":"15"},
+                {"type":"wall","left":"2765px","top":"505px","width":"55px","height":"10px","angle":"90","length":"55"},
+                {"type":"wall","left":"2765px","top":"640px","width":"30px","height":"10px","angle":"90","length":"30"},
+                // - Cloison de séparation entre WC Bureaux et Local Ménage (y=540, de x=2765 à x=2900)
+                {"type":"wall","left":"2765px","top":"540px","width":"135px","height":"8px","angle":"0","length":"135"},
+
+                // --- PORTES DE L'ÉTAGE R+1 (CAT-OPENING) ---
+                {"type":"machine","left":"1295px","top":"398px","width":"90px","height":"24px","className":"cat-opening","innerHTML":"<span>PORTE BALLON & TRÉMIE (0,90m)</span><span class=\"dim-label\">Accès Maintenance EI60</span>","rotation":"0"},
+                {"type":"machine","left":"1278px","top":"425px","width":"24px","height":"120px","className":"cat-opening","innerHTML":"<span>PORTE SALLE RÉUNION (1,20m)</span><span class=\"dim-label\">Bout Ouest Couloir 1,50m</span>","rotation":"0"},
+                {"type":"machine","left":"1695px","top":"398px","width":"120px","height":"24px","className":"cat-opening","innerHTML":"<span>PORTE OPEN-SPACE UNIQUE (1,20m)</span><span class=\"dim-label\">Accès central Bureaux</span>","rotation":"0"},
+                {"type":"machine","left":"2275px","top":"398px","width":"90px","height":"24px","className":"cat-opening","innerHTML":"<span>PORTE VESTIAIRE F (0,90m)</span><span class=\"dim-label\">Axe allée 1,20m</span>","rotation":"0"},
+                {"type":"machine","left":"2660px","top":"398px","width":"90px","height":"24px","className":"cat-opening","innerHTML":"<span>PORTE VESTIAIRE H (0,90m)</span><span class=\"dim-label\">Axe allée 1,20m</span>","rotation":"0"},
+                {"type":"machine","left":"2753px","top":"425px","width":"24px","height":"80px","className":"cat-opening","innerHTML":"<span>PORTE WC (0,80m)</span><span class=\"dim-label\">Accès direct Couloir</span>","rotation":"0"},
+                {"type":"machine","left":"2753px","top":"560px","width":"24px","height":"80px","className":"cat-opening","innerHTML":"<span>PORTE MÉNAGE (0,80m)</span><span class=\"dim-label\">Accès direct Palier</span>","rotation":"0"},
+                {"type":"machine","left":"2665px","top":"658px","width":"90px","height":"24px","className":"cat-opening","innerHTML":"<span>PORTE WC PMR (0,90m)</span><span class=\"dim-label\">Accès direct Palier</span>","rotation":"0"},
+                {"type":"machine","left":"1695px","top":"548px","width":"120px","height":"24px","className":"cat-opening","innerHTML":"<span>PORTE SALLE PAUSE & KITCHENETTE (1,20m)</span><span class=\"dim-label\">Accès direct Couloir 1,50m</span>","rotation":"0"},
+                {"type":"machine","left":"2505px","top":"703px","width":"115px","height":"24px","className":"cat-opening","innerHTML":"<span>PORTE ÉLÉVATEUR PMR (1,15m)</span><span class=\"dim-label\">Sur Palier Est</span>","rotation":"0"},
+                {"type":"machine","left":"2468px","top":"690px","width":"24px","height":"80px","className":"cat-opening","innerHTML":"<span>PORTE RÉSERVE (0,80m)</span><span class=\"dim-label\">EPI/Serveur</span>","rotation":"0"},
+
+                // --- COULOIR PRINCIPAL DE 1,50M & PALIER EST ÉLARGI (SANS SAS SANITAIRE) ---
+                {"type":"machine","left":"1305px","top":"415px","width":"1445px","height":"142px","className":"cat-circulation","innerHTML":"<span>⬅ COULOIR CENTRAL DE DISTRIBUTION R+1 (LARGEUR 1,50m - SOL CLASSIQUE PLEIN) ➡</span><span class=\"dim-label\">14,45m x 1,50m (Dessert directement Local Ballon/Trémie, Salle Réunion, Open-Space, Salle Pause, Vestiaires H/F & WC)</span>","rotation":"0"},
+                {"type":"machine","left":"2482px","top":"560px","width":"268px","height":"140px","className":"cat-circulation","innerHTML":"<span>⬆ GRAND PALIER DÉGAGÉ ESCALIER, ÉLÉVATEUR PMR & SANITAIRES (SANS SAS) ⬇</span><span class=\"dim-label\">268x140 cm (Accès direct sans cloison parasite au WC PMR, Local Ménage, Escalier et Élévateur)</span>","rotation":"0"},
+
+                // --- COTES DE VÉRIFICATION DES COULOIRS DE 1,50M ---
+                {"type":"measure","left":"2060px","top":"410px","width":"150px","height":"","angle":"90","length":"150"},
+                {"type":"measure","left":"950px","top":"940px","width":"1950px","height":"","angle":"0","length":"1950"},
+
+                // --- ZONES NON AMÉNAGEABLES (GAUCHE : COMBLES BOUTIQUE / DROITE : VIDE SUR MEUNERIE) ---
+                {"type":"text","left":"180px","top":"420px","text":"COMBLES / VIDE SUR BOUTIQUE (85m2)","color":"#64748b","border":"2px dashed #94a3b8"},
+                {"type":"text","left":"2935px","top":"420px","text":"ESPACE NON DISPONIBLE R+1\n(VIDE SUR MEUNERIE H=4,00m : x=29m à 36m)","color":"#64748b","border":"2px dashed #94a3b8"},
+                {"type":"text","left":"1280px","top":"-45px","text":"ÉTAGE R+1 (+4,00m) : OPEN-SPACE UNIQUE, ACCÈS LOCAL BALLON/TRÉMIE & SANITAIRES SANS SAS","color":"#312e81","border":""},
+
+                // =========================================================================
+                // AMÉNAGEMENT DÉTAILLÉ & CIRCULATIONS INTERNES PIÈCE PAR PIÈCE DU R+1
+                // =========================================================================
+
+                // 1. ESCALIER (SENS OUEST ➔ EST) + ÉLÉVATEUR PMR ADOSSÉ AU MUR SUD + RÉSERVE EPI/ARCHIVES
+                {"type":"machine","left":"2131px","top":"572px","width":"346px","height":"100px","className":"cat-pmr","innerHTML":"<span>Escalier (Montée Ouest ➔ Arrivée Est sur Palier R+1 à +4,00m)</span><span class=\"dim-label\">346x100 (Débouche à x=24,77m face à l'Élévateur PMR)</span>","rotation":"0"},
+                {"type":"machine","left":"2482px","top":"715px","width":"165px","height":"162px","className":"cat-pmr","innerHTML":"<span>Arrivée Élévateur PMR (Course 4,00m - Adossé Mur Sud)</span><span class=\"dim-label\">165x162 (Ouvre au Nord sur le Palier R+1)</span>","rotation":"0"},
+                {"type":"machine","left":"2135px","top":"692px","width":"332px","height":"180px","className":"cat-structure","innerHTML":"<span>Local Serveur, Archives & Réserve EPI/Tenues</span><span class=\"dim-label\">332x180 (Au-dessus du Local Pont-Bascule)</span>","rotation":"0"},
+
+                // 2. NORD-OUEST (x=950..1390, y=20..410 : 17,1m2) : LOCAL TECHNIQUE FOURS EI60 + BALLON ECS 500L + ALLÉE DE MAINTENANCE
+                {"type":"machine","left":"965px","top":"30px","width":"315px","height":"235px","className":"cat-structure","innerHTML":"<span>Trémie Coupe-Feu EI60 Conduits Fours & Buées (+ Trappe Visite Est)</span><span class=\"dim-label\">315x235 (100% alignée sur Fours RDC)</span>","rotation":"0"},
+                {"type":"machine","left":"965px","top":"275px","width":"315px","height":"120px","className":"cat-pmr","innerHTML":"<span>Ballon Tampon ECS 500L (Récup. Chaleur) + Centrale VMC</span><span class=\"dim-label\">315x120 (Alimente Douches R+1 & Laverie RDC)</span>","rotation":"0"},
+                {"type":"machine","left":"1288px","top":"30px","width":"92px","height":"365px","className":"cat-circulation","innerHTML":"<span>↕ ALLÉE ACCÈS & MAINTENANCE BALLON / TRÉMIE ↕</span><span class=\"dim-label\">92x365 cm (Depuis Porte 0,90m du Couloir)</span>","rotation":"0"},
+
+                // 3. SUD-OUEST (x=950..1290, y=410..880 : 16,0m2) : SALLE DE RÉUNION & ACCUEIL PÉDAGOGIQUE
+                {"type":"machine","left":"965px","top":"425px","width":"315px","height":"445px","className":"cat-zone","innerHTML":"<span></span><span class=\"dim-label\">SALLE DE RÉUNION & PÉDAGOGIE (16,0m2)</span>","rotation":"0"},
+                {"type":"machine","left":"1045px","top":"500px","width":"155px","height":"285px","className":"cat-etage","innerHTML":"<span>Grande Table de Réunion / Formation (12 pers.)</span><span class=\"dim-label\">155x285 cm (Circulation périphérique libre)</span>","rotation":"0"},
+                {"type":"machine","left":"970px","top":"540px","width":"32px","height":"200px","className":"cat-structure","innerHTML":"<span>Écran / Tableau</span><span class=\"dim-label\">32x200</span>","rotation":"0"},
+
+                // 4. NORD-CENTRE (x=1390..2125, y=20..410 : 28,7m2) : UN SEUL GRAND BUREAU OPEN-SPACE AVEC ALLÉE DE CIRCULATION INTERNE
+                {"type":"machine","left":"1402px","top":"28px","width":"710px","height":"370px","className":"cat-zone","innerHTML":"<span></span><span class=\"dim-label\">BUREAU OPEN-SPACE UNIQUE (7,35m x 3,90m = 28,7m2)</span>","rotation":"0"},
+                {"type":"machine","left":"1415px","top":"35px","width":"320px","height":"48px","className":"cat-structure","innerHTML":"<span>Linéaire Armoires Archives & Classeurs</span><span class=\"dim-label\">320x48 cm (Mur Nord-Ouest)</span>","rotation":"0"},
+                {"type":"machine","left":"1775px","top":"35px","width":"320px","height":"48px","className":"cat-structure","innerHTML":"<span>Pôle Reprographie, Imprimante & Fournitures</span><span class=\"dim-label\">320x48 cm (Mur Nord-Est)</span>","rotation":"0"},
+                {"type":"machine","left":"1415px","top":"105px","width":"260px","height":"155px","className":"cat-etage","innerHTML":"<span>Îlot Open-Space Ouest (4 Postes : Commercial, Cantines & Logistique)</span><span class=\"dim-label\">260x155 cm</span>","rotation":"0"},
+                {"type":"machine","left":"1685px","top":"95px","width":"140px","height":"175px","className":"cat-circulation","innerHTML":"<span>↕ CIRCULATION ENTRE ÎLOTS ↕</span><span class=\"dim-label\">140x175 cm (Face Porte 1,20m)</span>","rotation":"0"},
+                {"type":"machine","left":"1835px","top":"105px","width":"260px","height":"155px","className":"cat-etage","innerHTML":"<span>Îlot Open-Space Est (4 Postes : Gestion, Qualité Bio & Filière)</span><span class=\"dim-label\">260x155 cm</span>","rotation":"0"},
+                {"type":"machine","left":"1415px","top":"275px","width":"680px","height":"112px","className":"cat-circulation","innerHTML":"<span>⬅ ALLÉE DE DISTRIBUTION INTERNE DE L'OPEN-SPACE (1,12m) ➡</span><span class=\"dim-label\">680x112 cm (Accès fluide à tous les postes depuis la Porte 1,20m)</span>","rotation":"0"},
+
+                // 5. SUD-CENTRE AGRANDI (x=1290..2125, y=560..880 : 26,7m2) : SALLE DE PAUSE, RÉFECTOIRE & KITCHENETTE ÉQUIPÉE AVEC ALLÉE SERVICE
+                {"type":"machine","left":"1302px","top":"572px","width":"812px","height":"298px","className":"cat-zone","innerHTML":"<span></span><span class=\"dim-label\">SALLE DE PAUSE & KITCHENETTE (26,7m2)</span>","rotation":"0"},
+                {"type":"machine","left":"1315px","top":"578px","width":"310px","height":"62px","className":"cat-almapro","innerHTML":"<span>Kitchenette Équipée (Évier, Frigo, 2 Micro-Ondes, Lave-Vaisselle)</span><span class=\"dim-label\">310x62 cm</span>","rotation":"0"},
+                {"type":"machine","left":"1315px","top":"645px","width":"680px","height":"68px","className":"cat-circulation","innerHTML":"<span>⬅ ALLÉE DE CIRCULATION & SERVICE KITCHENETTE / TABLES ➡</span><span class=\"dim-label\">680x68 cm (Dégagement devant Kitchenette et Porte 1,20m)</span>","rotation":"0"},
+                {"type":"machine","left":"1345px","top":"722px","width":"240px","height":"105px","className":"cat-etage","innerHTML":"<span>Table Réfectoire 1 (8 places)</span><span class=\"dim-label\">240x105 cm</span>","rotation":"0"},
+                {"type":"machine","left":"1685px","top":"722px","width":"240px","height":"105px","className":"cat-etage","innerHTML":"<span>Table Réfectoire 2 (8 places)</span><span class=\"dim-label\">240x105 cm</span>","rotation":"0"},
+                {"type":"machine","left":"2005px","top":"585px","width":"98px","height":"270px","className":"cat-almapro","innerHTML":"<span>Banquette Détente & Machine à Café</span><span class=\"dim-label\">98x270 cm</span>","rotation":"0"},
+
+                // 6. NORD-EST SUR PALIER (x=2125..2900, y=20..410 : 30,2m2) : VESTIAIRES H/F AVEC ALLÉE CENTRALE 1,20m & ACCÈS DIRECT DOUCHE / LAVABO / WC
+                // 6A. Vestiaire Femmes (x=2125..2510, y=20..410 : 14,8m2)
+                {"type":"machine","left":"2133px","top":"28px","width":"369px","height":"370px","className":"cat-zone","innerHTML":"<span></span><span class=\"dim-label\">VESTIAIRE FEMMES (14,8m2)</span>","rotation":"0"},
+                {"type":"machine","left":"2138px","top":"32px","width":"115px","height":"108px","className":"cat-pmr","innerHTML":"<span>Douche F (Cabine + Zone sèche)</span><span class=\"dim-label\">115x108 (Porte sur allée)</span>","rotation":"0"},
+                {"type":"machine","left":"2260px","top":"32px","width":"120px","height":"68px","className":"cat-pmr","innerHTML":"<span>Lavabo 2 Vasques F</span><span class=\"dim-label\">120x68 (Fond d'allée)</span>","rotation":"0"},
+                {"type":"machine","left":"2387px","top":"32px","width":"110px","height":"108px","className":"cat-pmr","innerHTML":"<span>Cabine WC Femmes</span><span class=\"dim-label\">110x108 (Porte sur allée)</span>","rotation":"0"},
+                {"type":"machine","left":"2138px","top":"150px","width":"115px","height":"238px","className":"cat-etage","innerHTML":"<span>4 Armoires Doubles F + Banc (Ouest)</span><span class=\"dim-label\">115x238 cm</span>","rotation":"0"},
+                {"type":"machine","left":"2260px","top":"106px","width":"120px","height":"282px","className":"cat-circulation","innerHTML":"<span>↕ ALLÉE HABILLAGE & ACCÈS DOUCHE / WC (1,20m) ↕</span><span class=\"dim-label\">120x282 cm (Axe direct depuis Porte 0,90m)</span>","rotation":"0"},
+                {"type":"machine","left":"2387px","top":"150px","width":"110px","height":"238px","className":"cat-etage","innerHTML":"<span>4 Armoires Doubles F + Banc (Est)</span><span class=\"dim-label\">110x238 cm</span>","rotation":"0"},
+
+                // 6B. Vestiaire Hommes (x=2510..2900, y=20..410 : 15,0m2)
+                {"type":"machine","left":"2518px","top":"28px","width":"372px","height":"370px","className":"cat-zone","innerHTML":"<span></span><span class=\"dim-label\">VESTIAIRE HOMMES (15,0m2)</span>","rotation":"0"},
+                {"type":"machine","left":"2522px","top":"32px","width":"115px","height":"108px","className":"cat-pmr","innerHTML":"<span>Douche H (Cabine + Zone sèche)</span><span class=\"dim-label\">115x108 (Porte sur allée)</span>","rotation":"0"},
+                {"type":"machine","left":"2645px","top":"32px","width":"120px","height":"68px","className":"cat-pmr","innerHTML":"<span>Lavabo 2 Vasques H</span><span class=\"dim-label\">120x68 (Fond d'allée)</span>","rotation":"0"},
+                {"type":"machine","left":"2772px","top":"32px","width":"114px","height":"108px","className":"cat-pmr","innerHTML":"<span>Cabine WC Hommes</span><span class=\"dim-label\">114x108 (Porte sur allée)</span>","rotation":"0"},
+                {"type":"machine","left":"2522px","top":"150px","width":"115px","height":"238px","className":"cat-etage","innerHTML":"<span>4 Armoires Doubles H + Banc (Ouest)</span><span class=\"dim-label\">115x238 cm</span>","rotation":"0"},
+                {"type":"machine","left":"2645px","top":"106px","width":"120px","height":"282px","className":"cat-circulation","innerHTML":"<span>↕ ALLÉE HABILLAGE & ACCÈS DOUCHE / WC (1,20m) ↕</span><span class=\"dim-label\">120x282 cm (Axe direct depuis Porte 0,90m)</span>","rotation":"0"},
+                {"type":"machine","left":"2772px","top":"150px","width":"114px","height":"238px","className":"cat-etage","innerHTML":"<span>4 Armoires Doubles H + Banc (Est)</span><span class=\"dim-label\">114x238 cm</span>","rotation":"0"},
+
+                // 7. SUD-EST EN BOUT DE COULOIR / PALIER (SANS SAS SANITAIRE) : ACCÈS DIRECT WC BUREAUX, LOCAL MÉNAGE & CABINE WC PMR
+                {"type":"machine","left":"2775px","top":"418px","width":"116px","height":"116px","className":"cat-pmr","innerHTML":"<span>WC Bureaux / Visiteurs + Lave-mains</span><span class=\"dim-label\">116x116 (Porte 0,80m directe Couloir)</span>","rotation":"0"},
+                {"type":"machine","left":"2775px","top":"548px","width":"116px","height":"116px","className":"cat-structure","innerHTML":"<span>Local Ménage & Vidoir R+1</span><span class=\"dim-label\">116x116 (Porte 0,80m directe Palier)</span>","rotation":"0"},
+                {"type":"machine","left":"2665px","top":"680px","width":"226px","height":"190px","className":"cat-pmr","innerHTML":"<span>Cabine WC PMR Réglementaire (Ø 1,50m + Cuvette + Lave-mains)</span><span class=\"dim-label\">226x190 cm (Porte 0,90m directe sur Palier Est)</span>","rotation":"0"}
+            ];
+        }
+
+        // Gestionnaire de projets multi-étages { rdc: [...], r1: [...] }
         let projects = {};
         let currentProjectName = "";
 
-        window.onload = function() {
+        window.addEventListener('DOMContentLoaded', () => {
             initProjectManager();
-            resetView();
-        };
+            setTimeout(resetView, 50);
+        });
+
+        function getDefaultProjects() {
+            return {
+                "1. Plan Consolidé (Accès Bascule sous Escalier + R+1 Aménagé)": {
+                    rdc: JSON.parse(JSON.stringify(buildArchitectRDC())),
+                    r1: JSON.parse(JSON.stringify(buildArchitectR1()))
+                },
+                "2. Votre base Boutique (Sans mobilier central)": {
+                    rdc: JSON.parse(JSON.stringify(USER_JSON_RDC)),
+                    r1: JSON.parse(JSON.stringify(buildArchitectR1()))
+                }
+            };
+        }
 
         function initProjectManager() {
-            const savedData = localStorage.getItem('aubetin_projects');
+            const defaults = getDefaultProjects();
+            const defaultMainKey = Object.keys(defaults)[0];
+            const savedData = localStorage.getItem('aubetin_projects_v6_2');
             if (savedData) {
                 try {
                     projects = JSON.parse(savedData);
-                    currentProjectName = localStorage.getItem('aubetin_current_project');
-                    if(!projects[currentProjectName]) currentProjectName = Object.keys(projects)[0];
-                } catch(e) { projects = { "Projet Initial": [] }; currentProjectName = "Projet Initial"; }
+                    projects[defaultMainKey] = defaults[defaultMainKey];
+                    currentProjectName = localStorage.getItem('aubetin_current_project_v6_2') || defaultMainKey;
+                    if (!projects[currentProjectName]) currentProjectName = defaultMainKey;
+                } catch(e) {
+                    projects = defaults;
+                    currentProjectName = defaultMainKey;
+                }
             } else {
-                projects = { "Projet 1 (Vide)": [] };
-                currentProjectName = "Projet 1 (Vide)";
+                projects = defaults;
+                currentProjectName = defaultMainKey;
+                localStorage.setItem('aubetin_projects_v6_2', JSON.stringify(projects));
             }
             updateProjectSelectUI();
-            renderPlanData(projects[currentProjectName]);
+            renderActiveFloor();
+        }
+
+        function restoreDefaultProjects() {
+            projects = getDefaultProjects();
+            currentProjectName = Object.keys(projects)[0];
+            localStorage.setItem('aubetin_projects_v6_2', JSON.stringify(projects));
+            localStorage.setItem('aubetin_current_project_v6_2', currentProjectName);
+            updateProjectSelectUI();
+            renderActiveFloor();
+            resetView();
+            showBanner("Plans types rechargés et centrés !");
         }
 
         function updateProjectSelectUI() {
@@ -395,94 +796,131 @@
                 const opt = document.createElement('option');
                 opt.value = name;
                 opt.innerText = name;
-                if(name === currentProjectName) opt.selected = true;
+                if (name === currentProjectName) opt.selected = true;
                 select.appendChild(opt);
             }
         }
 
         function switchProject(name) {
-            saveCurrentToMemory(); // Sauve l'état actuel avant de changer
+            saveCurrentToMemory();
             currentProjectName = name;
-            localStorage.setItem('aubetin_current_project', name);
-            renderPlanData(projects[name]);
+            localStorage.setItem('aubetin_current_project_v6_2', name);
+            renderActiveFloor();
             selectElement(null);
             showBanner("Projet chargé : " + name);
         }
 
+        function switchFloor(floor) {
+            saveCurrentToMemory();
+            currentFloor = floor;
+            const btnRdc = document.getElementById('btn-floor-rdc');
+            const btnR1 = document.getElementById('btn-floor-r1');
+            const btnGhost = document.getElementById('btn-ghost');
+            const badge = document.getElementById('active-floor-badge');
+
+            if (floor === 'rdc') {
+                btnRdc.className = 'floor-btn active';
+                btnR1.className = 'floor-btn inactive';
+                btnGhost.classList.add('hidden');
+                ghostCanvas.classList.add('hidden');
+                badge.innerHTML = '<i class="fa-solid fa-industry text-amber-500 mr-1.5"></i>Niveau actif : RDC (H = 4.00m)';
+            } else {
+                btnR1.className = 'floor-btn active';
+                btnRdc.className = 'floor-btn inactive';
+                btnGhost.classList.remove('hidden');
+                if (showGhostRdc) ghostCanvas.classList.remove('hidden');
+                badge.innerHTML = '<i class="fa-solid fa-stairs text-indigo-600 mr-1.5"></i>Niveau actif : Étage R+1 (+4.00m - Open-Space & Vestiaires)';
+            }
+            selectElement(null);
+            renderActiveFloor();
+        }
+
+        function toggleGhost() {
+            showGhostRdc = !showGhostRdc;
+            document.getElementById('ghost-status').innerText = showGhostRdc ? 'ON' : 'OFF';
+            if (showGhostRdc && currentFloor === 'r1') ghostCanvas.classList.remove('hidden');
+            else ghostCanvas.classList.add('hidden');
+        }
+
+        function renderActiveFloor() {
+            const proj = projects[currentProjectName];
+            if (!proj) return;
+            if (Array.isArray(proj)) {
+                projects[currentProjectName] = { rdc: proj, r1: buildArchitectR1() };
+            }
+            const floorItems = projects[currentProjectName][currentFloor] || [];
+            renderPlanData(floorItems, canvas, true);
+
+            if (currentFloor === 'r1') {
+                renderPlanData(projects[currentProjectName].rdc || [], ghostCanvas, false);
+            }
+        }
+
         function createNewProject() {
-            const name = prompt("Nom du nouveau projet ? (ex: Variante Alma Pro)");
+            const name = prompt("Nom du nouveau projet ?");
             if (name && name.trim() !== "") {
-                if(!projects[name]) {
+                if (!projects[name]) {
                     saveCurrentToMemory();
-                    projects[name] = [];
+                    projects[name] = JSON.parse(JSON.stringify(projects[currentProjectName]));
                     currentProjectName = name;
-                    localStorage.setItem('aubetin_current_project', name);
+                    localStorage.setItem('aubetin_current_project_v5_9', name);
                     updateProjectSelectUI();
-                    renderPlanData([]);
-                    showBanner("Nouveau projet créé");
+                    renderActiveFloor();
+                    showBanner("Nouveau projet dupliqué : " + name);
                 } else {
-                    alert("Ce nom existe déjà.");
+                    showBanner("Ce nom existe déjà.");
                 }
             }
         }
 
         function deleteCurrentProject() {
-            if(Object.keys(projects).length <= 1) {
-                alert("Impossible de supprimer le dernier projet. Renommez-le ou créez-en un autre d'abord.");
+            if (Object.keys(projects).length <= 1) {
+                showBanner("Impossible de supprimer le dernier projet.");
                 return;
             }
-            if(confirm("Supprimer définitivement le projet '" + currentProjectName + "' ?")) {
-                delete projects[currentProjectName];
-                currentProjectName = Object.keys(projects)[0];
-                localStorage.setItem('aubetin_current_project', currentProjectName);
-                localStorage.setItem('aubetin_projects', JSON.stringify(projects));
-                updateProjectSelectUI();
-                renderPlanData(projects[currentProjectName]);
-            }
+            delete projects[currentProjectName];
+            currentProjectName = Object.keys(projects)[0];
+            localStorage.setItem('aubetin_current_project_v5_9', currentProjectName);
+            localStorage.setItem('aubetin_projects_v5_9', JSON.stringify(projects));
+            updateProjectSelectUI();
+            renderActiveFloor();
         }
 
         function saveCurrentToMemory() {
-            projects[currentProjectName] = extractPlanData();
-            localStorage.setItem('aubetin_projects', JSON.stringify(projects));
+            if (!projects[currentProjectName] || Array.isArray(projects[currentProjectName])) {
+                projects[currentProjectName] = { rdc: [], r1: [] };
+            }
+            projects[currentProjectName][currentFloor] = extractPlanData();
+            localStorage.setItem('aubetin_projects_v6_2', JSON.stringify(projects));
         }
 
-        function autoSave() {
-            saveCurrentToMemory();
-        }
+        function autoSave() { saveCurrentToMemory(); }
 
         function showBanner(text) {
             document.getElementById('banner-text').innerText = text;
-            banner.style.display = 'block';
-            setTimeout(() => { banner.style.display = 'none'; }, 3000);
+            banner.classList.remove('hidden');
+            setTimeout(() => { banner.classList.add('hidden'); }, 3000);
         }
 
         function setTool(tool) {
             currentTool = tool;
             document.querySelectorAll('.tool-btn').forEach(btn => btn.classList.remove('active'));
             document.getElementById('tool-' + tool).classList.add('active');
-            
             isDrawingWall = false; isMeasuring = false;
-            if(currentTempLine) { currentTempLine.remove(); currentTempLine = null; }
-            
+            if (currentTempLine) { currentTempLine.remove(); currentTempLine = null; }
             canvas.style.cursor = (tool === 'wall' || tool === 'measure') ? 'crosshair' : (tool === 'text' ? 'text' : 'default');
-            
-            if(tool === 'wall') showBanner('Cliquez pour démarrer un mur');
-            else if (tool === 'measure') showBanner('Cliquez-glissez pour mesurer');
         }
 
         function selectElement(el) {
-            if(currentTool !== 'select') return;
-            if(selectedElement) selectedElement.classList.remove('selected');
+            if (currentTool !== 'select') return;
+            if (selectedElement) selectedElement.classList.remove('selected');
             selectedElement = el;
-            
-            if(el) {
+            if (el) {
                 el.classList.add('selected');
                 propPanel.classList.remove('hidden');
-                
-                // Remplir les champs de propriétés
-                if(el.dataset.type === 'wall' || el.dataset.type === 'measure') {
+                if (el.dataset.type === 'wall' || el.dataset.type === 'measure') {
                     propLength.value = parseFloat(el.dataset.length || 0).toFixed(0);
-                    propThickness.value = parseFloat(el.style.height || 0).toFixed(0);
+                    propThickness.value = parseFloat(el.style.height || 10).toFixed(0);
                 } else {
                     propLength.value = parseFloat(el.style.width || 0).toFixed(0);
                     propThickness.value = parseFloat(el.style.height || 0).toFixed(0);
@@ -492,8 +930,20 @@
             }
         }
 
+        function rotateSelected() {
+            if (selectedElement && selectedElement.dataset.type === 'machine') {
+                let currentRot = parseFloat(selectedElement.dataset.rotation || 0);
+                currentRot = (currentRot + 90) % 360;
+                selectedElement.style.transform = `rotate(${currentRot}deg)`;
+                selectedElement.dataset.rotation = currentRot;
+                const spans = selectedElement.querySelectorAll('span');
+                spans.forEach(span => span.style.transform = `rotate(${-currentRot}deg)`);
+                autoSave();
+            }
+        }
+
         function deleteSelected() {
-            if(selectedElement) {
+            if (selectedElement) {
                 selectedElement.remove();
                 selectElement(null);
                 autoSave();
@@ -501,35 +951,39 @@
         }
 
         function applyProperties() {
-            if(!selectedElement) return;
+            if (!selectedElement) return;
             const w = parseFloat(propLength.value);
             const h = parseFloat(propThickness.value);
-            if(isNaN(w) || isNaN(h) || w <= 0 || h <= 0) return;
+            if (isNaN(w) || w <= 0) return;
 
-            if(selectedElement.dataset.type === 'wall' || selectedElement.dataset.type === 'measure') {
+            if (selectedElement.dataset.type === 'wall' || selectedElement.dataset.type === 'measure') {
                 selectedElement.style.width = w + 'px';
-                selectedElement.style.height = h + 'px';
+                if (!isNaN(h) && h > 0) selectedElement.style.height = h + 'px';
                 selectedElement.dataset.length = w;
-                
                 let labelClass = selectedElement.dataset.type === 'wall' ? '.wall-label' : '.measure-label';
                 let label = selectedElement.querySelector(labelClass);
-                if(label) label.innerText = (w / 100).toFixed(2) + 'm';
+                if (label) label.innerText = (w / 100).toFixed(2) + 'm';
             } else {
                 selectedElement.style.width = w + 'px';
                 selectedElement.style.height = h + 'px';
                 let dimLabel = selectedElement.querySelector('.dim-label');
-                if(dimLabel) dimLabel.innerText = `${w}x${h}`;
+                if (dimLabel) dimLabel.innerText = `${w}x${h}`;
             }
             autoSave();
         }
 
-        function updateTransform() { canvas.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`; }
-        function zoomIn() { scale *= 1.2; updateTransform(); }
-        function zoomOut() { scale /= 1.2; updateTransform(); }
+        function updateTransform() {
+            const t = `translate(${panX}px, ${panY}px) scale(${scale})`;
+            canvas.style.transform = t;
+            ghostCanvas.style.transform = t;
+        }
+        function zoomIn() { scale *= 1.18; updateTransform(); }
+        function zoomOut() { scale /= 1.18; updateTransform(); }
         function resetView() {
-            scale = 0.5;
-            panX = workspace.clientWidth / 2 - (3600 * scale) / 2;
-            panY = 100;
+            const w = workspace.clientWidth || 1000;
+            scale = Math.max(0.22, Math.min((w - 80) / 3700, 0.5));
+            panX = Math.max(30, (w - 3600 * scale) / 2);
+            panY = 80;
             updateTransform();
         }
 
@@ -539,7 +993,6 @@
             const rect = workspace.getBoundingClientRect();
             const mouseX = e.clientX - rect.left;
             const mouseY = e.clientY - rect.top;
-
             panX = mouseX - (mouseX - panX) * zoomAmount;
             panY = mouseY - (mouseY - panY) * zoomAmount;
             scale *= zoomAmount;
@@ -547,24 +1000,19 @@
         });
 
         function handleDragStart(e, name, width, height, className) {
-            const data = { name, width, height, className };
-            e.dataTransfer.setData('text/plain', JSON.stringify(data));
-            e.dataTransfer.effectAllowed = 'copy';
+            e.dataTransfer.setData('text/plain', JSON.stringify({ name, width, height, className }));
         }
-        function handleDragOver(e) { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; }
+        function handleDragOver(e) { e.preventDefault(); }
         function handleDrop(e) {
             e.preventDefault();
             const dataStr = e.dataTransfer.getData('text/plain');
-            if(!dataStr) return;
+            if (!dataStr) return;
             try {
                 const data = JSON.parse(dataStr);
                 const rect = workspace.getBoundingClientRect();
-                const mouseX = e.clientX - rect.left;
-                const mouseY = e.clientY - rect.top;
-                const x = (mouseX - panX) / scale - (data.width / 2);
-                const y = (mouseY - panY) / scale - (data.height / 2);
-                
-                const el = createMachineElement(data.name, data.width, data.height, data.className, x, y, 0);
+                const x = Math.round(((e.clientX - rect.left - panX) / scale - data.width / 2) / 5) * 5;
+                const y = Math.round(((e.clientY - rect.top - panY) / scale - data.height / 2) / 5) * 5;
+                const el = createMachineElement(data.name, data.width, data.height, data.className, x, y, 0, true);
                 canvas.appendChild(el);
                 setTool('select');
                 selectElement(el);
@@ -574,55 +1022,45 @@
 
         function makeDraggable(el) {
             el.addEventListener('mousedown', (e) => {
-                if(currentTool !== 'select') return;
+                if (currentTool !== 'select') return;
                 e.stopPropagation();
                 selectElement(el);
-                isDraggingItem = true; activeDragItem = el;
+                isDraggingItem = true;
+                activeDragItem = el;
                 const rect = workspace.getBoundingClientRect();
                 itemOffsetX = (e.clientX - rect.left - panX) / scale - parseFloat(el.style.left);
                 itemOffsetY = (e.clientY - rect.top - panY) / scale - parseFloat(el.style.top);
             });
         }
 
-        function createMachineElement(name, w, h, className, x, y, rot) {
+        function createMachineElement(name, w, h, className, x, y, rot, interactive = true) {
             const el = document.createElement('div');
             el.className = `data-item machine ${className}`;
             el.style.width = w + 'px'; el.style.height = h + 'px';
             el.style.left = x + 'px'; el.style.top = y + 'px';
             el.style.transform = `rotate(${rot}deg)`;
             el.dataset.type = 'machine'; el.dataset.rotation = rot;
-            
             el.innerHTML = `<span>${name}</span><span class="dim-label">${w}x${h}</span>`;
-            
-            // Correction de l'orientation du texte si la machine a été pivotée
-            if(rot !== 0) {
-                const spans = el.querySelectorAll('span');
-                spans.forEach(span => span.style.transform = `rotate(${-rot}deg)`);
+            if (rot !== 0) {
+                el.querySelectorAll('span').forEach(span => span.style.transform = `rotate(${-rot}deg)`);
             }
-            
-            makeDraggable(el);
+            if (interactive) makeDraggable(el);
             return el;
         }
 
         workspace.addEventListener('mousedown', (e) => {
             const rect = workspace.getBoundingClientRect();
-            
-            // Pan du canevas
-            if (e.button === 1 || (e.button === 0 && currentTool === 'select' && e.target === workspace)) {
+            if (e.button === 1 || (e.button === 0 && currentTool === 'select' && (e.target === workspace || e.target === canvas))) {
                 isPanning = true;
                 startPanX = e.clientX - panX; startPanY = e.clientY - panY;
                 selectElement(null);
-            } 
-            // Dessin Mur & Cote
-            else if (e.button === 0 && e.target === canvas && (currentTool === 'wall' || currentTool === 'measure')) {
+            } else if (e.button === 0 && (e.target === canvas || e.target === workspace) && (currentTool === 'wall' || currentTool === 'measure')) {
                 const x = (e.clientX - rect.left - panX) / scale;
                 const y = (e.clientY - rect.top - panY) / scale;
-
                 if (!isDrawingWall && !isMeasuring) {
                     startPoint = {x, y};
                     currentTempLine = document.createElement('div');
-                    
-                    if(currentTool === 'wall') {
+                    if (currentTool === 'wall') {
                         isDrawingWall = true;
                         currentTempLine.className = 'wall-line data-item';
                         currentTempLine.dataset.type = 'wall';
@@ -635,31 +1073,20 @@
                         label.className = 'measure-label'; label.innerText = '0.00m';
                         currentTempLine.appendChild(label);
                     }
-                    
                     currentTempLine.style.left = x + 'px'; currentTempLine.style.top = y + 'px';
                     currentTempLine.style.width = '0px';
                     canvas.appendChild(currentTempLine);
                 } else {
-                    // Fin du tracé
                     makeDraggable(currentTempLine);
-                    if(currentTool === 'measure') {
-                        // Le label ferme la cote au clic
-                        const lbl = currentTempLine.querySelector('.measure-label');
-                        const lineRef = currentTempLine;
-                        lbl.onclick = function(ev) { ev.stopPropagation(); lineRef.remove(); autoSave(); };
-                    }
                     isDrawingWall = false; isMeasuring = false;
                     currentTempLine = null;
                     autoSave();
-                    showBanner('Tracé terminé.');
                 }
-            }
-            // Texte
-            else if (e.button === 0 && e.target === canvas && currentTool === 'text') {
+            } else if (e.button === 0 && (e.target === canvas || e.target === workspace) && currentTool === 'text') {
                 const x = (e.clientX - rect.left - panX) / scale;
                 const y = (e.clientY - rect.top - panY) / scale;
                 const text = prompt("Texte de la zone :");
-                if(text) {
+                if (text) {
                     const el = document.createElement('div');
                     el.className = 'custom-text data-item'; el.dataset.type = 'text';
                     el.innerText = text; el.style.left = x + 'px'; el.style.top = y + 'px';
@@ -676,168 +1103,88 @@
             if (isPanning) {
                 panX = e.clientX - startPanX; panY = e.clientY - startPanY;
                 updateTransform();
-            } 
-            else if (isDraggingItem && activeDragItem && currentTool === 'select') {
-                const x = (e.clientX - rect.left - panX) / scale - itemOffsetX;
-                const y = (e.clientY - rect.top - panY) / scale - itemOffsetY;
+            } else if (isDraggingItem && activeDragItem && currentTool === 'select') {
+                const x = Math.round(((e.clientX - rect.left - panX) / scale - itemOffsetX) / 5) * 5;
+                const y = Math.round(((e.clientY - rect.top - panY) / scale - itemOffsetY) / 5) * 5;
                 activeDragItem.style.left = x + 'px'; activeDragItem.style.top = y + 'px';
-            }
-            else if ((isDrawingWall || isMeasuring) && currentTempLine) {
+            } else if ((isDrawingWall || isMeasuring) && currentTempLine) {
                 const x = (e.clientX - rect.left - panX) / scale;
                 const y = (e.clientY - rect.top - panY) / scale;
                 const dx = x - startPoint.x; const dy = y - startPoint.y;
                 const length = Math.sqrt(dx*dx + dy*dy);
-                const angle = Math.atan2(dy, dx) * 180 / Math.PI;
-                
+                let angle = Math.atan2(dy, dx) * 180 / Math.PI;
+                if (Math.abs(angle) < 4) angle = 0;
+                if (Math.abs(angle - 90) < 4) angle = 90;
+                if (Math.abs(angle + 90) < 4) angle = -90;
+
                 currentTempLine.style.width = length + 'px';
                 currentTempLine.style.transform = `rotate(${angle}deg)`;
                 currentTempLine.dataset.length = length; currentTempLine.dataset.angle = angle;
-                
+
                 let labelClass = isDrawingWall ? '.wall-label' : '.measure-label';
                 let label = currentTempLine.querySelector(labelClass);
-                
-                if(isDrawingWall && !label) {
+                if (isDrawingWall && !label) {
                     label = document.createElement('div');
                     label.className = 'wall-label'; currentTempLine.appendChild(label);
                 }
-                
-                if(label) {
+                if (label) {
                     label.innerText = (length / 100).toFixed(2) + 'm';
-                    if (angle > 90 || angle < -90) label.style.transform = 'rotate(180deg)';
-                    else label.style.transform = 'rotate(0deg)';
                 }
             }
         });
 
         window.addEventListener('mouseup', () => {
             isPanning = false;
-            if(isDraggingItem) { isDraggingItem = false; autoSave(); }
-            // Si on lâche au milieu d'une mesure (Cote), on valide la fin. (Moins de clics)
-            if(isMeasuring && currentTempLine && parseFloat(currentTempLine.style.width) > 10) {
-                 makeDraggable(currentTempLine);
-                 const lbl = currentTempLine.querySelector('.measure-label');
-                 const lineRef = currentTempLine;
-                 lbl.onclick = function(ev) { ev.stopPropagation(); lineRef.remove(); autoSave(); };
-                 isMeasuring = false; currentTempLine = null; autoSave();
+            if (isDraggingItem) { isDraggingItem = false; autoSave(); }
+            if (isMeasuring && currentTempLine && parseFloat(currentTempLine.style.width) > 10) {
+                makeDraggable(currentTempLine);
+                isMeasuring = false; currentTempLine = null; autoSave();
             }
         });
 
         window.addEventListener('keydown', (e) => {
-            if (e.key === 'Delete' || e.key === 'Backspace') {
-                if(e.target.tagName !== 'INPUT') deleteSelected();
-            }
-            if ((e.key === 'r' || e.key === 'R') && selectedElement && selectedElement.dataset.type === 'machine') {
-                let currentRot = parseFloat(selectedElement.dataset.rotation || 0);
-                currentRot = (currentRot + 90) % 360;
-                selectedElement.style.transform = `rotate(${currentRot}deg)`;
-                selectedElement.dataset.rotation = currentRot;
-                const spans = selectedElement.querySelectorAll('span');
-                spans.forEach(span => span.style.transform = `rotate(${-currentRot}deg)`);
-                autoSave();
-            }
+            if (e.target.tagName === 'INPUT') return;
+            if (e.key === 'Delete' || e.key === 'Backspace') deleteSelected();
+            if (e.key === 'r' || e.key === 'R') rotateSelected();
         });
 
-        function createBaseSegment(x, y, l, angle, th, isWall=true) {
+        function createBaseSegment(targetCanvas, x, y, l, angle, th, isWall = true, interactive = true) {
+            if (isNaN(l) || l <= 0) return;
             const el = document.createElement('div');
             el.className = isWall ? 'wall-line data-item' : 'measure-line data-item';
             el.dataset.type = isWall ? 'wall' : 'measure';
             el.style.left = x + 'px'; el.style.top = y + 'px';
-            el.style.width = l + 'px'; el.style.transform = `rotate(${angle}deg)`;
-            el.dataset.length = l; el.dataset.angle = angle;
-            
-            if(isWall) {
-                el.style.height = th + 'px';
-                el.style.backgroundColor = '#1e293b'; el.style.border = '1px solid #0f172a';
-                const lbl = document.createElement('div');
-                lbl.className = 'wall-label'; lbl.innerText = (l/100).toFixed(2) + 'm';
-                if (angle > 90 || angle < -90) lbl.style.transform = 'rotate(180deg)';
-                el.appendChild(lbl);
-            } else {
-                const lbl = document.createElement('div');
-                lbl.className = 'measure-label'; lbl.innerText = (l/100).toFixed(2) + 'm';
-                if (angle > 90 || angle < -90) lbl.style.transform = 'rotate(180deg)';
+            el.style.width = l + 'px'; el.style.transform = `rotate(${angle || 0}deg)`;
+            el.dataset.length = l; el.dataset.angle = angle || 0;
+
+            const lbl = document.createElement('div');
+            lbl.className = isWall ? 'wall-label' : 'measure-label';
+            lbl.innerText = (l / 100).toFixed(2) + 'm';
+            if (angle > 90 || angle < -90) lbl.style.transform = 'rotate(180deg)';
+            if (isWall) {
+                el.style.height = (th || 10) + 'px';
+            } else if (interactive) {
                 lbl.onclick = function(ev) { ev.stopPropagation(); el.remove(); autoSave(); };
-                el.appendChild(lbl);
             }
-            
-            makeDraggable(el);
-            canvas.appendChild(el);
+            el.appendChild(lbl);
+            if (interactive) makeDraggable(el);
+            targetCanvas.appendChild(el);
             return el;
         }
 
-        function createBaseText(txt, x, y, color, dashed) {
+        function createBaseText(targetCanvas, txt, x, y, color, border, interactive = true) {
             const el = document.createElement('div');
             el.className = 'custom-text data-item'; el.dataset.type = 'text';
             el.innerText = txt; el.style.left = x + 'px'; el.style.top = y + 'px';
-            if(color) el.style.color = color;
-            if(dashed) el.style.border = `2px dashed ${color}`;
-            makeDraggable(el);
-            canvas.appendChild(el);
-        }
-
-        function loadBasePlan() {
-            if(!confirm("Attention : Écraser le projet actuel avec le plan de base vierge ?")) return;
-            
-            canvas.innerHTML = '';
-            selectedElement = null; selectElement(null);
-            
-            // Lignes Extérieures (Sécables)
-            for(let i=0; i<9; i++) {
-                createBaseSegment(20 + i*400, 0, 400, 0, 20);      // Haut
-                createBaseSegment(20 + i*400, 880, 400, 0, 20);    // Bas
-            }
-            createBaseSegment(20, 0, 450, 90, 20); createBaseSegment(20, 450, 450, 90, 20); // Gauche
-            createBaseSegment(3600, 0, 450, 90, 20); createBaseSegment(3600, 450, 450, 90, 20); // Droite
-            
-            // Cloisons intérieures (10cm) - Segmentation pour permettre des portes
-            // Mur 1 (Boutique/Cuisson) x=950
-            createBaseSegment(950, 20, 200, 90, 10); createBaseSegment(950, 220, 230, 90, 10);
-            createBaseSegment(950, 450, 200, 90, 10); createBaseSegment(950, 650, 230, 90, 10);
-            
-            // Mur 2 (Cuisson/Pousse) x=1350
-            createBaseSegment(1350, 20, 430, 90, 10); createBaseSegment(1350, 450, 430, 90, 10);
-            
-            // Mur Horizontal (Pousse/Quai) y=450
-            createBaseSegment(1350, 450, 187, 0, 10); createBaseSegment(1537, 450, 188, 0, 10);
-            
-            // Mur 3 (Pousse/Pétrissage) x=1725
-            createBaseSegment(1725, 20, 430, 90, 10); createBaseSegment(1725, 450, 430, 90, 10);
-            
-            // Mur 4 (Pétrissage/Meunerie) x=2125
-            createBaseSegment(2125, 20, 430, 90, 10); createBaseSegment(2125, 450, 430, 90, 10);
-            
-            // Mur 5 (Meunerie/Sanitaire) x=3375
-            createBaseSegment(3375, 20, 430, 90, 10); createBaseSegment(3375, 450, 430, 90, 10);
-
-            // Cotes initiales (Lignes de repère rouges)
-            createBaseSegment(20, -100, 3600, 0, 0, false).querySelector('.measure-label').innerText = '36.00m (Total)';
-            createBaseSegment(-80, 20, 880, 90, 0, false).querySelector('.measure-label').innerText = '9.00m';
-            
-            createBaseSegment(20, 950, 930, 0, 0, false);   // Boutique
-            createBaseSegment(950, 950, 400, 0, 0, false);  // Cuisson
-            createBaseSegment(1350, 950, 375, 0, 0, false); // Quai
-            createBaseSegment(1725, 950, 400, 0, 0, false); // Petrissage
-            createBaseSegment(2125, 950, 1250, 0, 0, false);// Meunerie
-            createBaseSegment(3375, 950, 245, 0, 0, false); // Sanitaires
-
-            // Textes des Zones
-            createBaseText("1. BOUTIQUE (85m2)", 300, 400);
-            createBaseText("2. CUISSON & EMBALLAGE (36m2)", 970, 400);
-            createBaseText("3A. POUSSE (16m2)", 1400, 200);
-            createBaseText("3B. QUAI EXPÉDITION (16m2)", 1370, 600, '#8b5cf6', true);
-            createBaseText("4. PÉTRISSAGE (36m2)", 1800, 400);
-            createBaseText("5. MEUNERIE ASTRÉÏA (112,5m2)", 2600, 400);
-            createBaseText("6. SANITAIRES", 3400, 400);
-            createBaseText("ESPACE PESÉE", 2000, 380, '#ef4444', true);
-
-            resetView();
-            autoSave();
-            showBanner('Plan de base généré et sauvegardé.');
+            if (color) el.style.color = color;
+            if (border) el.style.border = border;
+            if (interactive) makeDraggable(el);
+            targetCanvas.appendChild(el);
         }
 
         function extractPlanData() {
             const items = [];
-            document.querySelectorAll('.data-item').forEach(el => {
+            canvas.querySelectorAll('.data-item').forEach(el => {
                 const data = { type: el.dataset.type, left: el.style.left, top: el.style.top };
                 if (data.type === 'machine') {
                     data.width = el.style.width; data.height = el.style.height;
@@ -855,26 +1202,27 @@
             return items;
         }
 
-        function renderPlanData(items) {
-            canvas.innerHTML = '';
-            if(!items) return;
+        function renderPlanData(items, targetCanvas, interactive = true) {
+            targetCanvas.innerHTML = '';
+            if (!items) return;
             items.forEach(data => {
                 if (data.type === 'machine') {
-                    const el = createMachineElement("tmp", parseFloat(data.width), parseFloat(data.height), data.className, parseFloat(data.left), parseFloat(data.top), parseFloat(data.rotation||0));
-                    el.innerHTML = data.innerHTML; // Restaure le contenu exact
-                    canvas.appendChild(el);
+                    const el = createMachineElement("tmp", parseFloat(data.width), parseFloat(data.height), data.className, parseFloat(data.left), parseFloat(data.top), parseFloat(data.rotation || 0), interactive);
+                    el.innerHTML = data.innerHTML;
+                    targetCanvas.appendChild(el);
                 } else if (data.type === 'wall') {
-                    createBaseSegment(parseFloat(data.left), parseFloat(data.top), parseFloat(data.length), parseFloat(data.angle), parseFloat(data.height), true);
+                    createBaseSegment(targetCanvas, parseFloat(data.left), parseFloat(data.top), parseFloat(data.length), parseFloat(data.angle), parseFloat(data.height), true, interactive);
                 } else if (data.type === 'measure') {
-                    createBaseSegment(parseFloat(data.left), parseFloat(data.top), parseFloat(data.length), parseFloat(data.angle), 0, false);
+                    createBaseSegment(targetCanvas, parseFloat(data.left), parseFloat(data.top), parseFloat(data.length), parseFloat(data.angle), 0, false, interactive);
                 } else if (data.type === 'text') {
-                    createBaseText(data.text, parseFloat(data.left), parseFloat(data.top), data.color, data.border && data.border.includes('dashed'));
+                    createBaseText(targetCanvas, data.text, parseFloat(data.left), parseFloat(data.top), data.color, data.border, interactive);
                 }
             });
         }
 
         function exportPlanFile() {
-            const json = JSON.stringify(extractPlanData());
+            saveCurrentToMemory();
+            const json = JSON.stringify(projects[currentProjectName], null, 2);
             const blob = new Blob([json], {type: "application/json"});
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a'); a.href = url;
@@ -888,55 +1236,124 @@
             const reader = new FileReader();
             reader.onload = function(e) {
                 try {
-                    const items = JSON.parse(e.target.result);
+                    const imported = JSON.parse(e.target.result);
                     let projName = file.name.replace('.json', '');
-                    if(!projects[projName]) {
-                        projects[projName] = items;
-                        currentProjectName = projName;
-                        updateProjectSelectUI();
+                    if (Array.isArray(imported)) {
+                        projects[projName] = { rdc: imported, r1: buildArchitectR1() };
                     } else {
-                        projects[currentProjectName] = items;
+                        projects[projName] = imported;
                     }
-                    localStorage.setItem('aubetin_current_project', currentProjectName);
-                    renderPlanData(items);
-                    resetView();
-                    autoSave();
-                    showBanner("Fichier importé !");
-                } catch(err) { alert("Fichier invalide."); }
+                    currentProjectName = projName;
+                    localStorage.setItem('aubetin_current_project_v5_9', currentProjectName);
+                    localStorage.setItem('aubetin_projects_v5_9', JSON.stringify(projects));
+                    updateProjectSelectUI();
+                    renderActiveFloor();
+                    showBanner("Fichier JSON importé avec succès !");
+                } catch(err) { showBanner("Erreur : Fichier JSON invalide."); }
             };
             reader.readAsText(file);
             event.target.value = '';
         }
 
         function openCustomObjectModal() {
-            document.getElementById('custom-object-modal').style.display = 'flex';
+            document.getElementById('custom-object-modal').classList.remove('hidden');
             document.getElementById('co-name').value = '';
             document.getElementById('co-name').focus();
         }
-
         function closeCustomObjectModal() {
-            document.getElementById('custom-object-modal').style.display = 'none';
+            document.getElementById('custom-object-modal').classList.add('hidden');
         }
-
         function createCustomObject() {
-            const name = document.getElementById('co-name').value || 'Nouvel Élément';
-            const w = parseFloat(document.getElementById('co-width').value) || 100;
-            const h = parseFloat(document.getElementById('co-height').value) || 100;
+            const name = document.getElementById('co-name').value || 'Élément Sur-Mesure';
+            const w = parseFloat(document.getElementById('co-width').value) || 120;
+            const h = parseFloat(document.getElementById('co-height').value) || 120;
             const category = document.getElementById('co-category').value;
-
-            // Placer l'élément au centre exact de la vue actuelle
             const rect = workspace.getBoundingClientRect();
-            const centerX = (rect.width / 2 - panX) / scale;
-            const centerY = (rect.height / 2 - panY) / scale;
-
-            const el = createMachineElement(name, w, h, category, centerX - (w/2), centerY - (h/2), 0);
+            const centerX = Math.round(((rect.width / 2 - panX) / scale - w / 2) / 10) * 10;
+            const centerY = Math.round(((rect.height / 2 - panY) / scale - h / 2) / 10) * 10;
+            const el = createMachineElement(name, w, h, category, centerX, centerY, 0, true);
             canvas.appendChild(el);
-            
             closeCustomObjectModal();
             setTool('select');
             selectElement(el);
             autoSave();
-            showBanner('Élément sur-mesure créé avec succès');
+        }
+
+        // ============================================================================
+        // 4. CALCULATEUR AUTOMATIQUE DE MÉTRÉS POUR DEVIS ARTISANS
+        // ============================================================================
+        function openMetresModal() {
+            saveCurrentToMemory();
+            const proj = projects[currentProjectName];
+            const rdcItems = proj.rdc || [];
+            const r1Items = proj.r1 || [];
+
+            let innerWallsRdcCm = 0;
+            let innerWallsR1Cm = 0;
+            const eqRdc = [];
+            const eqR1 = [];
+
+            rdcItems.forEach(item => {
+                if (item.type === 'wall' && parseFloat(item.height || 10) < 18) {
+                    innerWallsRdcCm += parseFloat(item.length || 0);
+                } else if (item.type === 'machine') {
+                    const tmp = document.createElement('div');
+                    tmp.innerHTML = item.innerHTML;
+                    const title = tmp.querySelector('span') ? tmp.querySelector('span').innerText : 'Équipement';
+                    if (title.trim() !== '') eqRdc.push(`${title} (${parseFloat(item.width)}x${parseFloat(item.height)} cm)`);
+                }
+            });
+
+            r1Items.forEach(item => {
+                if (item.type === 'wall' && parseFloat(item.height || 10) < 18) {
+                    innerWallsR1Cm += parseFloat(item.length || 0);
+                } else if (item.type === 'machine') {
+                    const tmp = document.createElement('div');
+                    tmp.innerHTML = item.innerHTML;
+                    const title = tmp.querySelector('span') ? tmp.querySelector('span').innerText : 'Équipement R+1';
+                    if (title.trim() !== '') eqR1.push(`${title} (${parseFloat(item.width)}x${parseFloat(item.height)} cm)`);
+                }
+            });
+
+            const mlCloisonsRdc = (innerWallsRdcCm / 100).toFixed(1);
+            const surfCloisonsRdc = (mlCloisonsRdc * 3.0).toFixed(0);
+            const mlCloisonsR1 = (innerWallsR1Cm / 100).toFixed(1);
+
+            document.getElementById('metres-subtitle').innerText = `Projet analysé : ${currentProjectName}`;
+            document.getElementById('metres-content').innerHTML = `
+                <div class="grid grid-cols-3 gap-3">
+                    <div class="bg-slate-50 p-3 rounded-lg border border-slate-200">
+                        <div class="text-xs text-slate-500 font-semibold">Surface Plancher RDC</div>
+                        <div class="text-xl font-bold text-slate-800">324,0 m²</div>
+                        <div class="text-[11px] text-slate-500 mt-1">Résine PU-Ciment : ~107 m²<br>Résine Antistatique : ~132 m²</div>
+                    </div>
+                    <div class="bg-amber-50 p-3 rounded-lg border border-amber-200">
+                        <div class="text-xs text-amber-800 font-semibold">Cloisons Isothermes RDC</div>
+                        <div class="text-xl font-bold text-amber-900">${mlCloisonsRdc} ml (~${surfCloisonsRdc} m²)</div>
+                        <div class="text-[11px] text-amber-700 mt-1">+ Plafond suspendu : ~205 m²<br>Âme Laine de Roche EI60</div>
+                    </div>
+                    <div class="bg-indigo-50 p-3 rounded-lg border border-indigo-200">
+                        <div class="text-xs text-indigo-800 font-semibold">Plancher Classique R+1</div>
+                        <div class="text-xl font-bold text-indigo-900">171,6 m²</div>
+                        <div class="text-[11px] text-indigo-700 mt-1">De x=9,50m à x=29,00m (Sol plein)<br>Cloisons R+1 : ${mlCloisonsR1} ml (Couloir 1,50m)</div>
+                    </div>
+                </div>
+
+                <div class="bg-white border border-slate-200 rounded-lg p-3">
+                    <div class="font-bold text-slate-800 mb-2"><i class="fa-solid fa-industry text-amber-500 mr-1.5"></i>Inventaire RDC (${eqRdc.length} éléments implantés)</div>
+                    <div class="grid grid-cols-2 gap-1.5 text-xs text-slate-600">
+                        ${eqRdc.map(e => `<div class="truncate">• ${e}</div>`).join('')}
+                    </div>
+                </div>
+
+                <div class="bg-white border border-slate-200 rounded-lg p-3">
+                    <div class="font-bold text-slate-800 mb-2"><i class="fa-solid fa-stairs text-indigo-600 mr-1.5"></i>Inventaire Étage R+1 Aménagé (${eqR1.length} éléments implantés)</div>
+                    <div class="grid grid-cols-2 gap-1.5 text-xs text-slate-600">
+                        ${eqR1.map(e => `<div class="truncate">• ${e}</div>`).join('')}
+                    </div>
+                </div>
+            `;
+            document.getElementById('metres-modal').classList.remove('hidden');
         }
     </script>
 </body>
