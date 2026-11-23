@@ -209,7 +209,8 @@
                     <button onclick="teleportWalker('petrins')" class="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-[10.5px] font-bold text-rose-300 border border-slate-700 transition">Pétrins & Façonnage</button>
                     <button onclick="teleportWalker('moulins')" class="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-[10.5px] font-bold text-amber-200 border border-slate-700 transition">Moulins Meules</button>
                     <button onclick="teleportWalker('escalier')" class="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-[10.5px] font-bold text-cyan-300 border border-slate-700 transition">Pied Escalier (3,30m)</button>
-                    <button onclick="teleportWalker('r1_palier')" class="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-[10.5px] font-bold text-indigo-300 border border-slate-700 transition">Étage R+1</button>
+                    <button onclick="teleportWalker('r1_palier')" class="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-[10.5px] font-bold text-indigo-300 border border-slate-700 transition">Palier & Vestiaires R+1</button>
+                    <button onclick="teleportWalker('r1_bureaux')" class="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-[10.5px] font-bold text-violet-300 border border-slate-700 transition">Bureaux & Pause R+1</button>
                 </div>
                 <button onclick="exitWalkMode()" class="ml-1 px-2.5 py-1 rounded-lg bg-red-600 hover:bg-red-500 text-white text-[11px] font-extrabold transition shadow">
                     <i class="fa-solid fa-xmark mr-1"></i>Quitter
@@ -272,8 +273,11 @@
                         <button onclick="flyToCamera('meunerie')" id="cam-meunerie" class="cam-btn px-2 py-1.5 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 text-[11px] font-bold text-amber-800 text-left transition">
                             <i class="fa-solid fa-wheat-awn mr-1"></i>Z5 Meunerie
                         </button>
-                        <button onclick="flyToCamera('escalier')" id="cam-escalier" class="cam-btn col-span-2 px-2 py-1.5 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 text-[11px] font-bold text-cyan-800 text-left transition">
-                            <i class="fa-solid fa-wheelchair mr-1"></i>Escalier Est➔Ouest & Élévateur PMR
+                        <button onclick="flyToCamera('r1')" id="cam-r1" class="cam-btn px-2 py-1.5 rounded-lg border border-slate-200 bg-indigo-50 hover:bg-indigo-100 text-[11px] font-bold text-indigo-900 text-left transition">
+                            <i class="fa-solid fa-building-user mr-1"></i>Étage R+1 Aménagé
+                        </button>
+                        <button onclick="flyToCamera('escalier')" id="cam-escalier" class="cam-btn px-2 py-1.5 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 text-[11px] font-bold text-cyan-800 text-left transition">
+                            <i class="fa-solid fa-wheelchair mr-1"></i>Escalier & PMR
                         </button>
                     </div>
 
@@ -437,6 +441,13 @@
             roof: new THREE.Group(),
             fullWalls: new THREE.Group(),
             lowWalls: new THREE.Group()
+        };
+
+        // Cloisons & Équipe dédiées à l'Étage R+1 (synchronisées avec Murs coupés à 1,35 m et Salarié·e·s)
+        const r1Cutaway = {
+            fullWalls: new THREE.Group(),
+            lowWalls: new THREE.Group(),
+            staff: new THREE.Group()
         };
 
         // Emprises interdites à la visite intérieure (autres bâtiments privés entourant la cour centrale z = 9..44 m)
@@ -663,6 +674,15 @@
                 barnGreen: new THREE.MeshStandardMaterial({ color: 0x4d6b45, roughness: 0.82, metalness: 0.05 }),
                 shutterBlue: new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.75 }),
                 pmrCyan: new THREE.MeshStandardMaterial({ color: 0x0891b2, roughness: 0.35, metalness: 0.25 }),
+                fabricIndigo: new THREE.MeshStandardMaterial({ color: 0x4338ca, roughness: 0.82, metalness: 0.02 }),
+                fabricSlate: new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.78, metalness: 0.05 }),
+                screenGlow: new THREE.MeshStandardMaterial({ color: 0x0ea5e9, emissive: 0x0284c7, emissiveIntensity: 0.38, roughness: 0.20 }),
+                copperPipe: new THREE.MeshStandardMaterial({ color: 0xb45309, roughness: 0.30, metalness: 0.75 }),
+                lockerGrey: new THREE.MeshStandardMaterial({ color: 0x64748b, roughness: 0.42, metalness: 0.52 }),
+                lockerDoorBlue: new THREE.MeshStandardMaterial({ color: 0x3b82f6, roughness: 0.38, metalness: 0.42 }),
+                rj45Blue: new THREE.MeshStandardMaterial({ color: 0x0284c7, emissive: 0x0369a1, emissiveIntensity: 0.28, roughness: 0.30 }),
+                outletRed: new THREE.MeshStandardMaterial({ color: 0xdc2626, roughness: 0.35, metalness: 0.10 }),
+                waterClear: new THREE.MeshStandardMaterial({ color: 0x38bdf8, roughness: 0.12, metalness: 0.15, transparent: true, opacity: 0.78 }),
                 glass: new THREE.MeshStandardMaterial({ color: 0xbae6fd, transparent: true, opacity: 0.38, roughness: 0.12, metalness: 0.20, side: THREE.DoubleSide }),
                 ceilingM0: new THREE.MeshStandardMaterial({ color: 0xfca5a5, transparent: true, opacity: 0.48, roughness: 0.6, side: THREE.DoubleSide }),
                 ceilingPIR: new THREE.MeshStandardMaterial({ color: 0xbae6fd, transparent: true, opacity: 0.44, roughness: 0.4, side: THREE.DoubleSide }),
@@ -756,7 +776,6 @@
             deck.position.set(0, tableH, 0);
             g.add(deck);
 
-            // Archure octogonale bois + Meule granit supérieure animée
             const archure = new THREE.Mesh(new THREE.CylinderGeometry(millRadius, millRadius, 0.46, 8), MATS.woodFrame);
             archure.position.set(0, tableH + 0.27, 0);
             archure.castShadow = true;
@@ -767,7 +786,6 @@
             g.add(runnerStone);
             animatedMillstones.push(runnerStone);
 
-            // Arche métallique et trémie conique à grain
             const arch = new THREE.Mesh(new THREE.BoxGeometry(millRadius * 1.5, 0.55, 0.08), MATS.steelBeam);
             arch.position.set(0, tableH + 0.82, 0);
             g.add(arch);
@@ -777,7 +795,6 @@
             hopper.castShadow = true;
             g.add(hopper);
 
-            // Potence bleue de retournement des meules sur le grand moulin Ø100
             if (isLarge) {
                 const mast = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 2.35, 10), MATS.hoistBlue);
                 mast.position.set(-millRadius - 0.15, 1.18, 0);
@@ -787,7 +804,6 @@
                 g.add(arm);
             }
 
-            // Bluterie bois + Vis inox de relevage farine
             const blutLen = isLarge ? 1.75 : 1.25;
             const blut = new THREE.Mesh(new THREE.BoxGeometry(0.68, 0.72, blutLen), MATS.beechWood);
             blut.position.set(0, 0.72, -millRadius - blutLen * 0.55);
@@ -799,7 +815,6 @@
             vrf.rotation.z = -0.18;
             g.add(vrf);
 
-            // Rampe d'ensachage étanche + Manche filtrante blanche + Sacs kraft suspendus
             const rampeW = isLarge ? 2.35 : 1.35;
             const rampeZ = -millRadius - blutLen - 0.68;
             const collector = new THREE.Mesh(new THREE.BoxGeometry(rampeW, 0.28, 0.62), MATS.stainless);
@@ -822,7 +837,6 @@
                 }
             }
 
-            // Support Big-Bag Son + Vis à son (VRS)
             const bbX = isLarge ? 2.15 : 1.32;
             const bbZ = -millRadius - 0.95;
             const bbBag = new THREE.Mesh(new THREE.BoxGeometry(1.05, 1.18, 1.05), MATS.whiteBag);
@@ -1012,7 +1026,8 @@
                 g.add(wheel);
             });
 
-            groups.rdcEquipment.add(g);
+            // Placé dans rdcStructure pour rester visible même lorsque l'auvent est masqué en mode Démo
+            groups.rdcStructure.add(g);
             deliveryVanGroup = g;
             registerInteractive(g, meta);
         }
@@ -1165,13 +1180,11 @@
         function createTelehandlerManitou() {
             const g = new THREE.Group();
 
-            // Châssis surbaissé rouge/noir typique Manitou agricole
             const chassis = new THREE.Mesh(new THREE.BoxGeometry(1.85, 0.78, 3.10), MATS.manitouRed);
             chassis.position.set(0, 0.78, -0.20);
             chassis.castShadow = true;
             g.add(chassis);
 
-            // Cabine vitrée déportée à gauche
             const cabFrame = new THREE.Mesh(new THREE.BoxGeometry(0.92, 1.15, 1.45), MATS.steelBeam);
             cabFrame.position.set(0.42, 1.65, -0.25);
             cabFrame.castShadow = true;
@@ -1180,13 +1193,11 @@
             cabGlass.position.set(0.42, 1.68, -0.25);
             g.add(cabGlass);
 
-            // Capot moteur latéral droit
             const hood = new THREE.Mesh(new THREE.BoxGeometry(0.78, 0.65, 1.65), MATS.manitouRed);
             hood.position.set(-0.44, 1.32, -0.35);
             hood.castShadow = true;
             g.add(hood);
 
-            // Bras télescopique articulé + Tablier fourches + Big-Bag de grain suspendu
             const boomPivot = new THREE.Group();
             boomPivot.position.set(-0.10, 1.45, -1.25);
 
@@ -1199,7 +1210,6 @@
             innerBoom.position.set(0, 0.15, 3.35);
             boomPivot.add(innerBoom);
 
-            // Potence crochet + Big-Bag blanc de céréales bio
             const bagGroup = new THREE.Group();
             bagGroup.position.set(0, -0.58, 3.95);
             const bigBag = new THREE.Mesh(new THREE.BoxGeometry(1.02, 1.12, 1.02), MATS.whiteBag);
@@ -1213,7 +1223,6 @@
             boomPivot.add(bagGroup);
             g.add(boomPivot);
 
-            // 4 Grosses roues agraires à jantes rouges
             const wheels = [];
             [[-0.95, 0.95], [0.95, 0.95], [-0.95, -1.25], [0.95, -1.25]].forEach(([wx, wz]) => {
                 const wg = new THREE.Group();
@@ -1249,22 +1258,16 @@
         }
 
         function buildFermeAubetinComplex() {
-            // ============================================================================
-            // IMPLANTATION RÉELLE DE LA FERME D'AUBETIN (CONFORME VUE SATELLITE & PHOTOS)
-            // - Notre bâtiment (x = 0..36,7 m, z = 0..8,9 m) est à l'angle Est/Nord-Est :
-            //   ses 3 portes charretières et son grand auvent (z = 8,9..12,65 m) S'OUVRENT
-            //   SUR LA GRANDE COUR INTÉRIEURE (z = 9,0..44,0 m) !
-            // - Derrière notre mur z = 0 se trouvent l'extension 5C/5D, la mare et les bois Est.
-            // ============================================================================
+            groups.farmComplex.add(farmStationCutaway.roof, farmStationCutaway.fullWalls, farmStationCutaway.lowWalls);
 
-            // 1. Grande Cour Centrale de la Ferme (z = 9..44 m) + Voie d'accès Nord (côté Boutique x < 0) + Entrée Sud ("Frm d'Aubetin")
+            // 1. Grande Cour Centrale de la Ferme (z = 9..44 m) + Voie d'accès Nord + Entrée Sud
             addBox(groups.farmComplex, -3.5, -0.14, 8.85, 53.5, 0.12, 35.5, MATS.courtyard, null, false);
-            addBox(groups.farmComplex, -16.0, -0.13, 4.20, 14.5, 0.10, 9.8, MATS.farmTrack, null, false);   // Accès Nord (pignon Boutique)
-            addBox(groups.farmComplex, -11.5, -0.13, -7.5, 9.5, 0.10, 12.0, MATS.farmTrack, null, false);  // Parking clients entrée Nord
-            addBox(groups.farmComplex, 48.0, -0.13, 26.8, 26.0, 0.10, 7.2, MATS.farmTrack, null, false);   // Route Sud "Frm d'Aubetin"
+            addBox(groups.farmComplex, -16.0, -0.13, 4.20, 14.5, 0.10, 9.8, MATS.farmTrack, null, false);
+            addBox(groups.farmComplex, -11.5, -0.13, -7.5, 9.5, 0.10, 12.0, MATS.farmTrack, null, false);
+            addBox(groups.farmComplex, 48.0, -0.13, 26.8, 26.0, 0.10, 7.2, MATS.farmTrack, null, false);
             addBox(groups.farmComplex, -28.0, -0.19, 48.0, 96.0, 0.08, 28.0, MATS.wheatField, null, false);
 
-            // Grille métallique blanche sur le pignon Nord-Ouest (x = -0,35 m) exactement comme sur la photo de pignon
+            // Grille métallique blanche sur le pignon Nord-Ouest
             const gateGroup = new THREE.Group();
             gateGroup.position.set(bx(-0.42), 0, bz(5.45));
             const topRail = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.08, 6.20), MATS.whiteEnamel);
@@ -1280,18 +1283,17 @@
             }
             groups.farmComplex.add(gateGroup);
 
-            // Petite mare et lisière boisée à l'Est derrière notre bâtiment (z < -4 m, visible sur Google Maps)
+            // Mare à l'Est derrière z = 0
             const pond = new THREE.Mesh(new THREE.CylinderGeometry(4.8, 4.8, 0.08, 20), MATS.pondWater);
             pond.position.set(bx(30.0), -0.06, bz(-12.5));
             pond.scale.set(1.25, 1, 0.85);
             groups.farmComplex.add(pond);
 
-            // 2. CORPS DE LOGIS MITOYEN AU PIGNON SUD DE LA MEUNERIE (x > 36,95 m)
-            // A) Maison en pierre à toit ardoise foncé directement accolée à notre pignon x = 36,95 m
+            // 2. Corps de logis mitoyen au pignon Sud de la Meunerie
             createClosedBriardWing(36.95, -0.25, 10.5, 9.40, 5.60, 8.50, true, {
                 zone: 'CORPS DE FERME (EXTÉRIEUR SEUL)',
                 title: 'Maison Mitoyenne au Pignon Meunerie (Habitation Privée)',
-                desc: 'Bâtiment en pierre à toiture sombre accolé au sud de la Meunerie (visible à droite sur la photo de la cour) — non visitable.',
+                desc: 'Bâtiment en pierre à toiture sombre accolé au sud de la Meunerie — non visitable.',
                 dims: '10,5 × 9,4 m', lot: 'Hors périmètre SAS'
             }, MATS.slateRoof);
             [39.2, 43.2].forEach(wx => {
@@ -1299,34 +1301,33 @@
                 addBox(groups.farmComplex, wx, 3.55, 9.16, 1.10, 1.45, 0.08, MATS.whiteEnamel);
             });
 
-            // B) Grand Corps de Logis en « L » à l'angle Sud-Est de la ferme (x = 47,4..61,0 m)
             createClosedBriardWing(47.45, -0.50, 13.5, 14.5, 5.80, 9.20, true, {
                 zone: 'CORPS DE FERME (EXTÉRIEUR SEUL)',
                 title: 'Corps de Logis Principal en « L » — Ferme d’Aubetin',
-                desc: 'Habitation historique de la ferme à l’angle Sud-Est de la cour (extérieur uniquement, accès intérieur verrouillé).',
+                desc: 'Habitation historique de la ferme à l’angle Sud-Est de la cour (extérieur uniquement).',
                 dims: 'Aile Sud-Est', lot: 'Hors périmètre SAS'
             });
             createClosedBriardWing(43.50, 13.80, 9.20, 12.6, 5.10, 8.10, false, {
                 zone: 'CORPS DE FERME (EXTÉRIEUR SEUL)',
                 title: 'Aile en Retour sur Cour (Corps de Logis)',
-                desc: 'Ferme le côté Sud-Est de la cour jusqu’à l’allée d’entrée Sud (extérieur uniquement).',
+                desc: 'Ferme le côté Sud-Est de la cour jusqu’à l’allée d’entrée Sud.',
                 dims: '12,6 × 9,2 m', lot: 'Hors périmètre SAS'
             });
 
-            // 3. GRANGE SUD (de l'autre côté de la route d'entrée Sud "Frm d'Aubetin" : x = 49..62 m, z = 34,5..53 m)
+            // 3. Grange Sud
             createClosedBriardWing(49.0, 34.5, 12.5, 18.5, 5.20, 8.70, false, {
                 zone: 'CORPS DE FERME (EXTÉRIEUR SEUL)',
                 title: 'Grange Briarde Sud (Entrée Principale Ferme d’Aubetin)',
-                desc: 'Bâtiment agricole bordant l’entrée Sud de la cour carrée (extérieur uniquement, non visitable).',
+                desc: 'Bâtiment agricole bordant l’entrée Sud de la cour carrée (extérieur uniquement).',
                 dims: '18,5 × 12,5 m', lot: 'Hors périmètre SAS'
             });
             addBox(groups.farmComplex, 48.88, 0.02, 40.5, 0.14, 3.80, 3.80, MATS.barnGreen);
 
-            // 4. GRANDE GRANGE NORD & AUVENT ORANGÉ (fermant le haut de la cour : x = -12,5..-1,5 m, z = 14,5..45 m)
+            // 4. Grande Grange Nord & Auvent orangé
             createClosedBriardWing(-12.5, 14.5, 11.0, 30.5, 5.60, 9.30, false, {
                 zone: 'CORPS DE FERME (EXTÉRIEUR SEUL)',
                 title: 'Grande Grange Nord & Auvent sur Cour',
-                desc: 'Ferme le côté Nord de la cour tout en laissant le passage d’entrée dégagé face au pignon de la Boutique (extérieur uniquement).',
+                desc: 'Ferme le côté Nord de la cour tout en laissant le passage d’entrée dégagé face à la Boutique.',
                 dims: '30,5 × 11,0 m', lot: 'Hors périmètre SAS'
             });
             const northLeanTo = new THREE.Mesh(new THREE.BoxGeometry(3.80, 0.12, 21.0), MATS.terracottaSheet);
@@ -1335,25 +1336,24 @@
             northLeanTo.castShadow = true;
             groups.farmComplex.add(northLeanTo);
 
-            // 5. GRANDS HANGARS AGRICOLES OUEST EN VIS-À-VIS DE NOTRE AUVENT (x = 2..37,5 m, z = 44..67 m)
+            // 5. Grands Hangars Ouest
             createClosedBriardWing(2.0, 44.2, 35.5, 11.2, 5.30, 8.60, true, {
                 zone: 'CORPS DE FERME (EXTÉRIEUR SEUL)',
                 title: 'Grange & Hangars Ouest (En vis-à-vis sur la Cour Centrale)',
-                desc: 'Long corps de bâtiments agricoles faisant face à notre grand auvent de l’autre côté de la cour de 35 m (extérieur seul).',
+                desc: 'Long corps de bâtiments agricoles faisant face à notre grand auvent de l’autre côté de la cour.',
                 dims: '35,5 × 11,2 m', lot: 'Hors périmètre SAS'
             }, MATS.slateRoof);
             [9.5, 20.5, 30.5].forEach(hx => {
                 addBox(groups.farmComplex, hx, 0.02, 44.08, 3.80, 3.90, 0.14, MATS.barnGreen);
             });
-            // Double hangar métallique clair à l'arrière Ouest vers la vallée de l'Aubetin
             createClosedBriardWing(4.0, 55.8, 33.0, 11.5, 4.80, 7.20, true, {
                 zone: 'CORPS DE FERME (EXTÉRIEUR SEUL)',
                 title: 'Hangars Métalliques Ouest (Côté Vallée de l’Aubetin)',
-                desc: 'Hangars de stockage matériel et fourrage à l’Ouest du corps de ferme (extérieur uniquement).',
+                desc: 'Hangars de stockage matériel et fourrage à l’Ouest du corps de ferme.',
                 dims: '33,0 × 11,5 m', lot: 'Hors périmètre SAS'
             }, MATS.galvaShed);
 
-            // 6. PÔLE SILOS À CÉRÉALES & UNITÉ DE NETTOYAGE / DÉCORTICAGE (À l'angle Sud-Ouest de la cour)
+            // 6. Pôle Silos à Céréales & Unité de Nettoyage / Décorticage (écorché synchronisé)
             addBox(groups.farmComplex, 38.2, -0.08, 46.5, 10.4, 0.22, 8.8, MATS.concreteTerrace);
             [
                 { sx: 44.8, sz: 49.5, r: 2.15, h: 6.40, label: 'Cellule Principale Blés Anciens Bio' },
@@ -1387,20 +1387,18 @@
                 registerInteractive(sg, {
                     zone: 'SILOS DE LA FERME (ANGLE SUD-OUEST COUR)',
                     title: `Silo Ventilé #${idx + 1} — ${silo.label}`,
-                    desc: 'Implanté à l’angle Sud-Ouest de la cour (comme sur la vue aérienne), en liaison directe avec la station de nettoyage et décorticage.',
+                    desc: 'Implanté à l’angle Sud-Ouest de la cour, en liaison directe avec la station de nettoyage et décorticage.',
                     dims: `Ø ${(silo.r * 2).toFixed(1)} m`, lot: 'Amont Agricole'
                 });
             });
-            // Tour d'élévation à godets des silos
             addBox(groups.farmComplex, 42.5, 0.10, 50.8, 0.55, 9.80, 0.55, MATS.steelBeam);
 
-            // Station Dédiée Nettoyage, Épierrage & Décorticage (toiture et parois abaissables à 1,35 m pour dégager les machines)
-            groups.farmComplex.add(farmStationCutaway.roof, farmStationCutaway.fullWalls, farmStationCutaway.lowWalls);
+            // Station Dédiée Nettoyage, Épierrage & Décorticage (murs & toit dans farmStationCutaway)
             addBox(groups.farmComplex, 38.5, -0.06, 41.2, 5.50, 0.16, 5.00, MATS.concreteTerrace);
             addBox(farmStationCutaway.fullWalls, 38.5, 0.10, 46.0, 5.50, 3.25, 0.16, MATS.woodFrame);
             addBox(farmStationCutaway.fullWalls, 38.5, 0.10, 41.2, 0.16, 3.25, 5.00, MATS.woodFrame);
-            addBox(farmStationCutaway.lowWalls, 38.5, 0.10, 46.0, 5.50, 1.35, 0.16, MATS.woodFrame);
-            addBox(farmStationCutaway.lowWalls, 38.5, 0.10, 41.2, 0.16, 1.35, 5.00, MATS.woodFrame);
+            addBox(farmStationCutaway.lowWalls, 38.5, 0.10, 46.0, 5.50, 1.25, 0.16, MATS.woodFrame);
+            addBox(farmStationCutaway.lowWalls, 38.5, 0.10, 41.2, 0.16, 1.25, 5.00, MATS.woodFrame);
             addBox(farmStationCutaway.roof, 38.3, 3.35, 41.0, 5.90, 0.16, 5.40, MATS.auventSheet);
 
             addBox(groups.farmComplex, 39.2, 0.10, 43.8, 1.60, 2.15, 1.25, MATS.hoistBlue, {
@@ -1421,7 +1419,6 @@
             groups.farmComplex.add(cyclone);
             addBox(groups.farmComplex, 42.7, 0.10, 42.0, 1.00, 1.10, 1.00, MATS.whiteBag);
 
-            // Bosquet dense à l'Est (derrière z = 0) et arbres près du pignon Nord
             [
                 [-3.2, 1.5], [-4.5, -2.5], [4.0, -7.5], [11.5, -8.5], [19.0, -8.0],
                 [26.0, -9.5], [36.5, -9.0], [43.0, -8.0], [-4.0, 52.0], [18.0, 72.0]
@@ -1429,15 +1426,13 @@
                 addTree(tx, tz, 1.0 + (i % 3) * 0.18);
             });
 
-            // Manitou télescopique agricole dans la cour près des silos
             createTelehandlerManitou();
         }
 
         function buildSmallEquipment() {
             const sg = groups.smallEquipment;
 
-            // ---------------- 1. PETIT MATÉRIEL DE MEUNERIE (ZONE 5) ----------------
-            // Potence & Couseuse à sacs suspendue sur équilibreur + Balance homologuée 150 kg au sol
+            // 1. Petit matériel Meunerie
             addBox(sg, 28.65, 0.00, 1.85, 0.08, 2.35, 0.08, MATS.steelBeam);
             addBox(sg, 28.65, 2.28, 1.85, 0.75, 0.06, 0.08, MATS.steelBeam);
             const cable = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, 0.85, 6), MATS.steelBeam);
@@ -1446,7 +1441,7 @@
             addBox(sg, 29.18, 1.28, 1.78, 0.26, 0.22, 0.20, MATS.hoistBlue, {
                 zone: 'SOUS-LOT 8B-06 • PETIT MATÉRIEL MEUNERIE',
                 title: 'Couseuse Portative sur Équilibreur & Bascule Homologuée 150 kg',
-                desc: 'Poste ergonomique sans port de charge pour peser (vignette verte M) et coudre au fil coton alimentaire les sacs kraft de 25 kg.',
+                desc: 'Poste ergonomique sans port de charge pour peser et coudre au fil coton alimentaire les sacs kraft de 25 kg.',
                 dims: 'Équilibreur + Bascule inox', lot: 'Sous-Lot 8B'
             });
             addBox(sg, 29.00, 0.00, 1.62, 0.62, 0.08, 0.62, MATS.stainless);
@@ -1456,7 +1451,6 @@
             bagToSew.position.set(bx(29.30), 0.44, bz(1.92));
             sg.add(bagToSew);
 
-            // Table inox ensachage détail (1–5 kg) + Balance 15 kg + Soudeuse + Étiqueteuse + Palettes sacs cousus
             addBox(sg, 26.85, 0.00, 0.32, 1.45, 0.88, 0.70, MATS.stainless, {
                 zone: 'SOUS-LOT 8B-05/06 • CONDITIONNEMENT DÉTAIL',
                 title: 'Poste Ensachage Détail (Balance 15 kg, Soudeuse & Étiqueteuse Lot/DLUO)',
@@ -1469,7 +1463,6 @@
                 addBox(sg, 28.02 + (b % 2) * 0.14, 0.88, 0.42 + Math.floor(b / 2) * 0.18, 0.11, 0.22, 0.09, MATS.kraftBag);
             }
 
-            // Palette bois chargée de sacs kraft 25 kg cousus
             addBox(sg, 26.90, 0.00, 2.05, 1.20, 0.14, 0.80, MATS.woodFrame);
             for (let layer = 0; layer < 4; layer++) {
                 for (let s = 0; s < 2; s++) {
@@ -1477,11 +1470,10 @@
                 }
             }
 
-            // Établi de contrôle réception des grains : Humidimètre homologué + Chondromètre laiton + Sonde canne
             addBox(sg, 32.55, 0.00, 8.05, 1.30, 0.88, 0.65, MATS.beechWood, {
                 zone: 'SOUS-LOT 8B-04 • MÉTROLOGIE GRAIN',
                 title: 'Laboratoire Réception Grain : Humidimètre Homologué, Chondromètre & Sonde',
-                desc: 'Vérification systématique du taux d’humidité (< 14,5 %), du poids spécifique (kg/hl) et de la température du grain avant mouture.',
+                desc: 'Vérification systématique du taux d’humidité (< 14,5 %) et du poids spécifique (kg/hl) avant mouture.',
                 dims: 'Poste contrôle qualité', lot: 'Sous-Lot 8B'
             });
             addBox(sg, 32.70, 0.88, 8.20, 0.34, 0.30, 0.28, MATS.hoistBlue);
@@ -1493,8 +1485,7 @@
             grainProbe.rotation.z = 0.15;
             sg.add(grainProbe);
 
-            // ---------------- 2. PETIT MATÉRIEL DU FOURNIL & DE LA LAVERIE ----------------
-            // Bannetons garnis sur la table hêtre + 4 Bacs à ingrédients mobiles dessous + Porte-couches en lin
+            // 2. Petit matériel Fournil & Laverie
             for (let r = 0; r < 3; r++) {
                 for (let c = 0; c < 3; c++) {
                     const ban = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.10, 0.09, 12), MATS.wicker);
@@ -1514,35 +1505,30 @@
                     dims: 'Zone 4 Façonnage', lot: 'Sous-Lot 8A'
                 } : null);
             }
-            // Porte-couches inox mobile avec couches en lin pur
             addBox(sg, 21.05, 0.00, 0.65, 0.52, 1.45, 0.72, MATS.stainless, {
                 zone: 'SOUS-LOT 8A-14 • APPRÊT',
                 title: 'Porte-Couches Mobile Inox & 45 Couches en Lin Pur Non Traité',
-                desc: 'Toiles de lin traditionnel pour le pointage et l’apprêt des pains bio, entretenues dans la buanderie R+1.',
+                desc: 'Toiles de lin traditionnel entretenues dans la buanderie R+1.',
                 dims: 'Couches 240 × 70 cm', lot: 'Sous-Lot 8A'
             });
             addBox(sg, 21.08, 0.45, 0.70, 0.46, 0.95, 0.62, MATS.linenCloth);
 
-            // Table Pesée & Levain : pH-mètre sonde, Balance IP65 & Piles de bacs à pâte 600×400 sur rouleurs
             addBox(sg, 20.75, 0.90, 5.55, 0.30, 0.10, 0.28, MATS.stainless);
             addBox(sg, 20.80, 0.90, 6.15, 0.18, 0.22, 0.18, MATS.pmrCyan, {
                 zone: 'SOUS-LOT 8A-14 • CONTRÔLE LEVAIN',
                 title: 'pH-mètre à Sonde Pâte/Levain, Thermomètre & Balance Inox IP65',
-                desc: 'Suivi précis de l’acidité (pH 3,8–4,3) et de la température des levains naturels avant pétrissage.',
+                desc: 'Suivi précis de l’acidité (pH 3,8–4,3) et de la température des levains naturels.',
                 dims: 'Métrologie Fournil', lot: 'Sous-Lot 8A'
             });
-            // Piles de bacs à pâte PEHD blancs sur socle rouleur bleu
             addBox(sg, 18.05, 0.04, 6.15, 0.62, 0.08, 0.42, MATS.crateBlue);
             for (let k = 0; k < 5; k++) {
                 addBox(sg, 18.06, 0.12 + k * 0.15, 6.16, 0.60, 0.14, 0.40, MATS.whiteEnamel);
             }
-            // Lave-mains fémoral inox Zone 4 + Poubelle inox à pédale 90 L
             addBox(sg, 19.05, 0.55, 4.45, 0.45, 0.35, 0.42, MATS.stainless);
             const binZ4 = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.20, 0.72, 12), MATS.stainless);
             binZ4.position.set(bx(19.65), 0.36, bz(4.65));
             sg.add(binZ4);
 
-            // Laverie & Quai 3B : Douchette à ressort, Bac à fécule 80 L, Bacs tournées Europe (bleus/rouges) & Transpalette
             const hose = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.72, 8), MATS.stainless);
             hose.position.set(bx(16.85), 1.26, bz(4.62));
             sg.add(hose);
@@ -1552,14 +1538,13 @@
                 desc: 'Retient l’amidon cru et le gluten sous la plonge profonde avant rejet vers la micro-station ANC.',
                 dims: 'Inox 304L • 80 L', lot: 'Lot 5 / 8D'
             });
-            // Piles de bacs Europe 600×400 (bleus & rouges) au Quai 3B + Transpalette
             [14.20, 14.90].forEach((cx, idx) => {
                 addBox(sg, cx, 0.04, 7.35, 0.62, 0.08, 0.42, MATS.steelBeam);
                 for (let b = 0; b < 5; b++) {
                     addBox(sg, cx + 0.01, 0.12 + b * 0.22, 7.36, 0.60, 0.21, 0.40, idx === 0 ? MATS.crateBlue : MATS.crateRed, b === 0 && idx === 0 ? {
                         zone: 'SOUS-LOT 8A-14 • LOGISTIQUE TOURNÉES',
                         title: '80 Bacs Alimentaires Europe (600 × 400 mm) sur Socles Rouleurs',
-                        desc: 'Bacs gerbables thermo-désinfectables à 85 °C en laverie après retour des cantines et magasins bio.',
+                        desc: 'Bacs gerbables thermo-désinfectables à 85 °C en laverie après retour des tournées.',
                         dims: '600 × 400 × 240 mm', lot: 'Sous-Lot 8A'
                     } : null);
                 }
@@ -1567,7 +1552,6 @@
             addBox(sg, 16.45, 0.05, 7.85, 0.56, 0.08, 1.15, MATS.forkliftAmber);
             addBox(sg, 16.70, 0.12, 8.40, 0.06, 0.95, 0.06, MATS.steelBeam);
 
-            // Zone 2 Cuisson : Râtelier pelles de four, Batteries de moules sans PFAS, Emballeuse & PC Poste BL
             [-0.18, 0.0, 0.18].forEach(pz => {
                 const handle = new THREE.Mesh(new THREE.CylinderGeometry(0.016, 0.016, 2.05, 6), MATS.beechWood);
                 handle.position.set(bx(9.78), 1.18, bz(2.15 + pz));
@@ -1587,7 +1571,6 @@
             addBox(sg, 12.95, 1.05, 7.55, 0.10, 0.36, 0.46, MATS.steelBeam);
             addBox(sg, 12.90, 1.05, 8.12, 0.24, 0.18, 0.26, MATS.whiteEnamel);
 
-            // Extincteurs réglementaires (Eau 6L / CO2 2kg) & Blocs lumineux BAES
             [[9.42, 3.40], [10.00, 3.30], [21.62, 5.30], [29.40, 8.60]].forEach(([ex, ez]) => {
                 const ext = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.52, 10), MATS.extRed);
                 ext.position.set(bx(ex), 1.05, bz(ez));
@@ -1597,21 +1580,19 @@
                 addBox(sg, bxp - 0.16, 2.62, bzp - 0.06, 0.32, 0.14, 0.08, MATS.baesGreen);
             });
 
-            // ---------------- 3. PETIT MATÉRIEL DE LA BOUTIQUE FERMIÈRE (ZONE 1) ----------------
-            // Billot Fromage : Balance poids-prix à colonne + Lyre & Plateau
+            // 3. Petit matériel & Garnissage alimentaire complet Boutique, Chambres Froides & Stocks
             addBox(sg, 1.75, 0.90, 3.75, 0.34, 0.10, 0.32, MATS.stainless);
             addBox(sg, 1.78, 1.00, 3.78, 0.05, 0.42, 0.05, MATS.stainless);
             addBox(sg, 1.74, 1.38, 3.72, 0.14, 0.16, 0.20, MATS.boutiqueGreen, {
                 zone: 'SOUS-LOT 8C-07 • RAYON COUPE',
                 title: 'Balance Commerciale Poids-Prix Homologuée M, Lyre & Couteaux Fromage',
-                desc: 'Pesée et étiquetage direct à la coupe des fromages fermiers, reliée sans fil apparent via le boîtier de sol.',
+                desc: 'Pesée et étiquetage direct à la coupe des fromages fermiers, reliée en RJ45 via boîtier de sol.',
                 dims: 'Métrologie Boutique', lot: 'Sous-Lot 8C'
             });
             const cloche = new THREE.Mesh(new THREE.SphereGeometry(0.18, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2), MATS.glass);
             cloche.position.set(bx(2.15), 0.90, bz(4.35));
             sg.add(cloche);
 
-            // Pains dorés dans les 2 Casiers Bois + Bocaux & Bouteilles sur l'étagère Sud
             [1.95, 2.45, 2.95, 5.55, 6.05, 6.55].forEach(pz => {
                 for (let lvl = 0; lvl < 3; lvl++) {
                     const miche = new THREE.Mesh(new THREE.SphereGeometry(0.15, 10, 8), MATS.breadCrust);
@@ -1620,13 +1601,7 @@
                     sg.add(miche);
                 }
             });
-            for (let j = 0; j < 10; j++) {
-                const btl = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.05, 0.28, 8), j % 2 === 0 ? MATS.bottleGreen : MATS.kraftBag);
-                btl.position.set(bx(4.25 + j * 0.38), 1.22, bz(8.35));
-                sg.add(btl);
-            }
 
-            // Pile de paniers clients à l'entrée + Chevalet ardoise sous l'auvent Sud
             for (let p = 0; p < 5; p++) {
                 addBox(sg, 0.98, 0.05 + p * 0.12, 8.20, 0.42, 0.18, 0.30, MATS.wicker);
             }
@@ -1639,12 +1614,10 @@
             signB.rotation.x = 0.18;
             sg.add(signB);
 
-            // ---------------- 4. GARNISSAGE DÉTAILLÉ DES CHAMBRES FROIDES, STOCKAGES & ÉTALAGES BOUTIQUE ----------------
-            // A) Contenu intérieur de la Chambre Froide #1 (+2/+4 °C : Crèmerie, Beurre & Affinage Fromages Fermiers)
+            // Garnissage Chambre Froide #1 (Meules Brie, Coulommiers, Beurre, Crème)
             for (let sh = 0; sh < 3; sh++) {
                 const sy = 0.35 + sh * 0.62;
                 addBox(sg, 0.25, sy, 0.24, 1.78, 0.04, 0.44, MATS.stainless);
-                // Meules de Brie de Meaux & Coulommiers sur clayettes hautes, bacs de yaourts & mottes de beurre en bas
                 if (sh >= 1) {
                     for (let w = 0; w < 3; w++) {
                         const wh = new THREE.Mesh(new THREE.CylinderGeometry(0.19, 0.19, 0.07, 14), MATS.cheeseRind);
@@ -1657,9 +1630,9 @@
                     }
                 }
             }
-            addBox(sg, 0.28, 0.04, 0.92, 0.60, 0.42, 0.45, MATS.whiteEnamel); // Bidons lait cru / crème fraîche
+            addBox(sg, 0.28, 0.04, 0.92, 0.60, 0.42, 0.45, MATS.whiteEnamel);
 
-            // B) Contenu intérieur de la Chambre Froide #2 (+4/+8 °C : Maraîchage Bio, Pommes Briardes, Œufs & Cidre)
+            // Garnissage Chambre Froide #2 (Maraîchage bio, Carottes, Pommes rouges, Cidre)
             for (let sh = 0; sh < 3; sh++) {
                 const sy = 0.35 + sh * 0.62;
                 addBox(sg, 2.35, sy, 0.24, 1.78, 0.04, 0.44, MATS.stainless);
@@ -1669,12 +1642,11 @@
                     addBox(sg, 2.45 + c * 0.54, sy + 0.16, 0.31, 0.40, 0.09, 0.30, prodMats[(sh + c) % 3]);
                 }
             }
-            // Caisse-palette de pommes/courges & cartons de jus de pomme au sol de CF #2
             addBox(sg, 2.40, 0.04, 0.90, 0.72, 0.44, 0.52, MATS.woodFrame);
             addBox(sg, 2.44, 0.46, 0.94, 0.64, 0.10, 0.44, MATS.appleRed);
             addBox(sg, 3.25, 0.04, 0.95, 0.55, 0.48, 0.42, MATS.kraftBag);
 
-            // C) Garnissage complet du Stockage Sec & Réserve Épicerie (5,00 m : Palettes au sol + Sachets/Bocaux sur 3 niveaux)
+            // Stockage Sec Nord & Vitrine Frais Libre-Service
             [4.50, 5.95, 7.45].forEach((px, pIdx) => {
                 addBox(sg, px, 0.02, 0.32, 1.15, 0.12, 0.85, MATS.woodFrame);
                 for (let l = 0; l < 2; l++) {
@@ -1684,12 +1656,10 @@
             for (let col = 0; col < 8; col++) {
                 const rx = 4.50 + col * 0.58;
                 addBox(sg, rx, 0.86, 0.35, 0.42, 0.26, 0.55, col % 2 === 0 ? MATS.kraftBag : MATS.whiteBag);
-                if (col < 4 || col > 5) { // Laisse passer la lumière devant la baie fixe Nord
+                if (col < 4 || col > 5) {
                     addBox(sg, rx, 1.51, 0.38, 0.38, 0.24, 0.48, col % 3 === 0 ? MATS.jamBerry : MATS.honeyAmber);
                 }
             }
-
-            // D) Garnissage détaillé de la Vitrine Frais Libre-Service (2,40 m : Yaourts, Lait, Beurre, Terrines)
             for (let lvl = 0; lvl < 3; lvl++) {
                 const vy = 0.52 + lvl * 0.42;
                 addBox(sg, 4.45, vy, 1.88, 2.20, 0.03, 0.52, MATS.whiteEnamel);
@@ -1699,15 +1669,13 @@
                 }
             }
 
-            // E) Garnissage des 2 Îlots Centraux Boutique :
-            // Îlot #1 (Farines bio T65/T80/Petit Épeautre/Sarrasin, Pâtes fermières & Silos bocaux vrac lentilles/pois chiches)
+            // Îlots centraux Boutique (Bocaux vrac & Cagettes maraîcher fruits/légumes/œufs)
             addBox(sg, 3.85, 0.86, 3.55, 2.00, 0.26, 0.40, MATS.woodFrame);
             for (let b = 0; b < 4; b++) {
                 const jar = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.11, 0.34, 12), MATS.honeyAmber);
                 jar.position.set(bx(4.15 + b * 0.45), 1.29, bz(3.75));
                 sg.add(jar);
             }
-            // Îlot #2 (Étal Maraîcher de saison : cageots inclinés pommes rouges, carottes, salades, courges & œufs fermiers)
             const crateColors = [MATS.appleRed, MATS.carrotOrange, MATS.veggieGreen, MATS.cheeseRind, MATS.appleRed, MATS.veggieGreen];
             for (let c = 0; c < 6; c++) {
                 const cx = 3.72 + (c % 3) * 0.78;
@@ -1715,13 +1683,13 @@
                 addBox(sg, cx, 0.86, cz, 0.68, 0.12, 0.38, MATS.darkWood, c === 0 ? {
                     zone: 'BOUTIQUE • ÉTAL MARAÎCHER BIO',
                     title: 'Îlot Fruits, Légumes de Saison, Œufs Plein Air & Biscuits au Levain',
-                    desc: 'Présentation en cagettes bois des récoltes maraîchères locales, pommes briardes, œufs bio et sablés du fournil.',
+                    desc: 'Présentation en cagettes bois des récoltes maraîchères locales, pommes briardes, œufs bio et sablés.',
                     dims: 'Îlot 250 × 100 cm', lot: 'Sous-Lot 8C'
                 } : null);
                 addBox(sg, cx + 0.05, 0.96, cz + 0.04, 0.58, 0.09, 0.30, crateColors[c]);
             }
 
-            // F) Étagères Épicerie Fine Sud (4 niveaux : Miels de Brie, Confitures, Huiles fermières, Cidres & Jus) + Paniers Baguettes
+            // Épicerie fine Sud + Paniers osier baguettes
             for (let sh = 0; sh < 3; sh++) {
                 const ey = 0.52 + sh * 0.42;
                 for (let j = 0; j < 11; j++) {
@@ -1729,7 +1697,6 @@
                     addBox(sg, 4.10 + j * 0.38, ey, 8.28, 0.14, 0.22, 0.14, m);
                 }
             }
-            // Paniers osier à baguettes debout au pied des casiers à pain
             [3.75, 4.95].forEach(bzPos => {
                 const wb = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.19, 0.58, 12), MATS.wicker);
                 wb.position.set(bx(8.85), 0.29, bz(bzPos));
@@ -1742,40 +1709,37 @@
                 }
             });
 
-            // G) Contenu détaillé de la Chambre Farine Fraîche 5A (+15 °C : Palettes sacs 25 kg cousus + Sachets détail + Évaporateur)
+            // Chambre Farine Fraîche 5A (+15 °C) + Réserve 5C + Armoire Levain + Caissons Grain
             [0.45, 1.55].forEach((pz, idx) => {
                 addBox(sg, 24.45, 0.02, pz, 1.05, 0.12, 0.82, MATS.woodFrame);
                 for (let lvl = 0; lvl < 4; lvl++) {
                     addBox(sg, 24.52, 0.14 + lvl * 0.17, pz + 0.06, 0.90, 0.16, 0.70, idx === 0 ? MATS.kraftBag : MATS.whiteBag, lvl === 0 && idx === 0 ? {
                         zone: 'CHAMBRE FARINE FRAÎCHE 5A (+15 °C)',
                         title: 'Palettes de Farines Bio Ensachées (Sacs 25 kg Fournil & Sachets 1 kg Boutique)',
-                        desc: 'Stockage tampon climatisé à +14/+16 °C stabilisant les farines fraîchement moulues avant panification ou mise en rayon.',
+                        desc: 'Stockage tampon climatisé à +14/+16 °C stabilisant les farines fraîchement moulues.',
                         dims: 'Hygrométrie < 60 %', lot: 'Zone 5A'
                     } : null);
                 }
             });
-            addBox(sg, 23.35, 2.25, 0.12, 0.95, 0.36, 0.42, MATS.hvacTeal); // Évaporateur plafonnier froid sec +15 °C
+            addBox(sg, 23.35, 2.25, 0.12, 0.95, 0.36, 0.42, MATS.hvacTeal);
 
-            // H) Contenu détaillé de la Réserve Consommables 5C (Racks sacs kraft plats, bobines fil coton, cartons) & Armoire Levain + Caissons Grain
             for (let lvl = 0; lvl < 3; lvl++) {
                 addBox(sg, 29.95, 0.18 + lvl * 0.62, -2.35, 3.65, 0.05, 0.75, MATS.steelBeam);
                 for (let b = 0; b < 5; b++) {
                     addBox(sg, 30.08 + b * 0.70, 0.23 + lvl * 0.62, -2.28, 0.55, 0.34, 0.60, (lvl + b) % 2 === 0 ? MATS.kraftBag : MATS.whiteBag);
                 }
             }
-            // Armoire frigorifique positive inox Levains Chefs & Graines (8A-09) en Zone 4
             addBox(sg, 20.82, 0.00, 3.42, 0.78, 2.02, 0.82, MATS.stainless, {
                 zone: 'SOUS-LOT 8A-09 • FROID FOURNIL',
                 title: 'Armoire Frigorifique Positive Inox (+2/+8 °C — Levains Chefs & Graines)',
-                desc: 'Conservation au froid doux des levains chefs, autolyses et mélanges de graines bio réhydratées.',
+                desc: 'Conservation au froid doux des levains chefs, autolyses et graines bio réhydratées.',
                 dims: '700–900 L (600×400)', lot: 'Sous-Lot 8A'
             });
-            // Caissons-trémies rigides fourchables de stocks tampons de grains propres en Meunerie (8B-07)
             [34.95, 35.85].forEach((gx, idx) => {
                 addBox(sg, gx, 0.35, 7.65, 0.78, 0.95, 0.85, MATS.stainless, idx === 0 ? {
                     zone: 'SOUS-LOT 8B-07 • STOCKS TAMPONS GRAIN',
-                    title: 'Caissons-Silos Tampons Fourchables à Fond Pyramidal (Grains Propres & Décortiqués)',
-                    desc: 'Permettent de stocker par variété les lots de blés anciens, petit épeautre décortiqué et sarrasin prêts à moudre.',
+                    title: 'Caissons-Silos Tampons Fourchables à Fond Pyramidal (Grains Propres)',
+                    desc: 'Stockent par variété les lots de blés anciens, petit épeautre décortiqué et sarrasin prêts à moudre.',
                     dims: '800 à 1 200 kg/caisson', lot: 'Sous-Lot 8B'
                 } : null);
             });
@@ -1784,7 +1748,6 @@
         function buildDemoDynamicActors() {
             const dg = groups.demoDynamic;
 
-            // Anneau lumineux repère suivant l'action principale de chaque étape de la démo
             const ring = new THREE.Mesh(new THREE.RingGeometry(0.85, 1.18, 28), MATS.beaconGold);
             ring.rotation.x = -Math.PI / 2;
             ring.position.set(0, 0.06, 0);
@@ -1792,7 +1755,6 @@
             dg.add(ring);
             demoActors.beaconRing = ring;
 
-            // Chariot transpalette de sacs de farine (Moulin -> Chambre 5A -> Pétrins)
             const ft = new THREE.Group();
             const pal = new THREE.Mesh(new THREE.BoxGeometry(0.90, 0.12, 0.75), MATS.woodFrame);
             pal.position.y = 0.10;
@@ -1806,7 +1768,6 @@
             dg.add(ft);
             demoActors.flourTrolley = ft;
 
-            // Échelle mobile garnie (Pousse 3A -> Four à soles Zone 2)
             const dr = new THREE.Group();
             const frame = new THREE.Mesh(new THREE.BoxGeometry(0.62, 1.72, 0.76), MATS.stainless);
             frame.position.y = 0.90;
@@ -1818,7 +1779,6 @@
             dg.add(dr);
             demoActors.doughRack = dr;
 
-            // Roll de bacs bleus de livraison (Poste BL -> Quai 3B -> Fourgon)
             const cd = new THREE.Group();
             for (let b = 0; b < 4; b++) {
                 const cr = new THREE.Mesh(new THREE.BoxGeometry(0.60, 0.22, 0.40), MATS.crateBlue);
@@ -1829,13 +1789,918 @@
             dg.add(cd);
             demoActors.crateDolly = cd;
 
-            // Client animé avec panier en Boutique (Étape 7)
             const sh = createPerson(dg, 6.5, 0, 6.5, 1.57, 'client_demo', 0x0f766e, null, false, null);
             const basket = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.22, 0.24), MATS.wicker);
             basket.position.set(0.28, 0.85, 0.18);
             sh.add(basket);
             sh.visible = false;
             demoActors.shopper = sh;
+        }
+
+        // ============================================================================
+        // 3C. AMÉNAGEMENT COMPLET & ULTRA-PRÉCIS DE L'ÉTAGE R+1 (+3,80 m • 172 m²)
+        // (WC détaillés, Casiers individuels, Nourritures/Repas, Réseau RJ45 / RJ15)
+        // ============================================================================
+        function r1RoofLimitY(z) {
+            if (z <= 4.15) {
+                return 4.30 + ((z + 0.55) / 4.70) * 2.86;
+            }
+            return 7.16 - ((z - 4.15) / 5.00) * 2.22;
+        }
+
+        function addR1WallX(x, z, w, d, fullH, mat, meta, customLowH) {
+            const maxH = Math.max(0.45, r1RoofLimitY(z + d * 0.5) - 3.80);
+            const hFull = Math.min(fullH, maxH);
+            const hLow = Math.min(customLowH || 0.78, hFull);
+            addBox(r1Cutaway.fullWalls, x, 3.80, z, w, hFull, d, mat, meta);
+            addBox(r1Cutaway.lowWalls, x, 3.80, z, w, hLow, d, mat, meta);
+        }
+
+        function addR1SlopedWallZ(x, zStart, zEnd, thickX, targetH, mat, meta, customLowH) {
+            const buildProfileMesh = (parent, capH) => {
+                const pts = [zStart];
+                if (zStart < 4.15 && zEnd > 4.15) pts.push(4.15);
+                pts.push(zEnd);
+
+                const shape = new THREE.Shape();
+                shape.moveTo(zStart, 3.80);
+                shape.lineTo(zEnd, 3.80);
+                for (let i = pts.length - 1; i >= 0; i--) {
+                    const zz = pts[i];
+                    const topY = Math.max(4.15, Math.min(3.80 + capH, r1RoofLimitY(zz)));
+                    shape.lineTo(zz, topY);
+                }
+                shape.closePath();
+
+                const geo = new THREE.ExtrudeGeometry(shape, { depth: thickX, bevelEnabled: false });
+                geo.rotateY(-Math.PI / 2);
+                const m = new THREE.Mesh(geo, mat);
+                m.position.set(bx(x + thickX), 0, bz(0));
+                m.castShadow = true;
+                m.receiveShadow = true;
+                parent.add(m);
+                if (meta) registerInteractive(m, meta);
+            };
+            buildProfileMesh(r1Cutaway.fullWalls, targetH);
+            buildProfileMesh(r1Cutaway.lowWalls, customLowH || 0.78);
+        }
+
+        function addR1AtelierGlazedWallX(x, z, w, mat, meta) {
+            addR1WallX(x, z, w, 0.10, 0.96, mat, meta, 0.72);
+            addBox(r1Cutaway.fullWalls, x, 4.76, z + 0.02, w, 1.08, 0.06, MATS.glass, meta, false);
+            addBox(r1Cutaway.fullWalls, x, 5.84, z, w, 0.22, 0.10, MATS.steelBeam, null);
+            const mullions = Math.max(2, Math.floor(w / 0.85));
+            for (let i = 0; i <= mullions; i++) {
+                const mx = x + (i / mullions) * (w - 0.04);
+                addBox(r1Cutaway.fullWalls, mx, 4.76, z + 0.01, 0.04, 1.08, 0.08, MATS.steelBeam);
+            }
+        }
+
+        function addR1Chair(parent, cx, cz, rotY, seatMat) {
+            const g = new THREE.Group();
+            g.position.set(bx(cx), 3.80, bz(cz));
+            g.rotation.y = rotY;
+            const seat = new THREE.Mesh(new THREE.BoxGeometry(0.44, 0.06, 0.44), seatMat);
+            seat.position.set(0, 0.46, 0);
+            seat.castShadow = true;
+            g.add(seat);
+            const back = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.44, 0.06), seatMat);
+            back.position.set(0, 0.70, -0.19);
+            back.castShadow = true;
+            g.add(back);
+            const ped = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.44, 8), MATS.steelBeam);
+            ped.position.set(0, 0.22, 0);
+            g.add(ped);
+            const foot = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, 0.03, 8), MATS.steelBeam);
+            foot.position.set(0, 0.02, 0);
+            g.add(foot);
+            parent.add(g);
+        }
+
+        function addR1PottedPlant(parent, px, pz) {
+            const pot = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.14, 0.34, 12), MATS.terracottaSheet);
+            pot.position.set(bx(px), 3.97, bz(pz));
+            pot.castShadow = true;
+            parent.add(pot);
+            const bush = new THREE.Mesh(new THREE.SphereGeometry(0.28, 10, 8), MATS.treeFoliage);
+            bush.position.set(bx(px), 4.35, bz(pz));
+            bush.scale.set(1, 1.35, 1);
+            bush.castShadow = true;
+            parent.add(bush);
+        }
+
+        // Module WC Céramique Complet : Cuvette ovoïde, Eau fond de cuvette, Lunette, Abattant relevé, Chasse & Papier
+        function createDetailedToilet(parent, x, z, rotY, isPMR, meta) {
+            const g = new THREE.Group();
+            g.position.set(bx(x), 3.80, bz(z));
+            g.rotation.y = rotY;
+
+            const bowlH = isPMR ? 0.48 : 0.42;
+            const pedestal = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.16, bowlH - 0.12, 14), MATS.whiteEnamel);
+            pedestal.position.set(0, (bowlH - 0.12) / 2, 0.04);
+            pedestal.scale.set(1.0, 1.0, 1.35);
+            pedestal.castShadow = true;
+            g.add(pedestal);
+
+            const bowl = new THREE.Mesh(new THREE.CylinderGeometry(0.20, 0.14, 0.18, 16), MATS.whiteEnamel);
+            bowl.position.set(0, bowlH - 0.06, 0.08);
+            bowl.scale.set(0.95, 1.0, 1.32);
+            bowl.castShadow = true;
+            g.add(bowl);
+
+            // Eau limpide bleutée visible à l'intérieur de la cuvette + Lunette d'assise
+            const water = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.12, 0.02, 14), MATS.waterClear);
+            water.position.set(0, bowlH + 0.02, 0.09);
+            water.scale.set(0.92, 1.0, 1.25);
+            g.add(water);
+
+            const seatRing = new THREE.Mesh(new THREE.TorusGeometry(0.15, 0.028, 8, 18), MATS.whiteEnamel);
+            seatRing.rotation.x = Math.PI / 2;
+            seatRing.scale.set(0.95, 1.30, 0.65);
+            seatRing.position.set(0, bowlH + 0.04, 0.09);
+            g.add(seatRing);
+
+            // Abattant relevé contre le réservoir dorsal
+            const openLid = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.17, 0.025, 16), MATS.whiteEnamel);
+            openLid.rotation.x = 0.20;
+            openLid.scale.set(0.95, 1.0, 1.28);
+            openLid.position.set(0, bowlH + 0.24, -0.10);
+            g.add(openLid);
+
+            // Réservoir dorsal en porcelaine + Double bouton poussoir chromé 3L/6L
+            const cistern = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.38, 0.17), MATS.whiteEnamel);
+            cistern.position.set(0, bowlH + 0.20, -0.21);
+            cistern.castShadow = true;
+            g.add(cistern);
+
+            const flushBtn = new THREE.Mesh(new THREE.CylinderGeometry(0.032, 0.032, 0.025, 12), MATS.stainless);
+            flushBtn.position.set(0, bowlH + 0.40, -0.21);
+            g.add(flushBtn);
+
+            // Dérouleur papier toilette mural + Rouleau blanc + Brosse WC inox au sol
+            const tpHolder = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.12, 0.14), MATS.stainless);
+            tpHolder.position.set(0.28, 0.68, 0.10);
+            g.add(tpHolder);
+            const tpRoll = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.055, 0.11, 12), MATS.whiteBag);
+            tpRoll.rotation.z = Math.PI / 2;
+            tpRoll.position.set(0.24, 0.66, 0.10);
+            g.add(tpRoll);
+
+            const brushPot = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.05, 0.16, 10), MATS.stainless);
+            brushPot.position.set(-0.26, 0.08, -0.16);
+            g.add(brushPot);
+            const brushHandle = new THREE.Mesh(new THREE.CylinderGeometry(0.01, 0.01, 0.24, 8), MATS.stainless);
+            brushHandle.position.set(-0.26, 0.24, -0.16);
+            g.add(brushHandle);
+
+            if (isPMR) {
+                // Barres d'appui PMR rabattable et murale
+                const grabBar1 = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.04, 0.68), MATS.pmrCyan);
+                grabBar1.position.set(-0.32, 0.76, 0.05);
+                g.add(grabBar1);
+                const grabBar2 = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.04, 0.68), MATS.pmrCyan);
+                grabBar2.position.set(0.34, 0.76, 0.05);
+                g.add(grabBar2);
+            }
+
+            parent.add(g);
+            if (meta) registerInteractive(g, meta);
+        }
+
+        // Batterie de Casiers Vestiaires « Industrie Salissante » dessinée porte par porte + casier ouvert + banc & sabots
+        function createDetailedLockerBank(parent, x, z, label, meta) {
+            const g = new THREE.Group();
+            g.position.set(bx(x), 3.80, bz(z));
+
+            const cols = 4;
+            const colW = 0.36;
+            const totalZ = cols * colW; // 1,44 m
+            const bankW = 1.04;         // Double face (4 portes Ouest + 4 portes Est = 8 armoires doubles)
+            const bodyH = 1.72;
+
+            // Corps principal gris anthracite
+            const body = new THREE.Mesh(new THREE.BoxGeometry(bankW, bodyH - 0.18, totalZ), MATS.lockerGrey);
+            body.position.set(bankW / 2, 0.18 + (bodyH - 0.18) / 2, totalZ / 2);
+            body.castShadow = true;
+            g.add(body);
+
+            // Pieds tubulaires hygiéniques de 18 cm permettant le lavage du sol sous les casiers
+            [[0.08, 0.08], [bankW - 0.08, 0.08], [0.08, totalZ - 0.08], [bankW - 0.08, totalZ - 0.08]].forEach(([lx, lz]) => {
+                const leg = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.18, 0.05), MATS.steelBeam);
+                leg.position.set(lx, 0.09, lz);
+                g.add(leg);
+            });
+
+            // Coiffe supérieure inclinée réglementaire anti-poussière (double pente)
+            const roofL = new THREE.Mesh(new THREE.BoxGeometry(bankW * 0.54, 0.16, totalZ), MATS.lockerGrey);
+            roofL.position.set(bankW * 0.26, bodyH + 0.04, totalZ / 2);
+            roofL.rotation.z = 0.24;
+            g.add(roofL);
+            const roofR = new THREE.Mesh(new THREE.BoxGeometry(bankW * 0.54, 0.16, totalZ), MATS.lockerGrey);
+            roofR.position.set(bankW * 0.74, bodyH + 0.04, totalZ / 2);
+            roofR.rotation.z = -0.24;
+            g.add(roofR);
+
+            // Portes individuelles détaillées sur les 2 faces (1 porte ouverte montrant tenue boulanger + tablier !)
+            [-1, 1].forEach(side => {
+                const faceX = side === -1 ? -0.015 : bankW + 0.015;
+                for (let c = 0; c < cols; c++) {
+                    const cz = c * colW + colW / 2;
+                    const isOpenDoor = (side === 1 && c === 1);
+
+                    if (isOpenDoor) {
+                        // Niche intérieure sombre + Séparation propre/sale + Veste blanche & Tablier ocre suspendus
+                        const niche = new THREE.Mesh(new THREE.BoxGeometry(0.18, bodyH - 0.26, colW - 0.05), MATS.slateBoard);
+                        niche.position.set(bankW - 0.08, 0.20 + (bodyH - 0.26) / 2, cz);
+                        g.add(niche);
+                        const jacket = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.10, 0.62, 8), MATS.whiteEnamel);
+                        jacket.position.set(bankW - 0.04, 1.15, cz - 0.06);
+                        g.add(jacket);
+                        const apron = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.58, 0.12), MATS.kraftBag);
+                        apron.position.set(bankW - 0.03, 1.08, cz + 0.07);
+                        g.add(apron);
+
+                        // Porte pivotée ouverte à 65°
+                        const openDoor = new THREE.Mesh(new THREE.BoxGeometry(0.32, bodyH - 0.24, 0.025), MATS.lockerDoorBlue);
+                        openDoor.position.set(bankW + 0.14, 0.20 + (bodyH - 0.24) / 2, cz - colW * 0.36);
+                        openDoor.rotation.y = 0.45;
+                        openDoor.castShadow = true;
+                        g.add(openDoor);
+                    } else {
+                        const door = new THREE.Mesh(new THREE.BoxGeometry(0.025, bodyH - 0.24, colW - 0.04), MATS.lockerDoorBlue);
+                        door.position.set(faceX, 0.20 + (bodyH - 0.24) / 2, cz);
+                        door.castShadow = true;
+                        g.add(door);
+
+                        // Porte-étiquette nominatif blanc + Serrure cadenas chromée + Ouïes d'aération hautes & basses
+                        const tag = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.04, 0.10), MATS.whiteEnamel);
+                        tag.position.set(faceX + side * 0.006, 1.48, cz);
+                        g.add(tag);
+                        const lock = new THREE.Mesh(new THREE.BoxGeometry(0.035, 0.07, 0.03), MATS.stainless);
+                        lock.position.set(faceX + side * 0.008, 1.02, cz + (side * 0.11));
+                        g.add(lock);
+                        [1.58, 1.53, 0.36, 0.31].forEach(vy => {
+                            const vent = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.018, 0.18), MATS.steelBeam);
+                            vent.position.set(faceX + side * 0.005, vy, cz);
+                            g.add(vent);
+                        });
+                    }
+                }
+
+                // Banc vestiaire à 3 lattes de hêtre devant chaque rangée + Sabots blancs agroalimentaires dessous
+                const benchX = side === -1 ? -0.34 : bankW + 0.34;
+                [0, 1, 2].forEach(sl => {
+                    const slat = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.03, totalZ - 0.08), MATS.beechWood);
+                    slat.position.set(benchX - 0.10 + sl * 0.10, 0.42, totalZ / 2);
+                    slat.castShadow = true;
+                    g.add(slat);
+                });
+                [0.16, totalZ - 0.16].forEach(bzLeg => {
+                    const bLeg = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.40, 0.04), MATS.steelBeam);
+                    bLeg.position.set(benchX, 0.20, bzLeg);
+                    g.add(bLeg);
+                });
+                // Paires de sabots blancs de sécurité rangées sous le banc
+                [0.35, 0.95].forEach(szPos => {
+                    [-0.06, 0.06].forEach(pairOff => {
+                        const clog = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.08, 0.09), MATS.whiteEnamel);
+                        clog.position.set(benchX, 0.04, szPos + pairOff);
+                        g.add(clog);
+                    });
+                });
+            });
+
+            parent.add(g);
+            if (meta) registerInteractive(g, meta);
+        }
+
+        // Couvert dressé & Nourriture détaillée sur les tables du Réfectoire (Assiette garnie, Pain, Fruits, Verre)
+        function createMealPlaceSetting(parent, x, y, z, flipZ, variant) {
+            const g = new THREE.Group();
+            g.position.set(bx(x), y, bz(z));
+            const dir = flipZ ? -1 : 1;
+
+            // Set de table ardoise + Assiette blanche en porcelaine
+            const matPad = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.008, 0.30), MATS.slateBoard);
+            matPad.position.set(0, 0.005, 0);
+            g.add(matPad);
+
+            const plateRim = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.10, 0.022, 16), MATS.whiteEnamel);
+            plateRim.position.set(0, 0.018, 0);
+            g.add(plateRim);
+
+            // Nourriture précise dans l'assiette : Tourte/Quiche dorée, Légumes verts bio, Carottes rôties / Pomme
+            const mainFood = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.055, 0.028, 10), variant % 2 === 0 ? MATS.breadCrust : MATS.butterGold);
+            mainFood.position.set(-0.03, 0.034, -0.01);
+            g.add(mainFood);
+
+            const greens = new THREE.Mesh(new THREE.SphereGeometry(0.042, 8, 6), MATS.veggieGreen);
+            greens.scale.set(1.1, 0.55, 1.0);
+            greens.position.set(0.045, 0.032, -0.02);
+            g.add(greens);
+
+            const carrots = new THREE.Mesh(new THREE.SphereGeometry(0.035, 8, 6), MATS.carrotOrange);
+            carrots.scale.set(1.0, 0.5, 1.1);
+            carrots.position.set(0.02, 0.032, 0.045);
+            g.add(carrots);
+
+            // Couverts inox + Verre d'eau/jus + Tasse café
+            const fork = new THREE.Mesh(new THREE.BoxGeometry(0.015, 0.008, 0.17), MATS.stainless);
+            fork.position.set(-0.16, 0.012, 0);
+            g.add(fork);
+            const knife = new THREE.Mesh(new THREE.BoxGeometry(0.015, 0.008, 0.17), MATS.stainless);
+            knife.position.set(0.16, 0.012, 0);
+            g.add(knife);
+
+            const tumbler = new THREE.Mesh(new THREE.CylinderGeometry(0.034, 0.028, 0.095, 10), variant % 3 === 0 ? MATS.honeyAmber : MATS.waterClear);
+            tumbler.position.set(0.14, 0.05, dir * 0.10);
+            g.add(tumbler);
+
+            parent.add(g);
+        }
+
+        // Bloc Prises Murales Courants Faibles RJ45 / RJ15 + Courants Forts 230V Ondulés sur Goulotte Technique
+        function createRJ45WallOutlet(parent, x, y, z, alongX, meta) {
+            const g = new THREE.Group();
+            g.position.set(bx(x), y, bz(z));
+            if (!alongX) g.rotation.y = Math.PI / 2;
+
+            const faceplate = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.09, 0.035), MATS.whiteEnamel);
+            g.add(faceplate);
+            // 2 Prises 230 V rouges secourues par onduleur
+            [-0.075, -0.025].forEach(ox => {
+                const pwr = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.018, 0.04, 10), MATS.outletRed);
+                pwr.rotation.x = Math.PI / 2;
+                pwr.position.set(ox, 0, 0.004);
+                g.add(pwr);
+            });
+            // 2 Ports Réseau RJ45 / Téléphonie RJ15 bleus côte à côte
+            [0.035, 0.080].forEach(ox => {
+                const rj = new THREE.Mesh(new THREE.BoxGeometry(0.028, 0.032, 0.042), MATS.rj45Blue);
+                rj.position.set(ox, 0, 0.004);
+                g.add(rj);
+            });
+
+            parent.add(g);
+            if (meta) registerInteractive(g, meta);
+        }
+
+        function buildR1CompleteLayout() {
+            const r1 = groups.r1FloorAndRooms;
+            r1.add(r1Cutaway.fullWalls, r1Cutaway.lowWalls, r1Cutaway.staff);
+
+            // ---------------- 1. PLANCHERS R+1 AVEC TRÉMIE D'ESCALIER & GAINE PMR ----------------
+            addBox(r1, 9.50, 3.62, 0.00, 12.45, 0.18, 8.95, MATS.floorR1West, {
+                zone: 'LOT 2.2 • PLANCHER R+1 OUEST', title: 'Plancher Collaborant Acoustique — Pôle Tertiaire & Vie d’Équipe',
+                desc: 'Dalle sèche isolée phoniquement accueillant la Salle de Réunion, l’Open-Space 8 postes, le Réfectoire et le Local CVC/IT.',
+                dims: '111 m² (Ouest)', lot: 'Lots 2.2 & 4.2'
+            }, false);
+            addBox(r1, 21.95, 3.62, 0.00, 7.35, 0.18, 5.55, MATS.floorR1East, {
+                zone: 'LOT 4.2 • PLANCHER R+1 EST', title: 'Carrelage Antidérapant R10 — Pôle Vestiaires, Douches, Buanderie & PMR',
+                desc: 'Chape étanchée avec siphons de sol desservant les Vestiaires H/F « Industrie salissante », la Buanderie et le WC PMR.',
+                dims: '61 m² (Est)', lot: 'Lots 2.2 & 4.2'
+            }, false);
+            addBox(r1, 21.95, 3.62, 5.55, 1.70, 0.18, 1.73, MATS.floorR1East, null, false);
+            addBox(r1, 23.65, 3.62, 6.55, 5.65, 0.18, 2.40, MATS.floorR1East, null, false);
+            addBox(r1, 26.95, 3.62, 5.55, 2.35, 0.18, 1.00, MATS.floorR1East, null, false);
+
+            // ---------------- 2. CLOISONS PÉRIPHÉRIQUES & INTÉRIEURES (ABAISSABLES EN ÉCORCHÉ) ----------------
+            addR1SlopedWallZ(9.50, 0.00, 8.95, 0.16, 2.15, MATS.woodFrame, null, 0.65);
+            addR1SlopedWallZ(29.14, 0.00, 8.95, 0.16, 2.15, MATS.woodFrame, null, 0.65);
+            addR1WallX(9.50, 0.00, 19.80, 0.16, 0.78, MATS.woodFrame, null, 0.55);
+            addR1WallX(9.50, 8.80, 19.80, 0.15, 0.95, MATS.woodFrame, null, 0.58);
+
+            // A) Local Technique CVC / ECS / Baie RJ45 Coupe-Feu EI 60
+            addR1SlopedWallZ(13.75, 0.16, 4.05, 0.12, 1.85, MATS.wallEI60, {
+                zone: 'R+1 • SÉCURITÉ INCENDIE', title: 'Parois Coupe-Feu EI 60 du Local Technique & Informatique R+1',
+                desc: 'Isolent le ballon ECS 500 L, l’échangeur sur conduit des fours, la centrale VMC double flux et la baie réseau RJ45/RJ15.',
+                dims: 'EI 60 + Bloc-porte CF', lot: 'Lot 3'
+            }, 0.75);
+            addR1WallX(9.66, 4.05, 3.04, 0.12, 1.85, MATS.wallEI60, null, 0.75);
+            addBox(r1Cutaway.fullWalls, 12.72, 3.82, 3.98, 0.90, 1.82, 0.05, MATS.steelBeam);
+
+            // B) Salle de Réunion & Pédagogie
+            addR1SlopedWallZ(12.60, 5.25, 8.80, 0.10, 1.80, MATS.acousticWall, null, 0.72);
+            addR1SlopedWallZ(12.60, 4.17, 4.32, 0.10, 1.80, MATS.acousticWall, null, 0.72);
+            addBox(r1Cutaway.fullWalls, 12.62, 3.82, 4.35, 0.05, 1.80, 0.88, MATS.glass, null, false);
+
+            // C) Couloir Central PMR (1,50 m) avec verrières d'atelier
+            addR1AtelierGlazedWallX(13.87, 4.05, 3.43, MATS.acousticWall, {
+                zone: 'ÉTAGE R+1 • COULOIR CENTRAL PMR', title: 'Verrière Acoustique Type Atelier (Open-Space / Couloir 1,50 m)',
+                desc: 'Fait circuler la lumière naturelle traversante tout en isolant phoniquement les 8 postes de travail.',
+                dims: 'Couloir largeur 1,50 m', lot: 'Lot 3'
+            });
+            addR1AtelierGlazedWallX(18.23, 4.05, 3.52, MATS.acousticWall);
+            addR1AtelierGlazedWallX(12.70, 5.55, 3.45, MATS.acousticWall);
+            addR1AtelierGlazedWallX(17.10, 5.55, 4.75, MATS.acousticWall);
+            addR1SlopedWallZ(21.85, 5.55, 8.80, 0.10, 1.80, MATS.acousticWall, null, 0.72);
+
+            // D) Cloisons des Vestiaires Femmes & Hommes (abaissées en écorché pour voir casiers, douches & WC)
+            addR1SlopedWallZ(21.75, 0.16, 4.05, 0.10, 1.75, MATS.pirPanel, null, 0.68);
+            addR1SlopedWallZ(25.52, 0.16, 4.05, 0.10, 1.75, MATS.pirPanel, null, 0.68);
+            addR1WallX(21.85, 4.05, 1.50, 0.10, 1.75, MATS.pirPanel, null, 0.68);
+            addR1WallX(24.25, 4.05, 1.27, 0.10, 1.75, MATS.pirPanel, null, 0.68);
+            addR1WallX(25.62, 4.05, 1.23, 0.10, 1.75, MATS.pirPanel, null, 0.68);
+            addR1WallX(27.75, 4.05, 1.39, 0.10, 1.75, MATS.pirPanel, null, 0.68);
+
+            // E) Cloisons basses en écorché de la Cabine WC PMR (Sud-Est)
+            addR1WallX(27.05, 7.05, 2.09, 0.10, 1.65, MATS.pirPanel, {
+                zone: 'ÉTAGE R+1 • SANITAIRE ACCESSIBLE', title: 'Cabine WC PMR Réglementaire (Aire de rotation Ø 1,50 m)',
+                desc: 'Accès direct depuis le palier de l’élévateur PMR avec cuvette surélevée, barres d’appui cyan et lave-mains PMR.',
+                dims: '2,05 × 1,75 m int.', lot: 'Lot 5.2'
+            }, 0.62);
+            addR1SlopedWallZ(27.05, 7.05, 7.25, 0.10, 1.65, MATS.pirPanel, null, 0.62);
+            addR1SlopedWallZ(27.05, 8.18, 8.80, 0.10, 1.65, MATS.pirPanel, null, 0.62);
+
+            // ---------------- 3. GARDE-CORPS DE TRÉMIE D'ESCALIER, ÉLÉVATEUR & WI-FI 6 ----------------
+            addBox(r1, 23.65, 3.80, 5.50, 3.35, 1.05, 0.05, MATS.glass, {
+                zone: 'LOT 2.2 • SÉCURITÉ PALIER R+1', title: 'Garde-Corps Vitré & Main Courante Acier (Trémie Escalier)',
+                desc: 'Sécurise à 1,05 m de hauteur toute la trémie d’escalier.', dims: 'Hauteur 1,05 m • NF P01-012', lot: 'Lot 2.2'
+            }, false);
+            addBox(r1, 23.65, 4.82, 5.49, 3.36, 0.05, 0.07, MATS.steelBeam);
+            addBox(r1, 23.65, 3.80, 6.53, 3.35, 1.05, 0.05, MATS.glass, null, false);
+            addBox(r1, 23.65, 4.82, 6.52, 3.36, 0.05, 0.07, MATS.steelBeam);
+            addBox(r1, 26.95, 3.80, 5.50, 0.05, 1.05, 1.08, MATS.glass, null, false);
+            addBox(r1, 26.94, 4.82, 5.49, 0.07, 0.05, 1.10, MATS.steelBeam);
+            [23.66, 24.75, 25.85, 26.96].forEach(px => {
+                addBox(r1, px, 3.80, 5.49, 0.05, 1.06, 0.05, MATS.steelBeam);
+                addBox(r1, px, 3.80, 6.53, 0.05, 1.06, 0.05, MATS.steelBeam);
+            });
+
+            addBox(r1, 22.10, 3.82, 7.24, 1.32, 1.15, 0.05, MATS.pmrCyan);
+            addBox(r1, 23.58, 3.80, 7.18, 0.12, 1.12, 0.12, MATS.pmrCyan);
+
+            // Fontaine à eau filtrée + gobelets + Borne Wi-Fi 6 Pro PoE RJ45 au centre du couloir
+            addBox(r1, 21.30, 3.80, 4.22, 0.38, 1.22, 0.38, MATS.stainless, {
+                zone: 'COULOIR R+1 • CONFORT ÉQUIPE', title: 'Fontaine à Eau Réseau Filtrée (Fraîche / Tempérée)',
+                desc: 'Point d’hydratation zéro plastique en sortie d’Open-Space et de Vestiaires.', dims: 'Inox • Réseau', lot: 'Sous-Lot 8D'
+            });
+            const wifiAp = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, 0.05, 16), MATS.whiteEnamel);
+            wifiAp.position.set(bx(18.00), 5.68, bz(4.80));
+            r1.add(wifiAp);
+            const wifiRing = new THREE.Mesh(new THREE.RingGeometry(0.08, 0.12, 16), MATS.screenGlow);
+            wifiRing.rotation.x = Math.PI / 2;
+            wifiRing.position.set(bx(18.00), 5.65, bz(4.80));
+            r1.add(wifiRing);
+            registerInteractive(wifiAp, {
+                zone: 'LOT 7.2 • RÉSEAU WI-FI & RJ45 / RJ15', title: 'Borne Wi-Fi 6 Professionnelle PoE (Câblée RJ45 Cat.6A)',
+                desc: 'Alimentée en Power-over-Ethernet depuis la baie de brassage 19" pour couvrir tout l’étage et le fournil.',
+                dims: 'PoE Gigabit • Dual-Band', lot: 'Lot 7.2'
+            });
+
+            // ---------------- 4. LOCAL TECHNIQUE CVC, BALLON 500 L & BAIE DE BRASSAGE RJ45 / RJ15 ----------------
+            const ecsTank = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.42, 1.65, 18), MATS.pmrCyan);
+            ecsTank.position.set(bx(10.45), 4.63, bz(2.85));
+            ecsTank.castShadow = true;
+            r1.add(ecsTank);
+            registerInteractive(ecsTank, {
+                zone: 'R+1 • LOCAL TECHNIQUE EI 60', title: 'Ballon Tampon ECS 500 L Préchauffé par les Fours',
+                desc: 'Stocke l’eau chaude sanitaire préchauffée gratuitement par l’échangeur thermique sur buées des fours.',
+                dims: '500 Litres • Boucle 55 °C', lot: 'Lots 5 & 6'
+            });
+            const expVessel = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.18, 0.48, 14), MATS.extRed);
+            expVessel.position.set(bx(9.92), 4.25, bz(2.15));
+            r1.add(expVessel);
+
+            addBox(r1, 11.28, 4.15, 0.98, 0.74, 0.78, 0.74, MATS.stainless, {
+                zone: 'LOT 6.2 • ÉCONOMIE D’ÉNERGIE', title: 'Échangeur Récupérateur de Chaleur Air/Eau sur Buées des Fours',
+                desc: 'Capte les calories de cuisson juste en dessous pour chauffer gratuitement le ballon ECS 500 L.',
+                dims: 'Rendement récup. > 65 %', lot: 'Lot 6.2'
+            });
+            addBox(r1, 10.45, 4.75, 1.32, 0.85, 0.06, 0.06, MATS.copperPipe);
+            addBox(r1, 10.42, 4.75, 1.32, 0.06, 0.06, 1.50, MATS.copperPipe);
+
+            addBox(r1, 11.82, 3.80, 1.95, 1.35, 1.08, 0.88, MATS.hvacTeal, {
+                zone: 'LOT 6.2 • QUALITÉ DE L’AIR R+1', title: 'Centrale VMC Double Flux Haut Rendement',
+                desc: 'Renouvelle l’air hygiénique des bureaux, de la salle de réunion, du réfectoire et extrait l’humidité des douches.',
+                dims: 'Échangeur > 85 % • Filtres F7', lot: 'Lot 6.2'
+            });
+
+            // BAIE DE BRASSAGE INFORMATIQUE 19" VITRÉE DÉTAILLÉE (Panneau 24 ports RJ45/RJ15, Switch PoE LEDs, NAS & Onduleur)
+            const rackGroup = new THREE.Group();
+            rackGroup.position.set(bx(13.32), 3.80, bz(3.38));
+            const rackBody = new THREE.Mesh(new THREE.BoxGeometry(0.62, 1.62, 0.62), MATS.steelBeam);
+            rackBody.position.set(0, 0.81, 0);
+            rackBody.castShadow = true;
+            rackGroup.add(rackBody);
+            // Équipements 19" rackés visibles sur la tranche avant (Switch PoE, Bandeau 24 ports RJ45/RJ15, Box Fibre, Onduleur)
+            [
+                { ry: 1.38, mat: MATS.rj45Blue, h: 0.10 },   // Bandeau de brassage 24 ports RJ45 / Téléphonie RJ15
+                { ry: 1.20, mat: MATS.screenGlow, h: 0.10 }, // Switch PoE 24 ports avec LEDs actives
+                { ry: 1.02, mat: MATS.whiteEnamel, h: 0.12 },// Routeur Fibre Pro & Passerelle VoIP RJ11/RJ15
+                { ry: 0.78, mat: MATS.slateBoard, h: 0.22 }, // Serveur NAS Sauvegarde Comptabilité / Traçabilité
+                { ry: 0.32, mat: MATS.outletRed, h: 0.24 }   // Onduleur rackable 1500 VA
+            ].forEach(u => {
+                const unit = new THREE.Mesh(new THREE.BoxGeometry(0.50, u.h, 0.06), u.mat);
+                unit.position.set(-0.29, u.ry, 0);
+                unit.rotation.y = Math.PI / 2;
+                rackGroup.add(unit);
+            });
+            // Faisceau de cordons de brassage RJ45 bleus en façade de baie
+            for (let p = -2; p <= 2; p++) {
+                const patchCord = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, 0.22, 6), MATS.rj45Blue);
+                patchCord.position.set(-0.33, 1.29, p * 0.08);
+                patchCord.rotation.z = 0.20;
+                rackGroup.add(patchCord);
+            }
+            r1.add(rackGroup);
+            registerInteractive(rackGroup, {
+                zone: 'LOT 7.2 • RÉSEAU RJ45 / RJ15 & SERVEUR',
+                title: 'Baie de Brassage 19" (24 Ports RJ45 Cat.6A / Téléphonie RJ15, Switch PoE, Fibre & Onduleur)',
+                desc: 'Cœur numérique hors poussières distribuant en étoile toutes les prises RJ45 / RJ15 des 8 bureaux, de la salle de réunion, des balances homologuées et de la caisse TPV.',
+                dims: 'Baie 24U vitrée + Chemin câbles', lot: 'Lot 7.2 Courants Faibles'
+            });
+
+            // Chemin de câbles courant faible bleu (RJ45/RJ15) sortant de la baie vers les goulottes de l'Open-Space
+            addBox(r1, 13.35, 5.25, 3.30, 8.25, 0.04, 0.14, MATS.rj45Blue, {
+                zone: 'LOT 7.2 • CHEMINEMENT COURANTS FAIBLES',
+                title: 'Chemin de Câbles Dalle Marine — Distribution Réseau RJ45 / Téléphonie RJ15',
+                desc: 'Achemine proprement les câbles Cat.6A S/FTP blindés depuis la baie 19" jusqu’aux goulottes et boîtiers des bureaux.',
+                dims: '8,25 ml • Blindé S/FTP', lot: 'Lot 7.2'
+            });
+
+            // ---------------- 5. SALLE DE RÉUNION, CONNECTIQUE RJ45 & PLATEAU DÉGUSTATION (SUD-OUEST) ----------------
+            addBox(r1, 10.55, 3.80, 5.40, 1.24, 0.76, 2.60, MATS.beechWood, {
+                zone: 'ÉTAGE R+1 • PÔLE RÉUNION & PÉDAGOGIE', title: 'Table de Conférence Connectée (Boîtier RJ45/HDMI & Plateau Dégustation)',
+                desc: 'Équipée d’un boîtier central encastré (2 ports RJ45/RJ15 + HDMI + 230V) et dressée pour les réunions producteurs / dégustations.',
+                dims: '14,0 m² • 10–12 places', lot: 'Sous-Lot 8D & Lot 7.2'
+            });
+            // Boîtier Top-Access RJ45/HDMI au centre de la table + PC portable + Téléphone de conférence IP (RJ15/RJ45)
+            addBox(r1, 11.02, 4.56, 6.10, 0.30, 0.02, 0.18, MATS.stainless);
+            addBox(r1, 11.12, 4.57, 6.14, 0.10, 0.02, 0.08, MATS.rj45Blue);
+            addBox(r1, 10.95, 4.56, 5.65, 0.36, 0.025, 0.25, MATS.steelBeam);
+            addBox(r1, 10.95, 4.58, 5.54, 0.36, 0.24, 0.025, MATS.screenGlow);
+            // Pieuvre téléphone IP conférence + Cordon RJ45/RJ15 bleu
+            const confPhone = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.14, 0.035, 6), MATS.slateBoard);
+            confPhone.position.set(bx(11.17), 4.58, bz(6.42));
+            r1.add(confPhone);
+            addBox(r1, 11.16, 4.57, 6.20, 0.02, 0.015, 0.22, MATS.rj45Blue);
+
+            // Plateau dégustation gourmand (pains spéciaux tranchés, croissants, pommes bio, bouteilles jus & tasses café)
+            addBox(r1, 10.92, 4.56, 6.85, 0.50, 0.05, 0.72, MATS.wicker, {
+                zone: 'SALLE DE RÉUNION • CONVIVIALITÉ',
+                title: 'Plateau Dégustation « Produits de la Ferme » (Pains au Levain, Brioches, Jus & Café)',
+                desc: 'Présentation des pains de blés anciens, viennoiseries maison, pommes briardes et jus fermiers lors des réunions.',
+                dims: 'Accueil producteurs & clients', lot: 'Exploitation'
+            });
+            [-0.18, 0.0, 0.18].forEach((oz, li) => {
+                const loaf = new THREE.Mesh(new THREE.SphereGeometry(0.11, 10, 8), li === 1 ? MATS.butterGold : MATS.breadCrust);
+                loaf.scale.set(1.2, 0.6, 0.9);
+                loaf.position.set(bx(11.17), 4.63, bz(7.05 + oz));
+                r1.add(loaf);
+            });
+            const juiceBtl = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.05, 0.26, 10), MATS.honeyAmber);
+            juiceBtl.position.set(bx(11.35), 4.69, bz(7.68));
+            r1.add(juiceBtl);
+            [-0.12, 0.12].forEach(cxOff => {
+                const cup = new THREE.Mesh(new THREE.CylinderGeometry(0.032, 0.026, 0.065, 10), MATS.whiteEnamel);
+                cup.position.set(bx(11.02 + cxOff), 4.59, bz(7.68));
+                r1.add(cup);
+            });
+
+            [5.75, 6.38, 7.02, 7.65].forEach(cz => {
+                addR1Chair(r1, 10.22, cz, Math.PI / 2, MATS.fabricSlate);
+                addR1Chair(r1, 12.12, cz, -Math.PI / 2, MATS.fabricSlate);
+            });
+            addR1Chair(r1, 11.17, 5.08, 0, MATS.fabricSlate);
+            addR1Chair(r1, 11.17, 8.32, Math.PI, MATS.fabricSlate);
+
+            // Écran interactif 75" + Goulotte et Prises murales RJ45 / RJ15 en Salle de Réunion
+            addBox(r1, 9.68, 4.52, 5.95, 0.08, 0.90, 1.55, MATS.steelBeam, {
+                zone: 'LOT 7.2 • AUDIOVISUEL & RJ45', title: 'Écran Interactif 75" Connecté en RJ45 Gigabit',
+                desc: 'Raccordé directement à la baie de brassage pour visioconférences et suivi des indicateurs.',
+                dims: 'Écran 75" 4K', lot: 'Lot 7.2'
+            });
+            addBox(r1, 9.76, 4.57, 6.01, 0.02, 0.80, 1.43, MATS.screenGlow);
+            createRJ45WallOutlet(r1, 9.70, 4.18, 6.72, false, {
+                zone: 'LOT 7.2 • PRISES RÉSEAU SALLE RÉUNION',
+                title: 'Plastron Mural Double RJ45 / Téléphonie RJ15 + Prises 230 V Secourues',
+                desc: 'Aligne prises réseau blindées Cat.6A (compatibles RJ45 informatique et RJ11/RJ15 téléphonie) et prises ondulées.',
+                dims: '2 × RJ45/RJ15 + 2 × 230 V', lot: 'Lot 7.2'
+            });
+
+            // ---------------- 6. OPEN-SPACE 8 POSTES, GOULOTTES & CONNECTIQUE RJ45 / RJ15 DÉTAILLÉE ----------------
+            // Goulotte technique périphérique blanche avec plastrons RJ45 / RJ15 visibles le long de l'Open-Space
+            addBox(r1, 13.90, 4.12, 3.98, 7.80, 0.11, 0.06, MATS.whiteEnamel, {
+                zone: 'LOT 7.2 • GOULOTTE PÉRIPHÉRIQUE COURANTS FAIBLES / FORTS',
+                title: 'Goulotte Technique Compartimentée (16 Prises Réseau RJ45 / RJ15 + 16 Prises 230 V)',
+                desc: 'Séparation physique courant fort / courant faible distribuant chaque îlot de bureaux sans câble au sol.',
+                dims: 'Linéaire 7,80 m • Cat.6A', lot: 'Lot 7.2'
+            });
+            [14.65, 16.35, 18.85, 20.55].forEach(ox => {
+                createRJ45WallOutlet(r1, ox, 4.18, 3.96, true, {
+                    zone: 'LOT 7.2 • PRISES BUREAUX RJ45 / RJ15',
+                    title: 'Bloc Mural 2 Ports RJ45 / RJ15 (Informatique & Téléphonie IP) + 2 Prises Rouges Ondulées',
+                    desc: 'Prises repérées et testées au certificateur Fluke reliées au panneau 24 ports de la baie R+1.',
+                    dims: 'Plastron 4 modules', lot: 'Lot 7.2'
+                });
+            });
+
+            [14.35, 18.55].forEach((dx, idx) => {
+                addBox(r1, dx, 3.80, 1.50, 2.60, 0.75, 1.50, MATS.whiteEnamel, {
+                    zone: 'ÉTAGE R+1 • OPEN-SPACE 30 m²', title: `Îlot de Bureaux #${idx + 1} (4 Postes, Boîtiers RJ45/RJ15 & Téléphones IP)`,
+                    desc: idx === 0
+                        ? 'Pôle Gestion, Comptabilité & Traçabilité Bio / HACCP équipé de trappes RJ45/RJ15, écrans 27" et téléphones IP.'
+                        : 'Pôle Commercial, Commandes Cantines / Magasins Bio & Plannings de Tournées connecté au serveur.',
+                    dims: '260 × 150 cm (4 postes)', lot: 'Sous-Lot 8D & Lot 7.2'
+                });
+                addBox(r1, dx + 0.08, 4.55, 2.22, 2.44, 0.28, 0.05, MATS.fabricIndigo);
+
+                // Goulotte verticale descente de câbles RJ45 bleue + Boîtiers Top-Access aluminium encastrés sur les bureaux
+                addBox(r1, dx + 1.26, 3.80, 2.20, 0.08, 1.48, 0.08, MATS.rj45Blue);
+
+                [0.58, 1.88].forEach((ox, pIdx) => {
+                    // Trappe Top-Access centrale avec ports RJ45 bleus & prises rouges
+                    addBox(r1, dx + ox - 0.18, 4.555, 2.15, 0.28, 0.015, 0.14, MATS.stainless);
+                    addBox(r1, dx + ox - 0.14, 4.565, 2.18, 0.09, 0.018, 0.05, MATS.rj45Blue);
+                    addBox(r1, dx + ox - 0.02, 4.565, 2.18, 0.09, 0.018, 0.05, MATS.outletRed);
+
+                    // Poste Nord : Écran + Clavier + Téléphone fixe IP (RJ15/RJ45) + Cordon bleu + Tasse café
+                    addBox(r1, dx + ox - 0.22, 4.55, 2.04, 0.52, 0.32, 0.04, MATS.steelBeam);
+                    addBox(r1, dx + ox - 0.20, 4.57, 2.01, 0.48, 0.28, 0.02, MATS.screenGlow);
+                    addBox(r1, dx + ox - 0.14, 4.55, 1.72, 0.34, 0.02, 0.12, MATS.steelBeam);
+                    // Combiné Téléphone IP RJ15/RJ45
+                    addBox(r1, dx + ox + 0.34, 4.55, 1.78, 0.16, 0.05, 0.18, MATS.slateBoard);
+                    addBox(r1, dx + ox + 0.36, 4.60, 1.78, 0.04, 0.03, 0.17, MATS.steelBeam);
+                    addBox(r1, dx + ox + 0.12, 4.558, 1.86, 0.24, 0.012, 0.015, MATS.rj45Blue); // Cordon RJ45/RJ15 bleu
+                    addR1Chair(r1, dx + ox + 0.04, 1.15, 0, MATS.fabricIndigo);
+
+                    // Poste Sud : Écran + Clavier + Téléphone IP + Cordon RJ45 bleu + Mug
+                    addBox(r1, dx + ox - 0.22, 4.55, 2.40, 0.52, 0.32, 0.04, MATS.steelBeam);
+                    addBox(r1, dx + ox - 0.20, 4.57, 2.45, 0.48, 0.28, 0.02, MATS.screenGlow);
+                    addBox(r1, dx + ox - 0.14, 4.55, 2.66, 0.34, 0.02, 0.12, MATS.steelBeam);
+                    addBox(r1, dx + ox + 0.34, 4.55, 2.60, 0.16, 0.05, 0.18, MATS.slateBoard);
+                    addBox(r1, dx + ox + 0.12, 4.558, 2.55, 0.24, 0.012, 0.015, MATS.rj45Blue);
+                    if (pIdx === 0) {
+                        const mug = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.032, 0.085, 10), MATS.terracottaSheet);
+                        mug.position.set(bx(dx + ox - 0.32), 4.59, bz(2.68));
+                        r1.add(mug);
+                    }
+                    addR1Chair(r1, dx + ox + 0.04, 3.32, Math.PI, MATS.fabricIndigo);
+                });
+            });
+
+            // Crédences basses d'archivage sous rampant Nord + Classeurs + Imprimante A3 connectée RJ45
+            [14.20, 18.65].forEach(ax => {
+                addBox(r1, ax, 3.80, 0.24, 2.50, 0.74, 0.45, MATS.beechWood, {
+                    zone: 'OPEN-SPACE • ARCHIVES & QUALITÉ', title: 'Crédences Basses d’Archivage (Registres Bio, Analyses & Bons Pesée)',
+                    desc: 'Classeurs de traçabilité rangés sous le rampant Nord.', dims: '250 × 45 × 74 cm', lot: 'Sous-Lot 8D'
+                });
+                const binderMats = [MATS.crateBlue, MATS.crateRed, MATS.boutiqueGreen, MATS.forkliftAmber];
+                for (let b = 0; b < 10; b++) {
+                    addBox(r1, ax + 0.15 + b * 0.22, 4.18, 0.32, 0.08, 0.28, 0.28, binderMats[b % 4]);
+                }
+            });
+            addBox(r1, 17.32, 3.80, 0.48, 0.78, 1.02, 0.62, MATS.whiteEnamel, {
+                zone: 'OPEN-SPACE • REPROGRAPHIE RÉSEAU', title: 'Copieur Multifonction A3 Réseau (Connecté RJ45 Gigabit)',
+                desc: 'Impression centralisée des bons de livraison, étiquettes lots et factures.', dims: '78 × 62 cm', lot: 'Lot 7.2'
+            });
+            addBox(r1, 17.38, 4.82, 0.54, 0.66, 0.10, 0.50, MATS.steelBeam);
+
+            // ---------------- 7. KITCHENETTE GARNIE, NOURRITURES & RÉFECTOIRE CONVIVIAL (29,0 m²) ----------------
+            // Réfrigérateur vitré / garni (clayettes visibles avec bouteilles, laitages, plats préparés) + Kitchenette
+            addBox(r1, 12.85, 3.80, 5.68, 0.74, 1.88, 0.10, MATS.stainless);
+            addBox(r1, 12.85, 3.80, 5.68, 0.08, 1.88, 0.68, MATS.stainless);
+            addBox(r1, 13.51, 3.80, 5.68, 0.08, 1.88, 0.68, MATS.stainless);
+            addBox(r1, 12.85, 5.60, 5.68, 0.74, 0.08, 0.68, MATS.stainless);
+            addBox(r1, 12.93, 3.86, 6.32, 0.58, 1.72, 0.04, MATS.glass, {
+                zone: 'SALLE DE PAUSE • FRIGO ÉQUIPE GARNI',
+                title: 'Réfrigérateur Grand Volume Garni (Repas Équipe, Laitages Fermiers, Jus & Fruits)',
+                desc: 'Conservation à +3 °C des gamelles et produits frais de la ferme mis à disposition des salariés.',
+                dims: '450 Litres • A+++', lot: 'Sous-Lot 8D'
+            }, false);
+            // Nourritures visibles sur les 4 clayettes à l'intérieur du réfrigérateur !
+            [4.15, 4.52, 4.89, 5.26].forEach((fy, fIdx) => {
+                addBox(r1, 12.95, fy, 5.80, 0.54, 0.03, 0.46, MATS.whiteEnamel);
+                addBox(r1, 13.00, fy + 0.03, 5.88, 0.18, 0.15, 0.24, fIdx % 2 === 0 ? MATS.butterGold : MATS.veggieGreen);
+                addBox(r1, 13.24, fy + 0.03, 5.88, 0.18, 0.20, 0.22, fIdx === 0 ? MATS.bottleGreen : MATS.appleRed);
+            });
+
+            // Plan de travail Kitchenette avec évier eau bleue, faitout sur induction, micro-ondes, expresso + viennoiseries & fruits !
+            addBox(r1, 13.62, 3.80, 5.68, 2.42, 0.90, 0.64, MATS.boutiqueGreen, {
+                zone: 'SALLE DE PAUSE • KITCHENETTE GARNIE',
+                title: 'Kitchenette Équipée (Évier, Induction, Micro-Ondes, Machine Expresso, Viennoiseries & Fruits Bio)',
+                desc: 'Tout le nécessaire pour le petit-déjeuner des boulangers après la fournée de l’aube et le déjeuner de midi.',
+                dims: 'Linéaire 3,15 m', lot: 'Lots 5.2 & 8D'
+            });
+            addBox(r1, 13.60, 4.70, 5.66, 2.46, 0.05, 0.68, MATS.beechWood);
+            addBox(r1, 13.78, 4.73, 5.78, 0.52, 0.04, 0.42, MATS.stainless);
+            addBox(r1, 13.84, 4.75, 5.84, 0.40, 0.03, 0.30, MATS.waterClear); // Eau dans le bac évier + robinet
+            addBox(r1, 14.02, 4.75, 5.74, 0.04, 0.24, 0.04, MATS.stainless);
+
+            // Plaque induction + Casserole inox garnie + Planche à découper avec miche de pain & fromage
+            addBox(r1, 14.42, 4.75, 5.78, 0.50, 0.02, 0.42, MATS.slateBoard);
+            const potPan = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.11, 0.12, 14), MATS.stainless);
+            potPan.position.set(bx(14.67), 4.83, bz(5.99));
+            r1.add(potPan);
+            const soupTop = new THREE.Mesh(new THREE.CylinderGeometry(0.10, 0.10, 0.02, 12), MATS.carrotOrange);
+            soupTop.position.set(bx(14.67), 4.89, bz(5.99));
+            r1.add(soupTop);
+
+            // Micro-ondes + Machine Expresso rouge + Tasses blanches + Plateau de croissants dorés + Corbeille de pommes rouges
+            addBox(r1, 15.02, 4.75, 5.76, 0.46, 0.28, 0.36, MATS.stainless);
+            addBox(r1, 15.06, 4.79, 6.11, 0.30, 0.18, 0.02, MATS.screenGlow);
+            addBox(r1, 15.56, 4.75, 5.78, 0.24, 0.34, 0.28, MATS.extRed);
+            [0, 1, 2].forEach(ci => {
+                const cup = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.025, 0.06, 10), MATS.whiteEnamel);
+                cup.position.set(bx(15.58 + ci * 0.08), 4.78, bz(6.16));
+                r1.add(cup);
+            });
+            // Corbeille de fruits bio sur le comptoir
+            const fruitBowl = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.10, 0.07, 12), MATS.wicker);
+            fruitBowl.position.set(bx(15.90), 4.78, bz(6.02));
+            r1.add(fruitBowl);
+            [[-0.05, -0.03, MATS.appleRed], [0.05, -0.02, MATS.appleRed], [0.0, 0.05, MATS.butterGold], [-0.04, 0.04, MATS.veggieGreen]].forEach(([fx, fz, fm]) => {
+                const fr = new THREE.Mesh(new THREE.SphereGeometry(0.045, 8, 8), fm);
+                fr.position.set(bx(15.90 + fx), 4.84, bz(6.02 + fz));
+                r1.add(fr);
+            });
+
+            // Tri sélectif 3 flux
+            [MATS.butterGold, MATS.boutiqueGreen, MATS.steelBeam].forEach((bm, bi) => {
+                addBox(r1, 17.25 + bi * 0.32, 3.80, 5.72, 0.28, 0.62, 0.32, bm);
+            });
+
+            // 2 Grandes Tables du Réfectoire dressées avec Assiettes Garnies, Pains au Levain, Fromage, Fruits & Boissons !
+            [13.25, 16.45].forEach((tx, idx) => {
+                addBox(r1, tx, 3.80, 7.05, 2.40, 0.76, 0.98, MATS.beechWood, {
+                    zone: 'ÉTAGE R+1 • RÉFECTOIRE & REPAS ÉQUIPE',
+                    title: `Table de Réfectoire #${idx + 1} Dressée (Assiettes Garnies, Pain Chaud, Brie & Fruits Bio)`,
+                    desc: 'Table conviviale 8 places avec repas chauds servis, corbeille de pains du fournil, plateau de Brie fermier et carafes.',
+                    dims: '240 × 98 cm (Total 16 places)', lot: 'Sous-Lot 8D'
+                });
+
+                // 6 couverts complets garnis de nourriture sur les tables + Corbeille à pain centrale + Plateau fromage + Carafe
+                [0, 1, 2].forEach(seatIdx => {
+                    const pxPos = tx + 0.42 + seatIdx * 0.76;
+                    createMealPlaceSetting(r1, pxPos, 4.56, 7.26, false, idx + seatIdx);
+                    if (seatIdx !== 1 || idx === 0) {
+                        createMealPlaceSetting(r1, pxPos, 4.56, 7.82, true, idx + seatIdx + 1);
+                    }
+                });
+
+                // Corbeille osier centrale garnie de pains dorés + Meule de Brie entamée sur planche + Bouteille jus/cidre
+                addBox(r1, tx + 0.85, 4.56, 7.45, 0.44, 0.07, 0.22, MATS.wicker);
+                [-0.10, 0.04, 0.16].forEach(bxOff => {
+                    const roll = new THREE.Mesh(new THREE.SphereGeometry(0.065, 8, 6), MATS.breadCrust);
+                    roll.scale.set(1.3, 0.65, 0.9);
+                    roll.position.set(bx(tx + 1.07 + bxOff), 4.64, bz(7.56));
+                    r1.add(roll);
+                });
+                const brieWheel = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.13, 0.045, 14), MATS.cheeseRind);
+                brieWheel.position.set(bx(tx + 1.62), 4.59, bz(7.54));
+                r1.add(brieWheel);
+                const bottle = new THREE.Mesh(new THREE.CylinderGeometry(0.042, 0.048, 0.25, 10), MATS.bottleGreen);
+                bottle.position.set(bx(tx + 1.92), 4.69, bz(7.54));
+                r1.add(bottle);
+
+                for (let c = 0; c < 4; c++) {
+                    addR1Chair(r1, tx + 0.30 + c * 0.60, 6.70, 0, MATS.boutiqueGreen);
+                    addR1Chair(r1, tx + 0.30 + c * 0.60, 8.36, Math.PI, MATS.boutiqueGreen);
+                }
+            });
+
+            // Coin Détente / Salon Calme avec tasse à café & corbeille de viennoiseries sur la table basse
+            addBox(r1, 20.88, 3.80, 6.35, 0.82, 0.44, 1.95, MATS.fabricIndigo, {
+                zone: 'SALLE DE PAUSE • COIN DÉTENTE', title: 'Salon de Repos Équipe (Canapé 3 Places, Fauteuil & Table Basse)',
+                desc: 'Espace de récupération au calme pour les pauses des équipes postées.', dims: 'Zone repos R+1', lot: 'Sous-Lot 8D'
+            });
+            addBox(r1, 21.52, 4.24, 6.35, 0.18, 0.46, 1.95, MATS.fabricIndigo);
+            addBox(r1, 20.88, 4.24, 6.35, 0.82, 0.26, 0.14, MATS.fabricIndigo);
+            addBox(r1, 20.88, 4.24, 8.16, 0.82, 0.26, 0.14, MATS.fabricIndigo);
+            addR1Chair(r1, 19.72, 6.55, 0.95, MATS.fabricIndigo);
+            const coffeeTbl = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.42, 0.42, 16), MATS.beechWood);
+            coffeeTbl.position.set(bx(20.15), 4.01, bz(7.45));
+            r1.add(coffeeTbl);
+            const pastryPlate = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.12, 0.02, 14), MATS.whiteEnamel);
+            pastryPlate.position.set(bx(20.15), 4.23, bz(7.45));
+            r1.add(pastryPlate);
+            [-0.05, 0.05].forEach(pxOff => {
+                const croissant = new THREE.Mesh(new THREE.SphereGeometry(0.05, 8, 6), MATS.breadCrust);
+                croissant.scale.set(1.4, 0.6, 0.8);
+                croissant.position.set(bx(20.15 + pxOff), 4.26, bz(7.45));
+                r1.add(croissant);
+            });
+            addR1PottedPlant(r1, 21.35, 5.88);
+
+            // ---------------- 8. VESTIAIRES H/F AVEC CASIERS INDIVIDUELS DÉTAILLÉS, DOUCHES & WC COMPLETS ----------------
+            [
+                { label: 'Femmes', shX: 21.92, lkX: 23.18, wcX: 24.56, isWest: true },
+                { label: 'Hommes', shX: 28.06, lkX: 26.68, wcX: 25.66, isWest: false }
+            ].forEach(v => {
+                // Batterie de 8 casiers doubles dessinée porte par porte (ouïes, serrures, casier ouvert avec veste/tablier, bancs & sabots)
+                createDetailedLockerBank(r1, v.lkX, 1.55, v.label, {
+                    zone: `ÉTAGE R+1 • VESTIAIRE ${v.label.toUpperCase()}`,
+                    title: `8 Armoires Doubles NF « Industrie Salissante » (${v.label}) + Bancs Hêtre & Sabots`,
+                    desc: 'Casiers individuels compartimentés (ville / travail farine) avec coiffes inclinées 30°, ouïes d’aération hautes/basses, serrures cadenas, vestes suspendues et bancs sur pieds.',
+                    dims: '14,8 m² • NF D 65-760', lot: 'Sous-Lot 8D'
+                });
+
+                // 2 Cabines de douche individuelles détaillées (receveur antidérapant, bonde inox, mitigeur, colonne & pommeau pluie)
+                [1.82, 2.88].forEach((sz, sIdx) => {
+                    addBox(r1, v.shX, 3.81, sz, 0.94, 0.07, 0.96, MATS.whiteEnamel, sIdx === 0 ? {
+                        zone: `VESTIAIRE ${v.label.toUpperCase()} • DOUCHES`,
+                        title: `2 Cabines de Douche Individuelles (${v.label} — Eau Chaude Préchauffée par les Fours)`,
+                        desc: 'Receveurs extra-plats R11, parois vitrées sécurit, mitigeurs thermostatiques et pommeaux haute efficacité.',
+                        dims: '95 × 95 cm / cabine', lot: 'Lot 5.2'
+                    } : null);
+                    const drain = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.02, 12), MATS.stainless);
+                    drain.position.set(bx(v.shX + 0.47), 3.88, bz(sz + 0.48));
+                    r1.add(drain);
+                    addR1WallX(v.shX, sz, 0.94, 0.05, 1.65, MATS.pirPanel, null, 0.58);
+                    const glassX = v.isWest ? v.shX + 0.90 : v.shX + 0.02;
+                    addBox(r1, glassX, 3.86, sz + 0.08, 0.03, 1.60, 0.80, MATS.glass, null, false);
+                    const headX = v.isWest ? v.shX + 0.12 : v.shX + 0.80;
+                    addBox(r1, headX, 4.75, sz + 0.46, 0.04, 0.88, 0.04, MATS.stainless);
+                    const rainHead = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.11, 0.025, 14), MATS.stainless);
+                    rainHead.position.set(bx(headX + (v.isWest ? 0.14 : -0.10)), 5.60, bz(sz + 0.48));
+                    r1.add(rainHead);
+                });
+
+                // Cabine WC individuelle avec parois basses en écorché + Vrai WC Céramique Complet !
+                addR1WallX(v.wcX, 2.95, 0.92, 0.06, 1.65, MATS.pirPanel, null, 0.55);
+                addR1SlopedWallZ(v.isWest ? v.wcX : v.wcX + 0.86, 2.95, 4.02, 0.06, 1.65, MATS.pirPanel, null, 0.55);
+                createDetailedToilet(r1, v.wcX + 0.46, 3.45, Math.PI, false, {
+                    zone: `VESTIAIRE ${v.label.toUpperCase()} • SANITAIRE`,
+                    title: `WC Individuel Suspendu / sur Pied (${v.label} — Chasse 3L/6L, Abattant, Dérouleur & Brosse)`,
+                    desc: 'Cabine sanitaire ventilée par la VMC double flux avec cuvette céramique, chasse économique et accessoires inox.',
+                    dims: 'Cabine indépendante', lot: 'Lot 5.2 Plomberie'
+                });
+
+                // Plan double vasque avec cuves d'eau, robinets chromés, distributeurs de savon & miroir
+                addBox(r1, v.wcX + 0.14, 4.52, 1.65, 0.54, 0.14, 1.15, MATS.whiteEnamel, {
+                    zone: `VESTIAIRE ${v.label.toUpperCase()} • LAVABOS`,
+                    title: 'Plan Double Vasque Céramique, Mitigeurs Éco, Distributeurs Savon & Grand Miroir',
+                    desc: 'Poste de lavage des mains en sortie de vestiaire.', dims: '115 × 54 cm', lot: 'Lot 5.2'
+                });
+                [1.92, 2.52].forEach(vzPos => {
+                    const sinkWater = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.12, 0.02, 14), MATS.waterClear);
+                    sinkWater.position.set(bx(v.wcX + 0.41), 4.66, bz(vzPos));
+                    r1.add(sinkWater);
+                    addBox(r1, v.wcX + (v.isWest ? 0.58 : 0.20), 4.66, vzPos - 0.02, 0.04, 0.16, 0.04, MATS.stainless);
+                });
+                const mirX = v.isWest ? v.wcX + 0.84 : v.wcX + 0.06;
+                addBox(r1, mirX, 4.80, 1.70, 0.03, 0.72, 1.04, MATS.glass, null, false);
+            });
+
+            // ---------------- 9. BUANDERIE PRO & CABINE WC PMR ULTRA-DÉTAILLÉE (SUD-EST) ----------------
+            addBox(r1, 28.18, 3.80, 4.25, 0.88, 1.78, 0.84, MATS.whiteEnamel, {
+                zone: 'SOUS-LOT 8D-02 • BUANDERIE PRO', title: 'Colonne Lave-Linge Aseptique 12 kg & Sèche-Linge Pompe à Chaleur',
+                desc: 'Désinfection thermique quotidienne des vestes boulangers, tabliers et des 45 couches en lin du fournil.',
+                dims: 'Capacité 12 kg • Cycle hygiène', lot: 'Sous-Lot 8D'
+            });
+            [4.28, 5.15].forEach(py => {
+                const porthole = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, 0.06, 16), MATS.glass);
+                porthole.rotation.z = Math.PI / 2;
+                porthole.position.set(bx(28.16), py, bz(4.67));
+                r1.add(porthole);
+            });
+            addBox(r1, 28.20, 3.80, 5.20, 0.86, 0.88, 1.02, MATS.stainless, {
+                zone: 'BUANDERIE • PLIAGE PROPRE', title: 'Table Inox de Pliage, Piles de Couches en Lin & Bidons Lessive Éco',
+                desc: 'Zone de pliage propre immédiatement en sortie de sèche-linge.', dims: '102 × 86 cm', lot: 'Sous-Lot 8D'
+            });
+            addBox(r1, 28.32, 4.68, 5.32, 0.56, 0.22, 0.36, MATS.linenCloth);
+            addBox(r1, 28.32, 4.68, 5.76, 0.56, 0.18, 0.36, MATS.whiteEnamel);
+            addBox(r1, 28.24, 3.84, 6.32, 0.72, 0.68, 0.58, MATS.crateBlue);
+
+            // Intérieur ultra-précis de la Cabine WC PMR (Cuvette PMR rehaussée, barres cyan, lave-mains PMR avec robinet & cercle Ø 1,50 m)
+            createDetailedToilet(r1, 28.62, 8.20, -Math.PI / 2, true, {
+                zone: 'ÉTAGE R+1 • ÉQUIPEMENT WC PMR',
+                title: 'WC PMR Surélevé Complet (Hauteur 50 cm, Barres d’Appui Cyan, Chasse, Papier & Lave-Mains)',
+                desc: 'Implanté face à l’aire de giration libre Ø 1,50 m avec espace de transfert latéral réglementaire de 0,80 × 1,30 m.',
+                dims: 'Norme Accessibilité ERP/Code Travail', lot: 'Lot 5.2'
+            });
+            addBox(r1, 28.48, 4.54, 7.20, 0.50, 0.12, 0.42, MATS.whiteEnamel, {
+                zone: 'WC PMR • LAVE-MAINS ACCESSIBLE',
+                title: 'Lavabo Ergonomique PMR Sans Colonne (Passage Fauteuil Dessous) & Mitigeur Long',
+                desc: 'Permet l’approche frontale en fauteuil roulant avec siphon déporté.', dims: 'Hauteur libre sous vasque 70 cm', lot: 'Lot 5.2'
+            });
+            const pmrSinkWater = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.12, 0.02, 14), MATS.waterClear);
+            pmrSinkWater.position.set(bx(28.73), 4.66, bz(7.41));
+            r1.add(pmrSinkWater);
+            addBox(r1, 28.92, 4.66, 7.39, 0.04, 0.18, 0.04, MATS.stainless);
+
+            const pmrTurnCircle = new THREE.Mesh(new THREE.RingGeometry(0.68, 0.75, 28), MATS.pmrCyan);
+            pmrTurnCircle.rotation.x = -Math.PI / 2;
+            pmrTurnCircle.position.set(bx(27.82), 3.81, bz(7.92));
+            r1.add(pmrTurnCircle);
+
+            // ---------------- 10. ÉQUIPE EN ACTIVITÉ À L'ÉTAGE R+1 ----------------
+            createPerson(r1Cutaway.staff, 15.65, 3.80, 1.05, 0.0, 'qualite_r1', 0x4f46e5, null, false, {
+                zone: 'ÉQUIPE R+1 • GESTION & QUALITÉ', title: 'Responsable Qualité & Gestion — Suivi Traçabilité Bio',
+                desc: 'Saisie des lots de mouture et contrôle HACCP sur poste connecté en RJ45.',
+                dims: 'Open-Space +3,80 m', lot: 'Exploitation'
+            });
+            createPerson(r1Cutaway.staff, 19.85, 3.80, 3.42, Math.PI, 'commercial_r1', 0x0284c7, null, false, {
+                zone: 'ÉQUIPE R+1 • COMMERCIAL & TOURNÉES', title: 'Chargé·e Relations Clients, Cantines & Magasins Bio',
+                desc: 'Prise de commandes téléphoniques (poste IP RJ15/RJ45) et planification des tournées.',
+                dims: 'Open-Space +3,80 m', lot: 'Exploitation'
+            });
+            createPerson(r1Cutaway.staff, 15.45, 3.80, 6.45, 2.85, 'pause_r1', 0xf8fafc, 0xd9a05b, true, {
+                zone: 'ÉQUIPE R+1 • VIE D’ÉQUIPE', title: 'Boulanger·ère en Pause Déjeuner au Réfectoire',
+                desc: 'Profite du réfectoire équipé et garni au-dessus du fournil.',
+                dims: 'Salle de Pause +3,80 m', lot: 'Exploitation'
+            });
         }
 
         // ============================================================================
@@ -2349,75 +3214,8 @@
                 desc: 'Maintient la Chambre 5A entre +14 et +16 °C pour conserver la farine et bloquer les mites.', dims: 'Froid sec +15 °C', lot: 'Lot 6.1'
             });
 
-            // ---------------- ÉTAGE R+1 (+3,80 m : x = 9,50 m à 29,30 m) ----------------
-            addBox(groups.r1FloorAndRooms, 9.50, 3.62, 0.00, 12.45, 0.18, 8.95, MATS.floorR1West, null, false);
-            addBox(groups.r1FloorAndRooms, 21.95, 3.62, 0.00, 7.35, 0.18, 5.55, MATS.floorR1East, null, false);
-            addBox(groups.r1FloorAndRooms, 21.95, 3.62, 5.55, 1.70, 0.18, 1.73, MATS.floorR1East, null, false);
-            addBox(groups.r1FloorAndRooms, 23.65, 3.62, 6.55, 5.65, 0.18, 2.40, MATS.floorR1East, null, false);
-            addBox(groups.r1FloorAndRooms, 26.95, 3.62, 5.55, 2.35, 0.18, 1.00, MATS.floorR1East, null, false);
-
-            const r1H = 1.25;
-            addBox(groups.r1FloorAndRooms, 9.50, 3.80, 0.00, 0.16, r1H, 8.95, MATS.woodFrame);
-            addBox(groups.r1FloorAndRooms, 29.14, 3.80, 0.00, 0.16, r1H, 8.95, MATS.woodFrame);
-            addBox(groups.r1FloorAndRooms, 9.50, 3.80, 0.00, 19.80, 0.95, 0.16, MATS.woodFrame);
-            addBox(groups.r1FloorAndRooms, 9.50, 3.80, 8.80, 19.80, 0.95, 0.16, MATS.woodFrame);
-
-            addBox(groups.r1FloorAndRooms, 13.75, 3.80, 0.00, 0.12, r1H, 4.05, MATS.wallEI60);
-            addBox(groups.r1FloorAndRooms, 9.66, 3.80, 4.05, 4.20, 0.12, 0.12, MATS.wallEI60);
-            const ecsTank = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.42, 1.65, 16), MATS.pmrCyan);
-            ecsTank.position.set(bx(10.55), 4.62, bz(3.25));
-            groups.r1FloorAndRooms.add(ecsTank);
-            registerInteractive(ecsTank, {
-                zone: 'R+1 • LOCAL TECHNIQUE EI 60', title: 'Ballon Tampon ECS 500 L & Centrale VMC Double Flux',
-                desc: 'Préchauffé gratuitement par la chaleur récupérée sur la hotte des fours situés juste en dessous.',
-                dims: '500 Litres • VMC DF', lot: 'Lots 5 & 6'
-            });
-
-            addBox(groups.r1FloorAndRooms, 12.60, 3.80, 4.05, 0.10, r1H, 4.75, MATS.acousticWall);
-            addBox(groups.r1FloorAndRooms, 13.85, 3.80, 4.05, 14.20, r1H * 0.75, 0.10, MATS.acousticWall);
-            addBox(groups.r1FloorAndRooms, 12.70, 3.80, 5.55, 9.05, r1H * 0.75, 0.10, MATS.acousticWall);
-            addBox(groups.r1FloorAndRooms, 21.75, 3.80, 0.00, 0.10, r1H, 4.05, MATS.acousticWall);
-            addBox(groups.r1FloorAndRooms, 25.52, 3.80, 0.00, 0.10, r1H, 4.05, MATS.acousticWall);
-
-            addBox(groups.r1FloorAndRooms, 10.55, 3.80, 5.15, 1.20, 0.76, 2.65, MATS.beechWood, {
-                zone: 'ÉTAGE R+1 • TERTIAIRE', title: 'Salle de Réunion & Pédagogie (14,0 m² • 12 places)',
-                desc: 'En bout Ouest du couloir central PMR de 1,50 m, au calme complet.', dims: '14,0 m²', lot: 'Lot 2.2 & 8D'
-            });
-            [14.45, 18.65].forEach((dx, idx) => {
-                addBox(groups.r1FloorAndRooms, dx, 3.80, 1.15, 2.60, 0.75, 1.55, MATS.whiteEnamel, {
-                    zone: 'ÉTAGE R+1 • BUREAUX', title: `Bureau Open-Space Unique — Îlot #${idx + 1} (4 Postes)`,
-                    desc: 'Plateau administratif lumineux de 30,0 m² regroupant gestion, qualité et commercial.', dims: '30,0 m² (8 postes)', lot: 'Lot 2.2 & 7.2'
-                });
-                for (let m = 0; m < 2; m++) {
-                    addBox(groups.r1FloorAndRooms, dx + 0.45 + m * 1.30, 4.55, 1.88, 0.48, 0.30, 0.06, MATS.steelBeam);
-                }
-            });
-
-            addBox(groups.r1FloorAndRooms, 12.90, 3.80, 5.72, 3.10, 0.90, 0.62, MATS.boutiqueGreen, {
-                zone: 'ÉTAGE R+1 • SALLE DE PAUSE', title: 'Kitchenette Équipée (3,10 m) & Réfectoire 16 Places',
-                desc: 'Évier, réfrigérateur, induction, micro-ondes et lave-vaisselle.', dims: '29,0 m²', lot: 'Lots 5.2 & 8D'
-            });
-            addBox(groups.r1FloorAndRooms, 13.40, 3.80, 6.95, 2.30, 0.76, 1.05, MATS.beechWood);
-            addBox(groups.r1FloorAndRooms, 16.75, 3.80, 6.95, 2.30, 0.76, 1.05, MATS.beechWood);
-
-            [22.00, 24.45, 25.80, 28.15].forEach(lx => {
-                addBox(groups.r1FloorAndRooms, lx, 3.80, 1.45, 0.85, 1.85, 1.95, MATS.steelBeam, {
-                    zone: 'ÉTAGE R+1 • VESTIAIRES H/F', title: '16 Armoires Doubles « Industrie Salissante » NF + Douches & WC',
-                    desc: 'Immédiatement accessibles en haut de l’escalier sur le palier Est sans traverser les bureaux.', dims: '2 × 14,8 m²', lot: 'Sous-Lot 8D'
-                });
-            });
-            addBox(groups.r1FloorAndRooms, 28.15, 3.80, 5.75, 0.85, 1.75, 0.80, MATS.whiteEnamel, {
-                zone: 'SOUS-LOT 8D-02 • BUANDERIE', title: 'Espace Buanderie Pro (Lave-linge Aseptique + Sèche-linge PAC)',
-                desc: 'Entretien quotidien des tenues des boulangers, tabliers, torchons et couches en lin.', dims: 'Colonne 10–12 kg', lot: 'Sous-Lot 8D'
-            });
-            addBox(groups.r1FloorAndRooms, 27.05, 3.80, 7.15, 2.05, r1H, 1.65, MATS.pirPanel, {
-                zone: 'ÉTAGE R+1 • ACCESSIBILITÉ', title: 'Cabine WC PMR Complète (Ø 1,50 m)',
-                desc: 'Accès direct depuis le palier d’arrivée Est.', dims: '222 × 176 cm', lot: 'Lot 5.2'
-            });
-            createPerson(groups.staff, 15.75, 3.80, 0.85, 0.0, 'bureau', 0x4f46e5, null, false, {
-                zone: 'ÉQUIPE R+1', title: 'Responsable Qualité / Gestion — Open-Space R+1',
-                desc: 'Travail administratif et suivi traçabilité à l’étage isolé.', dims: 'Étage +3,80 m', lot: 'Exploitation'
-            });
+            // ---------------- ÉTAGE R+1 COMPLET & AMÉNAGÉ (+3,80 m : x = 9,50 m à 29,30 m) ----------------
+            buildR1CompleteLayout();
 
             // ---------------- GRAND AUVENT CONTINU SUD & TOITURE BRIARDE EXACTE ----------------
             addBox(groups.upperShell, -0.25, 3.60, -0.25, 37.20, 0.98, 0.25, MATS.stone);
@@ -2446,19 +3244,49 @@
 
             const dzN = 4.70, dyN = 2.88;
             const lenN = Math.hypot(dzN, dyN);
+            const angN = -Math.atan2(dyN, dzN);
             const roofNorth = new THREE.Mesh(new THREE.BoxGeometry(37.60, 0.14, lenN), MATS.roofTiles);
             roofNorth.position.set(bx(18.35), (4.40 + 7.28) / 2, bz((-0.55 + 4.15) / 2));
-            roofNorth.rotation.x = -Math.atan2(dyN, dzN);
+            roofNorth.rotation.x = angN;
             roofNorth.castShadow = true;
             groups.mainRoof.add(roofNorth);
 
+            // Châssis de toit vitrés (Velux) sur le versant Nord éclairant l'Open-Space & les Vestiaires R+1
+            [15.65, 19.85, 25.55].forEach(vx => {
+                const vz = 2.35;
+                const vy = 4.40 + ((vz + 0.55) / 4.70) * 2.88 + 0.08;
+                const frameN = new THREE.Mesh(new THREE.BoxGeometry(1.18, 0.08, 1.42), MATS.slateRoof);
+                frameN.position.set(bx(vx), vy, bz(vz));
+                frameN.rotation.x = angN;
+                groups.mainRoof.add(frameN);
+                const glassN = new THREE.Mesh(new THREE.BoxGeometry(1.02, 0.10, 1.26), MATS.glass);
+                glassN.position.set(bx(vx), vy + 0.01, bz(vz));
+                glassN.rotation.x = angN;
+                groups.mainRoof.add(glassN);
+            });
+
             const dzS = 5.00, dyS = -2.22;
             const lenS = Math.hypot(dzS, dyS);
+            const angS = -Math.atan2(dyS, dzS);
             const roofSouth = new THREE.Mesh(new THREE.BoxGeometry(37.60, 0.14, lenS), MATS.roofTiles);
             roofSouth.position.set(bx(18.35), (7.28 + 5.06) / 2, bz((4.15 + 9.15) / 2));
-            roofSouth.rotation.x = -Math.atan2(dyS, dzS);
+            roofSouth.rotation.x = angS;
             roofSouth.castShadow = true;
             groups.mainRoof.add(roofSouth);
+
+            // Châssis de toit vitrés (Velux) sur le versant Sud éclairant la Salle de Réunion, le Réfectoire & le Palier R+1
+            [11.20, 16.50, 25.20].forEach(vx => {
+                const vz = 6.55;
+                const vy = 7.28 + ((vz - 4.15) / 5.00) * (-2.22) + 0.08;
+                const frameS = new THREE.Mesh(new THREE.BoxGeometry(1.18, 0.08, 1.42), MATS.slateRoof);
+                frameS.position.set(bx(vx), vy, bz(vz));
+                frameS.rotation.x = angS;
+                groups.mainRoof.add(frameS);
+                const glassS = new THREE.Mesh(new THREE.BoxGeometry(1.02, 0.10, 1.26), MATS.glass);
+                glassS.position.set(bx(vx), vy + 0.01, bz(vz));
+                glassS.rotation.x = angS;
+                groups.mainRoof.add(glassS);
+            });
 
             addBox(groups.mainRoof, 17.65, 7.05, 3.65, 1.35, 0.85, 1.00, MATS.woodFrame);
 
@@ -2508,8 +3336,12 @@
             add3DLabel(31.2, 3.3, 4.6, 'Ligne 1 Moulin Meules Ø100 (14 sacs)', 'bg-amber-500 text-slate-950');
             add3DLabel(35.0, 3.0, 4.2, 'Ligne 2 Moulin Meules Ø50 (8 sacs)', 'bg-amber-600 text-white');
             add3DLabel(33.2, 3.5, -1.3, '5C/5D • Réserve Sacs & Local TGBT', 'bg-purple-700 text-white');
-            add3DLabel(17.5, 5.4, 2.0, 'R+1 Ouest : Open-Space, Pause & Réunion', 'bg-indigo-600 text-white', 'r1');
-            add3DLabel(25.6, 5.4, 2.0, 'R+1 Est : Vestiaires H/F, Buanderie & WC PMR', 'bg-cyan-600 text-white', 'r1');
+            add3DLabel(12.2, 5.7, 2.8, 'R+1 • Baie 19" RJ45/RJ15, VMC & ECS 500L', 'bg-rose-700 text-white', 'r1');
+            add3DLabel(11.1, 5.7, 6.8, 'R+1 • Réunion, Dégustation & Écran 75"', 'bg-amber-600 text-white', 'r1');
+            add3DLabel(17.8, 5.8, 2.2, 'R+1 • Open-Space 8 Postes & Goulottes RJ45/RJ15', 'bg-indigo-600 text-white', 'r1');
+            add3DLabel(16.2, 5.7, 7.3, 'R+1 • Frigo Garni, Kitchenette & Repas Servies', 'bg-emerald-700 text-white', 'r1');
+            add3DLabel(25.5, 5.7, 2.3, 'R+1 • 16 Casiers NF, 4 Douches & 2 WC', 'bg-cyan-700 text-white', 'r1');
+            add3DLabel(28.1, 5.6, 7.2, 'R+1 • Buanderie Pro & Cabine WC PMR', 'bg-sky-600 text-white', 'r1');
             add3DLabel(42.6, 9.6, 51.0, 'Silos Céréales Bio (Angle Sud-Ouest Cour)', 'bg-slate-800 text-amber-300', 'farm');
             add3DLabel(41.2, 4.3, 43.6, 'Unité Nettoyage, Épierrage & Décorticage', 'bg-amber-700 text-white', 'farm');
             add3DLabel(20.0, 9.4, 50.0, 'Grands Hangars Ouest (Extérieur seul)', 'bg-stone-800 text-stone-200', 'farm');
@@ -2520,14 +3352,15 @@
         // 5. VISITE IMMERSIVE À PIED (AVEC COLLISION SUR LES AUTRES BÂTIMENTS) & VISITE DÉMO
         // ============================================================================
         const TELEPORT_SPOTS = {
-            cour:      { bx: 15.50, by: 0.00, bz: 20.00, yaw: 0.05,  pitch: 0.04 },
-            ferme:     { bx: 31.00, by: 0.00, bz: 32.50, yaw: 0.45,  pitch: 0.05 },
-            boutique:  { bx: 2.55,  by: 0.00, bz: 7.55,  yaw: -2.50, pitch: -0.05 },
-            fours:     { bx: 11.65, by: 0.00, bz: 5.20,  yaw: 3.14,  pitch: -0.04 },
-            petrins:   { bx: 19.35, by: 0.00, bz: 5.80,  yaw: 0.20,  pitch: -0.06 },
-            moulins:   { bx: 28.50, by: 0.00, bz: 6.80,  yaw: -2.25, pitch: -0.04 },
-            escalier:  { bx: 27.65, by: 0.00, bz: 6.03,  yaw: 1.57,  pitch: 0.06 },
-            r1_palier: { bx: 23.15, by: 3.80, bz: 4.80,  yaw: 1.57,  pitch: -0.04 }
+            cour:       { bx: 15.50, by: 0.00, bz: 20.00, yaw: 0.05,  pitch: 0.04 },
+            ferme:      { bx: 31.00, by: 0.00, bz: 32.50, yaw: 0.45,  pitch: 0.05 },
+            boutique:   { bx: 2.55,  by: 0.00, bz: 7.55,  yaw: -2.50, pitch: -0.05 },
+            fours:      { bx: 11.65, by: 0.00, bz: 5.20,  yaw: 3.14,  pitch: -0.04 },
+            petrins:    { bx: 19.35, by: 0.00, bz: 5.80,  yaw: 0.20,  pitch: -0.06 },
+            moulins:    { bx: 28.50, by: 0.00, bz: 6.80,  yaw: -2.25, pitch: -0.04 },
+            escalier:   { bx: 27.65, by: 0.00, bz: 6.03,  yaw: 1.57,  pitch: 0.06 },
+            r1_palier:  { bx: 23.15, by: 3.80, bz: 4.80,  yaw: 1.57,  pitch: -0.04 },
+            r1_bureaux: { bx: 17.65, by: 3.80, bz: 4.80,  yaw: 0.42,  pitch: -0.05 }
         };
 
         function hitsClosedFarmBuilding(xTest, zTest) {
@@ -2561,6 +3394,9 @@
             groups.rdcFullWalls.visible = !viewConfig.lowWalls || viewConfig.walkMode;
             groups.rdcLowWalls.visible = viewConfig.lowWalls && !viewConfig.walkMode;
             groups.r1FloorAndRooms.visible = viewConfig.showR1;
+            r1Cutaway.fullWalls.visible = !viewConfig.lowWalls || viewConfig.walkMode;
+            r1Cutaway.lowWalls.visible = viewConfig.lowWalls && !viewConfig.walkMode;
+            r1Cutaway.staff.visible = viewConfig.showStaff;
             groups.auventSud.visible = viewConfig.showAuvent;
             groups.mainRoof.visible = viewConfig.showRoof;
             groups.upperShell.visible = viewConfig.showRoof;
@@ -2906,9 +3742,15 @@
                 viewConfig.lowWalls = true; viewConfig.showR1 = false; viewConfig.showAuvent = true; viewConfig.showRoof = false; viewConfig.showCeilings = false; viewConfig.showSmall = true;
                 window.flyToCamera('overview');
             } else if (preset === 'r1_focus') {
-                viewConfig.lowWalls = false; viewConfig.showR1 = true; viewConfig.showAuvent = false; viewConfig.showRoof = false;
-                camOrbit.desiredTarget.set(bx(19.5), 4.2, bz(4.45));
-                camOrbit.desiredTheta = 0.25; camOrbit.desiredPhi = 0.72; camOrbit.desiredRadius = 22.0;
+                // Abaisse automatiquement les cloisons R+1 en mode écorché pour révéler WC, casiers, repas et prises RJ45/RJ15 !
+                viewConfig.lowWalls = true;
+                viewConfig.showR1 = true;
+                viewConfig.showAuvent = false;
+                viewConfig.showRoof = false;
+                camOrbit.desiredTarget.set(bx(19.4), 4.1, bz(4.45));
+                camOrbit.desiredTheta = 0.16;
+                camOrbit.desiredPhi = 0.58;
+                camOrbit.desiredRadius = 17.5;
             } else if (preset === 'exterior') {
                 viewConfig.lowWalls = false; viewConfig.showFarm = true; viewConfig.showR1 = true; viewConfig.showAuvent = true; viewConfig.showRoof = true;
                 window.flyToCamera('ferme', true);
@@ -3048,6 +3890,11 @@
                 viewConfig.showFarm = true;
                 viewConfig.showRoof = true;
                 syncLayerVisibility();
+            } else if (key === 'r1') {
+                viewConfig.showR1 = true;
+                viewConfig.showRoof = false;
+                viewConfig.lowWalls = true;
+                syncLayerVisibility();
             } else if (!keepRoof && viewConfig.showRoof && key !== 'overview' && key !== 'top') {
                 viewConfig.showRoof = false;
                 syncLayerVisibility();
@@ -3060,6 +3907,7 @@
                 boutique: { tx: bx(4.75), ty: 1.2, tz: bz(4.5), theta: -0.35, phi: 0.88, r: 14.0 },
                 fournil:  { tx: bx(16.2), ty: 1.2, tz: bz(4.5), theta: 0.22, phi: 0.84, r: 16.0 },
                 meunerie: { tx: bx(30.8), ty: 1.6, tz: bz(4.2), theta: 0.48, phi: 0.88, r: 17.0 },
+                r1:       { tx: bx(19.4), ty: 4.1, tz: bz(4.45), theta: 0.16, phi: 0.58, r: 17.5 },
                 escalier: { tx: bx(24.8), ty: 2.0, tz: bz(6.4), theta: -0.35, phi: 1.02, r: 11.0 }
             };
             const p = presets[key] || presets.overview;
