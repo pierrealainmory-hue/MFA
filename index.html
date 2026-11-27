@@ -9,10 +9,14 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root { --equip-opacity: 0.15; }
-        body, html { height: 100%; margin: 0; overflow: hidden; background-color: #f1f5f9; font-family: 'Inter', system-ui, -apple-system, sans-serif; }
-        #top-bar { height: 54px; min-height: 54px; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; }
-        #top-bar::-webkit-scrollbar { display: none; }
-        #app-layout { display: flex; height: calc(100vh - 54px); width: 100vw; }
+        html, body { height: 100%; margin: 0; overflow: hidden; background-color: #f1f5f9; font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+        body { display: flex; flex-direction: column; }
+        #top-bar { height: auto; min-height: 54px; padding-top: 6px; padding-bottom: 6px; flex-wrap: wrap; row-gap: 6px; }
+        #top-bar > div { flex-wrap: wrap; }
+        #top-bar > div:last-child { margin-left: auto; }
+        #app-layout { display: flex; flex: 1; min-height: 0; width: 100vw; }
+        #workspace { min-width: 0; }
+        #dce-addon-pack { display: contents; }
 
         /* Colonne gauche : Accordéon Plans, Lots & Couches */
         #left-panel {
