@@ -1,4 +1,3 @@
-<!-- DÉBUT DU MORCEAU 1/4 -->
 <!-- Meunerie & Fournil de l'Aubetin — Plans d'Aménagement & DCE (Version Neutre Consultation) -->
 <!DOCTYPE html>
 <html lang="fr">
@@ -2598,6 +2597,547 @@
             }
         });
     </script>
+    <!-- DÉBUT DU MODULE PLEIN ÉCRAN & TUTORIEL DYNAMIQUE DCE -->
+<div id="dce-addon-pack">
+    <style>
+        /* Cadre projecteur (« Spotlight ») qui assombrit le reste de l'écran et encadre la zone à cliquer */
+        #dce-tour-spotlight {
+            position: fixed;
+            z-index: 9990;
+            pointer-events: none;
+            border-radius: 12px;
+            border: 3px solid #f59e0b;
+            box-shadow: 0 0 0 9999px rgba(15, 23, 42, 0.68), 0 0 0 6px rgba(245, 158, 11, 0.28), 0 0 28px rgba(245, 158, 11, 0.65);
+            transition: top 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+                        left 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+                        width 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+                        height 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        #dce-tour-pointer {
+            position: absolute;
+            top: -28px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #f59e0b;
+            color: #0f172a;
+            font-size: 10.5px;
+            font-weight: 900;
+            padding: 2px 9px;
+            border-radius: 999px;
+            white-space: nowrap;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+            animation: dcePulseBounce 1.2s infinite ease-in-out;
+        }
+        #dce-tour-pointer.bottom-pill {
+            top: auto;
+            bottom: -28px;
+        }
+        @keyframes dcePulseBounce {
+            0%, 100% { transform: translateX(-50%) translateY(0); }
+            50% { transform: translateX(-50%) translateY(-4px); }
+        }
+        /* Bulle explicative mobile qui suit chaque zone pointée */
+        #dce-tour-popover {
+            position: fixed;
+            z-index: 9995;
+            width: 360px;
+            max-width: calc(100vw - 24px);
+            transition: top 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+                        left 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        @media print {
+            #dce-tour-spotlight, #dce-tour-popover, #dce-tour-backdrop-catcher, #btn-dce-guide-top { display: none !important; }
+        }
+    </style>
+
+    <!-- Fond cliquable discret permettant de quitter en cliquant hors de la bulle si souhaité -->
+    <div id="dce-tour-backdrop-catcher" class="hidden fixed inset-0 z-[9988]" onclick="endDceTour(true)"></div>
+
+    <!-- PROJECTEUR DYNAMIQUE SUR L'ÉLÉMENT CIBLÉ -->
+    <div id="dce-tour-spotlight" class="hidden">
+        <div id="dce-tour-pointer">👆 Zone à cliquer</div>
+    </div>
+
+    <!-- BULLE DYNAMIQUE CONTEXTUELLE -->
+    <div id="dce-tour-popover" class="hidden bg-white rounded-2xl shadow-2xl border-2 border-slate-800 overflow-hidden">
+        <!-- Bandeau haut -->
+        <div class="px-4 py-2.5 bg-slate-900 text-white flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2">
+                <span id="dce-tour-badge" class="px-2 py-0.5 rounded-md bg-amber-500 text-slate-950 text-[10.5px] font-extrabold">1 / 7</span>
+                <span id="dce-tour-title" class="text-xs font-extrabold text-white truncate">Visite guidée</span>
+            </div>
+            <button onclick="endDceTour(true)" class="shrink-0 text-[11px] font-bold text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 px-2 py-1 rounded-lg border border-slate-700 transition" title="Fermer immédiatement et revenir au plan plein écran">
+                Passer ✕
+            </button>
+        </div>
+
+        <!-- Texte explicatif court & visuel -->
+        <div id="dce-tour-desc" class="p-4 text-xs text-slate-700 leading-relaxed space-y-2"></div>
+
+        <!-- Barre de navigation de la bulle -->
+        <div class="px-4 py-2.5 bg-slate-50 border-t border-slate-200 space-y-2">
+            <div class="flex items-center justify-between gap-2">
+                <!-- Points d'étapes cliquables -->
+                <div id="dce-tour-dots" class="flex items-center gap-1.5"></div>
+
+                <div class="flex items-center gap-1.5">
+                    <button id="dce-btn-prev" onclick="moveDceTour(-1)" class="px-2.5 py-1 rounded-lg border border-slate-300 bg-white hover:bg-slate-100 text-slate-700 text-[11px] font-bold transition">
+                        ◀ Préc.
+                    </button>
+                    <button id="dce-btn-next" onclick="moveDceTour(1)" class="px-3 py-1 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 text-[11px] font-extrabold shadow-sm transition">
+                        Suivant ▶
+                    </button>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-between pt-1 border-t border-slate-200/80 text-[10.5px] text-slate-500">
+                <label class="flex items-center gap-1.5 cursor-pointer select-none">
+                    <input type="checkbox" id="chk-dce-skip-auto" onchange="saveDceTourPref(this.checked)" class="rounded text-blue-600">
+                    <span>Ne plus lancer automatiquement</span>
+                </label>
+                <button onclick="endDceTourAndOpenLots()" class="text-blue-700 hover:text-blue-900 font-extrabold">
+                    Ouvrir mon Lot directement ➔
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            let tourActive = false;
+            let tourStep = 0;
+            let animFrameId = null;
+
+            // Utilitaires pour piloter proprement les panneaux gauche et droit pendant la démonstration
+            function setPanelsState(leftOpen, rightOpen, instant) {
+                const lp = document.getElementById('left-panel');
+                const rp = document.getElementById('right-panel');
+
+                if (lp) {
+                    const isLeftOpen = !lp.classList.contains('collapsed');
+                    if (isLeftOpen !== leftOpen) {
+                        if (instant) lp.style.transition = 'none';
+                        if (typeof toggleLeftPanel === 'function') {
+                            toggleLeftPanel();
+                        } else {
+                            lp.classList.toggle('collapsed', !leftOpen);
+                        }
+                        if (instant) requestAnimationFrame(() => { lp.style.transition = ''; });
+                    }
+                }
+
+                if (rp) {
+                    const isRightOpen = !rp.classList.contains('collapsed');
+                    if (isRightOpen !== rightOpen) {
+                        if (instant) rp.style.transition = 'none';
+                        if (typeof toggleRightPanel === 'function') {
+                            toggleRightPanel();
+                        } else {
+                            rp.classList.toggle('collapsed', !rightOpen);
+                        }
+                        if (instant) requestAnimationFrame(() => { rp.style.transition = ''; });
+                    }
+                }
+
+                if (typeof resetView === 'function') {
+                    resetView();
+                    setTimeout(resetView, 270);
+                }
+            }
+
+            function ensureAccordionOpen(accId) {
+                const body = document.getElementById(accId);
+                if (body && body.classList.contains('hidden')) {
+                    if (typeof toggleAccordion === 'function') toggleAccordion(accId);
+                    else body.classList.remove('hidden');
+                }
+            }
+
+            // Définition des 7 étapes interactives qui pointent chaque zone réelle de l'interface
+            const TOUR_STEPS = [
+                {
+                    title: "Plans généraux & Niveaux",
+                    pointerText: "👆 Choisissez la vue globale ici",
+                    pillBelow: true,
+                    prepare: function () {
+                        setPanelsState(false, false, false);
+                    },
+                    getTargets: function () {
+                        const rdcBtn = document.getElementById('btn-level-rdc');
+                        return [rdcBtn && rdcBtn.parentElement ? rdcBtn.parentElement : rdcBtn];
+                    },
+                    desc: `
+                        <p><strong>Bienvenue sur le plan interactif DCE !</strong> Par défaut, les menus latéraux sont masqués (<strong>OFF</strong>) pour afficher le plan en plein écran.</p>
+                        <p>Utilisez cette barre centrale pour basculer entre <strong>0. l'Existant</strong>, <strong>1. le Zonage</strong>, le <strong>2. Plan RDC (0m)</strong> et le <strong>3. Plan R+1 (+3,80m)</strong>.</p>
+                    `
+                },
+                {
+                    title: "Bouton Menu (Lots & Couches)",
+                    pointerText: "👆 Cliquez ici pour ouvrir le Menu",
+                    pillBelow: true,
+                    prepare: function () {
+                        setPanelsState(false, false, false);
+                    },
+                    getTargets: function () {
+                        return [document.getElementById('btn-left-toggle')];
+                    },
+                    desc: `
+                        <p>Ce bouton en haut à gauche ouvre ou referme le volet latéral contenant les <strong>8 Lots du DCE</strong> et les calques de réseaux.</p>
+                        <p class="text-amber-700 font-bold"><i class="fa-solid fa-wand-magic-sparkles mr-1"></i>Cliquez sur « Suivant » : nous l'ouvrons en direct pour vous montrer !</p>
+                    `
+                },
+                {
+                    title: "Sélectionner votre Lot (L1 à L8)",
+                    pointerText: "👆 Cliquez sur votre Corps d'État",
+                    pillBelow: false,
+                    prepare: function () {
+                        setPanelsState(true, false, false);
+                        ensureAccordionOpen('acc-2');
+                        const lp = document.getElementById('left-panel');
+                        const acc2 = document.getElementById('acc-2');
+                        if (lp && acc2) {
+                            setTimeout(() => { lp.scrollTo({ top: Math.max(0, acc2.offsetTop - 42), behavior: 'smooth' }); }, 60);
+                        }
+                    },
+                    getTargets: function () {
+                        const acc2 = document.getElementById('acc-2');
+                        const hdr2 = acc2 ? acc2.previousElementSibling : null;
+                        return [hdr2, acc2];
+                    },
+                    desc: `
+                        <p>Sélectionnez ici votre lot (<strong>L1 Maçonnerie</strong> jusqu'à <strong>L8 Équipements</strong>).</p>
+                        <p>Le plan isole immédiatement vos ouvrages en surbrillance, allume vos réseaux techniques et adapte la légende en bas d'écran.</p>
+                    `
+                },
+                {
+                    title: "Superposer les Couches & Opacité",
+                    pointerText: "👆 Cochez les réseaux à superposer",
+                    pillBelow: false,
+                    prepare: function () {
+                        setPanelsState(true, false, false);
+                        ensureAccordionOpen('acc-3');
+                        const lp = document.getElementById('left-panel');
+                        const acc3 = document.getElementById('acc-3');
+                        if (lp && acc3) {
+                            setTimeout(() => { lp.scrollTo({ top: acc3.offsetTop, behavior: 'smooth' }); }, 60);
+                        }
+                    },
+                    getTargets: function () {
+                        const acc3 = document.getElementById('acc-3');
+                        const hdr3 = acc3 ? acc3.previousElementSibling : null;
+                        return [hdr3, acc3];
+                    },
+                    desc: `
+                        <p>Besoin de vérifier une interface avec un autre corps d'état ?</p>
+                        <p>Réglez ici l'<strong>opacité des équipements</strong> et superposez à la carte les couches (<strong>Sols, Plafonds, Eau, 5 Caniveaux, CVC, Électricité, Niveau R+1</strong>).</p>
+                    `
+                },
+                {
+                    title: "Bascule RDC / R+1, Zoom & Cotes",
+                    pointerText: "👆 Niveau du lot & Zoom",
+                    pillBelow: true,
+                    prepare: function () {
+                        setPanelsState(false, false, false);
+                    },
+                    getTargets: function () {
+                        const subRdc = document.getElementById('sub-lvl-rdc');
+                        const rightFloating = subRdc ? subRdc.closest('.pointer-events-auto') : document.getElementById('floating-controls');
+                        return [rightFloating];
+                    },
+                    desc: `
+                        <p>Sur un même lot technique, basculez ici entre le <strong>Niveau RDC (.1 Tranche Ferme)</strong> et le <strong>Niveau R+1 (.2 Option)</strong>.</p>
+                        <p><strong>Astuce :</strong> Zoomez à la molette et <strong>cliquez sur n'importe quel élément du plan</strong> pour inspecter ses cotes exactes (<code>1 px = 1 cm</code>).</p>
+                    `
+                },
+                {
+                    title: "Ouvrir & Copier la Fiche CCTP",
+                    pointerText: "👆 Bouton CCTP & Descriptif du Lot",
+                    pillBelow: false,
+                    prepare: function () {
+                        setPanelsState(false, true, false);
+                    },
+                    getTargets: function () {
+                        const cctpBtn = document.querySelector('button[onclick*="toggleRightPanel"]');
+                        const rp = document.getElementById('right-panel');
+                        const rpHeader = rp ? rp.firstElementChild : null;
+                        return [cctpBtn, rpHeader];
+                    },
+                    desc: `
+                        <p>Le bouton <strong>CCTP</strong> (en haut à droite) déploie la fiche descriptive du lot actif ainsi que le rappel du formalisme des devis (<strong>échéance 18/12/2026</strong>).</p>
+                        <p>Le bouton bleu <strong>Copier CCTP</strong> copie tout le texte en un clic. <em>(En cas de détail complémentaire, le CCTP PDF complet fait foi).</em></p>
+                    `
+                },
+                {
+                    title: "Focus, Lexique A–Z & Bouton Guide",
+                    pointerText: "👆 Outils d'aide & Relance du Tuto",
+                    pillBelow: true,
+                    prepare: function () {
+                        setPanelsState(false, false, false);
+                    },
+                    getTargets: function () {
+                        return [
+                            document.getElementById('btn-dce-guide-top'),
+                            document.getElementById('btn-compact-toggle'),
+                            document.getElementById('btn-dim-toggle'),
+                            document.querySelector('button[onclick*="Lexique"]')
+                        ];
+                    },
+                    desc: `
+                        <p>Enfin, ces outils permettent d'alléger les textes (<strong>Compact</strong>), d'isoler le lot actif (<strong>Focus</strong>) ou d'ouvrir le <strong>Lexique A–Z</strong> des sigles techniques (<em>REI 60, R 439, FIPU, IRVE, CEE...</em>).</p>
+                        <p class="text-emerald-700 font-bold">Vous pouvez relancer cette visite à tout moment via le bouton « Guide » !</p>
+                    `
+                }
+            ];
+
+            function computeUnionRect(elements) {
+                const valid = (elements || []).filter(el => el && el.getBoundingClientRect);
+                let minL = Infinity, minT = Infinity, maxR = -Infinity, maxB = -Infinity;
+
+                valid.forEach(el => {
+                    const r = el.getBoundingClientRect();
+                    if (r.width > 2 && r.height > 2) {
+                        minL = Math.min(minL, r.left);
+                        minT = Math.min(minT, r.top);
+                        maxR = Math.max(maxR, r.right);
+                        maxB = Math.max(maxB, r.bottom);
+                    }
+                });
+
+                if (!isFinite(minL)) {
+                    return { left: window.innerWidth / 2 - 120, top: window.innerHeight / 2 - 60, width: 240, height: 120 };
+                }
+
+                const pad = 6;
+                const left = Math.max(4, minL - pad);
+                const top = Math.max(4, minT - pad);
+                const right = Math.min(window.innerWidth - 4, maxR + pad);
+                const bottom = Math.min(window.innerHeight - 4, maxB + pad);
+                return { left, top, width: Math.max(32, right - left), height: Math.max(28, bottom - top), right, bottom };
+            }
+
+            function positionSpotlightAndPopover() {
+                if (!tourActive) return;
+                const stepObj = TOUR_STEPS[tourStep];
+                if (!stepObj) return;
+
+                const spot = document.getElementById('dce-tour-spotlight');
+                const ptr = document.getElementById('dce-tour-pointer');
+                const pop = document.getElementById('dce-tour-popover');
+                if (!spot || !pop) return;
+
+                const rect = computeUnionRect(stepObj.getTargets());
+                spot.style.left = rect.left + 'px';
+                spot.style.top = rect.top + 'px';
+                spot.style.width = rect.width + 'px';
+                spot.style.height = rect.height + 'px';
+
+                if (ptr) {
+                    ptr.innerText = stepObj.pointerText || '👆 Cliquez ici';
+                    const putBelow = stepObj.pillBelow || rect.top < 36;
+                    ptr.classList.toggle('bottom-pill', putBelow);
+                }
+
+                // Calcul intelligent de la position de la bulle à côté de la zone éclairée (zéro sortie d'écran)
+                const popW = pop.offsetWidth || 360;
+                const popH = pop.offsetHeight || 230;
+                const margin = 18;
+                const vw = window.innerWidth;
+                const vh = window.innerHeight;
+
+                let pLeft = 16;
+                let pTop = 72;
+
+                const spaceRight = vw - (rect.left + rect.width);
+                const spaceLeft = rect.left;
+                const spaceBottom = vh - (rect.top + rect.height);
+
+                if (rect.top < 100 && spaceBottom >= popH + 36) {
+                    // Cible dans la barre supérieure -> placer la bulle juste en dessous
+                    pTop = rect.top + rect.height + (stepObj.pillBelow ? 36 : 16);
+                    pLeft = rect.left + (rect.width / 2) - (popW / 2);
+                } else if (spaceRight >= popW + margin + 12) {
+                    // Cible à gauche (Menu / Lots / Couches) -> placer la bulle à droite du menu
+                    pLeft = rect.left + rect.width + margin;
+                    pTop = rect.top + 8;
+                } else if (spaceLeft >= popW + margin + 12) {
+                    // Cible à droite (Panneau CCTP) -> placer la bulle à gauche du panneau
+                    pLeft = rect.left - popW - margin;
+                    pTop = rect.top + 16;
+                } else {
+                    // Écran étroit -> placer en bas centré
+                    pLeft = (vw - popW) / 2;
+                    pTop = vh - popH - 16;
+                }
+
+                pLeft = Math.max(12, Math.min(vw - popW - 12, pLeft));
+                pTop = Math.max(62, Math.min(vh - popH - 12, pTop));
+
+                pop.style.left = pLeft + 'px';
+                pop.style.top = pTop + 'px';
+            }
+
+            // Suit en temps réel l'ouverture coulissante (0.25s) des panneaux latéraux
+            function trackTransitionFor(durationMs) {
+                if (animFrameId) cancelAnimationFrame(animFrameId);
+                const start = performance.now();
+                function tick(now) {
+                    positionSpotlightAndPopover();
+                    if (now - start < durationMs && tourActive) {
+                        animFrameId = requestAnimationFrame(tick);
+                    }
+                }
+                animFrameId = requestAnimationFrame(tick);
+            }
+
+            window.startDceTour = function (index) {
+                tourActive = true;
+                tourStep = Math.max(0, Math.min(TOUR_STEPS.length - 1, index || 0));
+
+                const spot = document.getElementById('dce-tour-spotlight');
+                const pop = document.getElementById('dce-tour-popover');
+                const catcher = document.getElementById('dce-tour-backdrop-catcher');
+                if (spot) spot.classList.remove('hidden');
+                if (pop) pop.classList.remove('hidden');
+                if (catcher) catcher.classList.remove('hidden');
+
+                renderCurrentTourStep();
+            };
+
+            function renderCurrentTourStep() {
+                const stepObj = TOUR_STEPS[tourStep];
+                if (!stepObj) return;
+
+                if (typeof stepObj.prepare === 'function') {
+                    stepObj.prepare();
+                }
+
+                const badge = document.getElementById('dce-tour-badge');
+                const title = document.getElementById('dce-tour-title');
+                const desc = document.getElementById('dce-tour-desc');
+                const dots = document.getElementById('dce-tour-dots');
+                const prevBtn = document.getElementById('dce-btn-prev');
+                const nextBtn = document.getElementById('dce-btn-next');
+
+                if (badge) badge.innerText = (tourStep + 1) + ' / ' + TOUR_STEPS.length;
+                if (title) title.innerText = stepObj.title;
+                if (desc) desc.innerHTML = stepObj.desc;
+
+                if (dots) {
+                    dots.innerHTML = TOUR_STEPS.map((_, idx) =>
+                        `<button onclick="startDceTour(${idx})" class="h-2 rounded-full transition-all ${idx === tourStep ? 'w-5 bg-amber-500' : 'w-2 bg-slate-300 hover:bg-slate-400'}" title="Aller à l'étape ${idx + 1}"></button>`
+                    ).join('');
+                }
+
+                if (prevBtn) {
+                    prevBtn.disabled = (tourStep === 0);
+                    prevBtn.style.opacity = (tourStep === 0) ? '0.4' : '1';
+                }
+                if (nextBtn) {
+                    nextBtn.innerHTML = (tourStep === TOUR_STEPS.length - 1)
+                        ? '<i class="fa-solid fa-check mr-1"></i>Terminer'
+                        : 'Suivant ▶';
+                }
+
+                trackTransitionFor(360);
+            }
+
+            window.moveDceTour = function (delta) {
+                if (tourStep + delta >= TOUR_STEPS.length) {
+                    window.endDceTour(true);
+                } else if (tourStep + delta >= 0) {
+                    tourStep += delta;
+                    renderCurrentTourStep();
+                }
+            };
+
+            window.endDceTour = function (restoreFullScreen) {
+                tourActive = false;
+                if (animFrameId) cancelAnimationFrame(animFrameId);
+
+                const spot = document.getElementById('dce-tour-spotlight');
+                const pop = document.getElementById('dce-tour-popover');
+                const catcher = document.getElementById('dce-tour-backdrop-catcher');
+                if (spot) spot.classList.add('hidden');
+                if (pop) pop.classList.add('hidden');
+                if (catcher) catcher.classList.add('hidden');
+
+                if (restoreFullScreen) {
+                    setPanelsState(false, false, false);
+                }
+            };
+
+            window.endDceTourAndOpenLots = function () {
+                window.endDceTour(false);
+                setPanelsState(true, false, false);
+                ensureAccordionOpen('acc-2');
+                const lp = document.getElementById('left-panel');
+                const acc2 = document.getElementById('acc-2');
+                if (lp && acc2) {
+                    setTimeout(() => { lp.scrollTo({ top: Math.max(0, acc2.offsetTop - 42), behavior: 'smooth' }); }, 80);
+                }
+            };
+
+            window.saveDceTourPref = function (skipNext) {
+                try {
+                    if (skipNext) localStorage.setItem('mfa_dce_skip_tour_v2', '1');
+                    else localStorage.removeItem('mfa_dce_skip_tour_v2');
+                } catch (e) { /* Ignoré en mode local strict */ }
+            };
+
+            function bootFullScreenAndDynamicTour() {
+                // 1. Démarrer systématiquement avec Menu : OFF et CCTP : OFF (plein écran centré)
+                setPanelsState(false, false, true);
+                if (typeof resetView === 'function') {
+                    setTimeout(resetView, 80);
+                    setTimeout(resetView, 260);
+                }
+
+                // 2. Ajouter le bouton « Guide » dans la barre supérieure pour relancer la visite à la demande
+                const rightBar = document.querySelector('#top-bar > div:last-child');
+                if (rightBar && !document.getElementById('btn-dce-guide-top')) {
+                    const btn = document.createElement('button');
+                    btn.id = 'btn-dce-guide-top';
+                    btn.onclick = function () { window.startDceTour(0); };
+                    btn.className = 'shrink-0 whitespace-nowrap bg-amber-500/20 hover:bg-amber-500/35 text-amber-300 border border-amber-400/50 px-2 py-1.5 rounded-lg text-[11px] font-bold transition';
+                    btn.title = 'Lancer la visite guidée interactive de l’outil';
+                    btn.innerHTML = '<i class="fa-solid fa-location-crosshairs mr-1"></i>Guide';
+                    rightBar.insertBefore(btn, rightBar.firstChild);
+                }
+
+                // 3. Recalculer la position du projecteur si la fenêtre est redimensionnée ou si le menu défile
+                window.addEventListener('resize', () => { if (tourActive) trackTransitionFor(150); });
+                const lp = document.getElementById('left-panel');
+                if (lp) lp.addEventListener('scroll', () => { if (tourActive) positionSpotlightAndPopover(); }, { passive: true });
+
+                // Navigation rapide au clavier (Flèches gauche/droite et Échap)
+                window.addEventListener('keydown', function (ev) {
+                    if (!tourActive) return;
+                    if (ev.key === 'Escape') window.endDceTour(true);
+                    else if (ev.key === 'ArrowRight') window.moveDceTour(1);
+                    else if (ev.key === 'ArrowLeft') window.moveDceTour(-1);
+                });
+
+                // 4. Lancement automatique à la connexion (sauf si l'artisan a coché « Ne plus lancer »)
+                let skip = false;
+                try {
+                    skip = (localStorage.getItem('mfa_dce_skip_tour_v2') === '1');
+                    const chk = document.getElementById('chk-dce-skip-auto');
+                    if (chk) chk.checked = skip;
+                } catch (e) { skip = false; }
+
+                if (!skip) {
+                    setTimeout(function () { window.startDceTour(0); }, 240);
+                }
+            }
+
+            if (document.readyState === 'loading') {
+                window.addEventListener('DOMContentLoaded', bootFullScreenAndDynamicTour);
+            } else {
+                bootFullScreenAndDynamicTour();
+            }
+        })();
+    </script>
+</div>
+<!-- FIN DU MODULE PLEIN ÉCRAN & TUTORIEL DYNAMIQUE DCE -->
 </body>
 </html>
-<!-- FIN DU MORCEAU 4/4 — Document complet prêt à enregistrer sous PlanVF_Consultation.html -->
