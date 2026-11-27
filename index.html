@@ -2597,7 +2597,7 @@
             }
         });
     </script>
-    <!-- DÉBUT DU MODULE PLEIN ÉCRAN & TUTORIEL DYNAMIQUE DCE -->
+ <!-- DÉBUT DU MODULE PLEIN ÉCRAN & TUTORIEL DYNAMIQUE DCE -->
 <div id="dce-addon-pack">
     <style>
         /* Cadre projecteur (« Spotlight ») qui assombrit le reste de l'écran et encadre la zone à cliquer */
@@ -2646,7 +2646,7 @@
                         left 0.28s cubic-bezier(0.22, 1, 0.36, 1);
         }
         @media print {
-            #dce-tour-spotlight, #dce-tour-popover, #dce-tour-backdrop-catcher, #btn-dce-guide-top { display: none !important; }
+            #dce-tour-spotlight, #dce-tour-popover, #dce-tour-backdrop-catcher, #btn-dce-guide-top, #btn-dce-drive-pdf { display: none !important; }
         }
     </style>
 
@@ -2663,7 +2663,7 @@
         <!-- Bandeau haut -->
         <div class="px-4 py-2.5 bg-slate-900 text-white flex items-center justify-between gap-2">
             <div class="flex items-center gap-2">
-                <span id="dce-tour-badge" class="px-2 py-0.5 rounded-md bg-amber-500 text-slate-950 text-[10.5px] font-extrabold">1 / 7</span>
+                <span id="dce-tour-badge" class="px-2 py-0.5 rounded-md bg-amber-500 text-slate-950 text-[10.5px] font-extrabold">1 / 8</span>
                 <span id="dce-tour-title" class="text-xs font-extrabold text-white truncate">Visite guidée</span>
             </div>
             <button onclick="endDceTour(true)" class="shrink-0 text-[11px] font-bold text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 px-2 py-1 rounded-lg border border-slate-700 transition" title="Fermer immédiatement et revenir au plan plein écran">
@@ -2704,6 +2704,9 @@
 
     <script>
         (function () {
+            // 🔗 URL DU DOSSIER GOOGLE DRIVE CONTENANT LES DOCUMENTS PDF DU DCE :
+            const LIEN_DOSSIER_DCE_PDF = "https://drive.google.com/drive/folders/VOTRE_LIEN_DCE_PUBLIC";
+
             let tourActive = false;
             let tourStep = 0;
             let animFrameId = null;
@@ -2863,8 +2866,23 @@
                         return [cctpBtn, rpHeader];
                     },
                     desc: `
-                        <p>Le bouton <strong>CCTP</strong> (en haut à droite) déploie la fiche descriptive du lot actif ainsi que le rappel du formalisme des devis (<strong>échéance 18/12/2026</strong>).</p>
-                        <p>Le bouton bleu <strong>Copier CCTP</strong> copie tout le texte en un clic. <em>(En cas de détail complémentaire, le CCTP PDF complet fait foi).</em></p>
+                        <p>Le bouton <strong>CCTP</strong> (en haut à droite) déploie la fiche synthétique du lot actif ainsi que le rappel du formalisme des devis (<strong>échéance 18/12/2026</strong>).</p>
+                        <p>Le bouton bleu <strong>Copier CCTP</strong> copie ce résumé en un clic.</p>
+                    `
+                },
+                {
+                    title: "Télécharger les Documents PDF (DCE)",
+                    pointerText: "👆 Cliquez ici pour ouvrir le Dossier PDF",
+                    pillBelow: true,
+                    prepare: function () {
+                        setPanelsState(false, false, false);
+                    },
+                    getTargets: function () {
+                        return [document.getElementById('btn-dce-drive-pdf')];
+                    },
+                    desc: `
+                        <p>Ce bouton vert <strong>Dossier PDF</strong> ouvre directement le dossier partagé contenant toutes les pièces officielles à télécharger :</p>
+                        <p>• Les <strong>CCTP complets en PDF</strong> (qui font foi), le <strong>Règlement de consultation</strong> et le <strong>carnet des 12 plans PDF</strong> prêts à imprimer.</p>
                     `
                 },
                 {
@@ -3092,16 +3110,28 @@
                     setTimeout(resetView, 260);
                 }
 
-                // 2. Ajouter le bouton « Guide » dans la barre supérieure pour relancer la visite à la demande
+                // 2. Ajouter les boutons « Dossier PDF » et « Guide » dans la barre supérieure
                 const rightBar = document.querySelector('#top-bar > div:last-child');
                 if (rightBar && !document.getElementById('btn-dce-guide-top')) {
-                    const btn = document.createElement('button');
-                    btn.id = 'btn-dce-guide-top';
-                    btn.onclick = function () { window.startDceTour(0); };
-                    btn.className = 'shrink-0 whitespace-nowrap bg-amber-500/20 hover:bg-amber-500/35 text-amber-300 border border-amber-400/50 px-2 py-1.5 rounded-lg text-[11px] font-bold transition';
-                    btn.title = 'Lancer la visite guidée interactive de l’outil';
-                    btn.innerHTML = '<i class="fa-solid fa-location-crosshairs mr-1"></i>Guide';
-                    rightBar.insertBefore(btn, rightBar.firstChild);
+                    const guideBtn = document.createElement('button');
+                    guideBtn.id = 'btn-dce-guide-top';
+                    guideBtn.onclick = function () { window.startDceTour(0); };
+                    guideBtn.className = 'shrink-0 whitespace-nowrap bg-amber-500/20 hover:bg-amber-500/35 text-amber-300 border border-amber-400/50 px-2 py-1.5 rounded-lg text-[11px] font-bold transition';
+                    guideBtn.title = 'Lancer la visite guidée interactive de l’outil';
+                    guideBtn.innerHTML = '<i class="fa-solid fa-location-crosshairs mr-1"></i>Guide';
+                    rightBar.insertBefore(guideBtn, rightBar.firstChild);
+                }
+
+                if (rightBar && !document.getElementById('btn-dce-drive-pdf')) {
+                    const pdfLink = document.createElement('a');
+                    pdfLink.id = 'btn-dce-drive-pdf';
+                    pdfLink.href = LIEN_DOSSIER_DCE_PDF;
+                    pdfLink.target = '_blank';
+                    pdfLink.rel = 'noopener noreferrer';
+                    pdfLink.className = 'shrink-0 whitespace-nowrap bg-emerald-600 hover:bg-emerald-500 text-white border border-emerald-400/60 px-2.5 py-1.5 rounded-lg text-[11px] font-extrabold shadow-sm transition flex items-center gap-1';
+                    pdfLink.title = 'Ouvrir le dossier contenant les CCTP, le Règlement et les 12 plans en PDF';
+                    pdfLink.innerHTML = '<i class="fa-solid fa-folder-open text-amber-200"></i><span>Dossier PDF</span>';
+                    rightBar.insertBefore(pdfLink, rightBar.firstChild);
                 }
 
                 // 3. Recalculer la position du projecteur si la fenêtre est redimensionnée ou si le menu défile
